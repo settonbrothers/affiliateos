@@ -32,5 +32,11 @@ build/
 .next/
 .nuxt/
 
+# Next.js / Vercel / TypeScript
+.vercel
+next-env.d.ts
+*.tsbuildinfo
+/coverage
+
 # Misc
 *.tmp
