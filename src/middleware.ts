@@ -4,6 +4,15 @@ import { type NextRequest, NextResponse } from 'next/server'
 const PROTECTED_PREFIXES = ['/offers', '/admin']
 
 export async function middleware(request: NextRequest) {
+  // Before Supabase is configured (e.g. local dev without .env.local), skip auth
+  // so public pages still render instead of 500-ing. Env is always set in prod.
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    return NextResponse.next({ request })
+  }
+
   let response = NextResponse.next({ request })
 
   const supabase = createServerClient(
