@@ -38,12 +38,26 @@ create table profiles (
   updated_at timestamptz not null default now()
 );
 alter table profiles enable row level security;
+
+-- SECURITY DEFINER admin check that reads profiles WITHOUT being subject to RLS.
+-- A SELECT policy on profiles that queries profiles would otherwise trigger
+-- Postgres "infinite recursion detected in policy". Same pattern as
+-- is_workspace_member() in 0003. See decisions/001.
+create function is_current_user_admin() returns boolean
+  language sql security definer stable
+  set search_path = public
+  as $$
+  select exists (
+    select 1 from profiles where id = auth.uid() and system_role = 'admin'
+  );
+$$;
+
 create policy "users read own profile" on profiles for select
   using (auth.uid() = id);
 create policy "users update own profile" on profiles for update
   using (auth.uid() = id);
 create policy "admins read all" on profiles for select
-  using (exists (select 1 from profiles p2 where p2.id = auth.uid() and p2.system_role = 'admin'));
+  using (is_current_user_admin());
 ```
 
 #### 0003_workspaces.sql

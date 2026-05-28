@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed, 2026-05-28 — **pending Izak sign-off** (deviates from `04_SCHEMA_LEAN.md`).
+Accepted, 2026-05-28 (Izak). `04_SCHEMA_LEAN.md` (migration 0002) updated to match.
 
 ## Context
 
@@ -41,7 +41,7 @@ SECURITY DEFINER *views*).
 ## Consequences
 
 - `profiles` reads work for both users and admins; no recursion.
-- `04_SCHEMA_LEAN.md` should be updated to match once Izak approves.
+- `04_SCHEMA_LEAN.md` has been updated to match (0002 block).
 - Later migrations may optionally reuse `is_current_user_admin()` instead of repeating
   the inline `exists (... from profiles ...)` admin check.
 
