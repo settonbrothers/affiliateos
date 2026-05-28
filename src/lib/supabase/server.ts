@@ -1,12 +1,13 @@
 import { type CookieOptions, createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
+import type { Database } from '@/types/database'
+
 // Server Supabase client for Server Components, Route Handlers and Server Actions.
-// TODO(types): add the <Database> generic once types are generated on main.
 export async function createClient() {
   const cookieStore = await cookies()
 
-  return createServerClient(
+  return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
