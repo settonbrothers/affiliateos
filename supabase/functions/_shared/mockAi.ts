@@ -18,9 +18,36 @@ const envelope = (orchestratorName: string) => ({
   human_review_reasons: [],
 })
 
-export function mockUnderwriting(): Record<string, unknown> {
+export type UnderwritingFactInput = {
+  fact_type: string
+  fact_value: string
+  source_quote: string | null
+  confidence_score: number | null
+}
+
+export function mockUnderwriting(
+  inputFacts: UnderwritingFactInput[] = []
+): Record<string, unknown> {
+  const envelopeFacts = inputFacts.map((f) => ({
+    statement: `${f.fact_type}: ${f.fact_value}`,
+    source: f.source_quote ?? null,
+    confidence: f.confidence_score ?? 80,
+  }))
+  // Data confidence reflects how many verified facts we actually have.
+  const dataConfidence =
+    inputFacts.length === 0 ? 35 : Math.min(60 + inputFacts.length * 5, 90)
+  const base = envelope('UnderwritingOrchestrator')
+  const noFacts = inputFacts.length === 0
+
   return {
-    ...envelope('UnderwritingOrchestrator'),
+    ...base,
+    confidence_score: dataConfidence,
+    facts: envelopeFacts,
+    assumptions: noFacts
+      ? ['Mock output — no verified facts attached to this offer.']
+      : [`Mock output — informed by ${inputFacts.length} verified fact(s).`],
+    human_review_required: noFacts,
+    human_review_reasons: noFacts ? ['No verified facts available for this offer.'] : [],
     payload: {
       scores: {
         economics: 74,
@@ -30,15 +57,15 @@ export function mockUnderwriting(): Record<string, unknown> {
         funnel_fit: 70,
         compliance: 88,
         operator_fit: 70,
-        data_confidence: 60,
+        data_confidence: dataConfidence,
         offer_trust: 86,
         scale_potential: 75,
         cashflow_fit: 65,
         high_ceiling_potential: 72,
         execution_complexity: 58,
       },
-      weighted_score: 73,
-      verdict: 'strong_test',
+      weighted_score: noFacts ? 55 : 73,
+      verdict: noFacts ? 'watch' : 'strong_test',
       recommended_channel: 'paid_social',
       recommended_geo: ['US', 'CA', 'UK'],
       minimum_test_budget_usd: 300,
@@ -50,11 +77,11 @@ export function mockUnderwriting(): Record<string, unknown> {
         trust: null,
         scale: null,
         cashflow: null,
-        compliance: null,
+        compliance: noFacts ? 'No verified facts — review claims before scaling.' : null,
       },
       kill_criteria: ['CPA above $90 after $300 spend', 'CTR below 0.8% after 10k impressions'],
       scale_criteria: ['EPC above $1.20 across 3 angles', 'Stable CVR over 5 days'],
-      verdict_caps_applied: [],
+      verdict_caps_applied: noFacts ? ['capped to watch — no verified facts'] : [],
     },
   }
 }

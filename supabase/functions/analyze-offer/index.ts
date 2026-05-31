@@ -42,11 +42,20 @@ Deno.serve(async (req: Request) => {
 
     // M1 stub (real in M2): cost cap (always ok).
 
+    // Pull the offer's *verified* extracted_facts — these inform the (mock)
+    // underwriting envelope + verdict instead of returning a fixed fixture.
+    const { data: factsRows } = await admin
+      .from('extracted_facts')
+      .select('fact_type, fact_value, source_quote, confidence_score')
+      .eq('offer_id', offerId)
+      .eq('status', 'verified')
+    const facts = factsRows ?? []
+
     const runId = await recordRunStart({
       orchestratorName: 'UnderwritingOrchestrator',
       agentVersion: 'mock-v1',
       model: 'mock',
-      inputPayload: { offer_id: offerId },
+      inputPayload: { offer_id: offerId, verified_fact_count: facts.length },
       userId: user.id,
       workspaceId: offer.workspace_id ?? undefined,
       offerId,
@@ -59,7 +68,7 @@ Deno.serve(async (req: Request) => {
         const startTime = new Date()
         try {
           await new Promise((resolve) => setTimeout(resolve, 8000))
-          const output = await runUnderwriting({ offerId })
+          const output = await runUnderwriting({ offerId, facts })
 
           const traceId = await createTrace({
             name: `analyze-offer:${offerId}`,
@@ -69,7 +78,7 @@ Deno.serve(async (req: Request) => {
             traceId,
             name: 'UnderwritingOrchestrator (mock)',
             model: 'mock',
-            input: { offer_id: offerId },
+            input: { offer_id: offerId, verified_fact_count: facts.length },
             output,
             promptTokens: 0,
             completionTokens: 0,

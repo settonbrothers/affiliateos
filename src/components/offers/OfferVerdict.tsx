@@ -55,6 +55,38 @@ export function OfferVerdict({
           </ul>
         </div>
       )}
+
+      {evaluation.facts.length > 0 && (
+        <div>
+          <h3 className="text-sm font-medium">
+            Facts considered ({evaluation.facts.length})
+          </h3>
+          <ul className="mt-1 space-y-1 text-sm">
+            {evaluation.facts.map((f, i) => (
+              <li key={`${f.statement}-${i}`} className="flex gap-2">
+                <span className="font-medium">{f.statement}</span>
+                {f.source && (
+                  <span className="text-xs text-[var(--color-muted-foreground)]">
+                    — “{f.source}”
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {evaluation.human_review_required &&
+        evaluation.human_review_reasons.length > 0 && (
+          <div className="rounded-md border border-yellow-600/50 bg-yellow-50 p-3 text-sm dark:bg-yellow-950/40">
+            <p className="font-medium">Human review recommended</p>
+            <ul className="mt-1 list-disc pl-5">
+              {evaluation.human_review_reasons.map((r) => (
+                <li key={r}>{r}</li>
+              ))}
+            </ul>
+          </div>
+        )}
     </div>
   )
 }
