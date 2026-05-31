@@ -10,8 +10,9 @@ import {
 } from '../_shared/recordAiRun.ts'
 import { getAdminClient } from '../_shared/supabaseAdmin.ts'
 
-// EdgeRuntime is provided by the Supabase Edge runtime.
 declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void }
+
+const MOCK_LATENCY_MS = 8_000
 
 Deno.serve(async (req: Request) => {
   const preflight = handleCors(req)
@@ -27,7 +28,7 @@ Deno.serve(async (req: Request) => {
     const admin = getAdminClient()
     const { data: offer, error: offerErr } = await admin
       .from('offers')
-      .select('id, workspace_id, vertical_id, name')
+      .select('id, workspace_id, vertical_id, name, verticals(slug)')
       .eq('id', offerId)
       .single()
     if (offerErr || !offer) return jsonResponse({ error: 'Offer not found' }, 404)
@@ -40,10 +41,6 @@ Deno.serve(async (req: Request) => {
       throw err
     }
 
-    // M1 stub (real in M2): cost cap (always ok).
-
-    // Pull the offer's *verified* extracted_facts — these inform the (mock)
-    // underwriting envelope + verdict instead of returning a fixed fixture.
     const { data: factsRows } = await admin
       .from('extracted_facts')
       .select('fact_type, fact_value, source_quote, confidence_score')
@@ -51,24 +48,43 @@ Deno.serve(async (req: Request) => {
       .eq('status', 'verified')
     const facts = factsRows ?? []
 
+    const verticalSlug =
+      (offer as unknown as { verticals?: { slug: string } | null }).verticals?.slug ??
+      undefined
+
+    const willCallReal = !!Deno.env.get('ANTHROPIC_API_KEY')
+    const model = willCallReal ? 'claude-sonnet-4-6' : 'mock'
+
     const runId = await recordRunStart({
       orchestratorName: 'UnderwritingOrchestrator',
-      agentVersion: 'mock-v1',
-      model: 'mock',
-      inputPayload: { offer_id: offerId, verified_fact_count: facts.length },
+      agentVersion: willCallReal ? 'real-v1' : 'mock-v1',
+      model,
+      inputPayload: {
+        offer_id: offerId,
+        verified_fact_count: facts.length,
+        vertical: verticalSlug ?? null,
+      },
       userId: user.id,
       workspaceId: offer.workspace_id ?? undefined,
       offerId,
     })
 
-    // Run the mock work in the background; return run_id immediately so the UI
-    // can subscribe / poll for the result.
     EdgeRuntime.waitUntil(
       (async () => {
         const startTime = new Date()
         try {
-          await new Promise((resolve) => setTimeout(resolve, 8000))
-          const output = await runUnderwriting({ offerId, facts })
+          // Mock path keeps the 8s latency so UI Realtime / polling exercises
+          // its loading state. Real path doesn't need the extra sleep.
+          if (!willCallReal) {
+            await new Promise((resolve) => setTimeout(resolve, MOCK_LATENCY_MS))
+          }
+
+          const result = await runUnderwriting({
+            offerId,
+            offerName: offer.name,
+            verticalSlug,
+            facts,
+          })
 
           const traceId = await createTrace({
             name: `analyze-offer:${offerId}`,
@@ -76,22 +92,24 @@ Deno.serve(async (req: Request) => {
           })
           await recordGeneration({
             traceId,
-            name: 'UnderwritingOrchestrator (mock)',
-            model: 'mock',
+            name: `UnderwritingOrchestrator (${result.mode})`,
+            model,
             input: { offer_id: offerId, verified_fact_count: facts.length },
-            output,
-            promptTokens: 0,
-            completionTokens: 0,
-            costUsd: 0,
+            output: result.output,
+            promptTokens: result.usage?.input_tokens ?? 0,
+            completionTokens: result.usage?.output_tokens ?? 0,
+            costUsd: result.usage?.cost_usd ?? 0,
             startTime,
             endTime: new Date(),
           })
 
           await recordRunSuccess(runId, {
-            outputPayload: output,
-            validatedOutput: output,
-            envelope: output,
-            estimatedCost: 0,
+            outputPayload: result.output,
+            validatedOutput: result.output,
+            envelope: result.output,
+            tokensInput: result.usage?.input_tokens,
+            tokensOutput: result.usage?.output_tokens,
+            estimatedCost: result.usage?.cost_usd ?? 0,
             langfuseTraceId: traceId,
           })
         } catch (err) {
