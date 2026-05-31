@@ -1,5 +1,6 @@
 import { ForbiddenError, requireUser, UnauthorizedError } from '../_shared/auth.ts'
 import { handleCors, jsonResponse } from '../_shared/cors.ts'
+import { assertNotPaused, OrchestratorPausedError } from '../_shared/killSwitch.ts'
 import { createTrace, recordGeneration } from '../_shared/langfuseClient.ts'
 import { runUnderwriting } from '../_shared/orchestrators/underwriting.ts'
 import {
@@ -31,7 +32,15 @@ Deno.serve(async (req: Request) => {
       .single()
     if (offerErr || !offer) return jsonResponse({ error: 'Offer not found' }, 404)
 
-    // M1 stubs (real in M2): kill switch (always active) + cost cap (always ok).
+    // Kill switch — fail fast before opening an ai_runs row.
+    try {
+      await assertNotPaused('UnderwritingOrchestrator')
+    } catch (err) {
+      if (err instanceof OrchestratorPausedError) return jsonResponse({ error: err.message }, 503)
+      throw err
+    }
+
+    // M1 stub (real in M2): cost cap (always ok).
 
     const runId = await recordRunStart({
       orchestratorName: 'UnderwritingOrchestrator',
