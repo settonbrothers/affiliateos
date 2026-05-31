@@ -35,6 +35,12 @@ export default async function AdminLayout({
             AI Runs
           </Link>
           <Link
+            href="/admin/kill-switches"
+            className="rounded-md px-3 py-2 hover:bg-[var(--color-muted)]"
+          >
+            Kill Switches
+          </Link>
+          <Link
             href="/offers"
             className="rounded-md px-3 py-2 text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]"
           >
