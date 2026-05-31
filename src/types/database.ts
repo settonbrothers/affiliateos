@@ -39,6 +39,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_kill_switches: {
+        Row: {
+          is_paused: boolean
+          orchestrator_name: string
+          paused_at: string | null
+          paused_by: string | null
+          reason: string | null
+          updated_at: string
+        }
+        Insert: {
+          is_paused?: boolean
+          orchestrator_name: string
+          paused_at?: string | null
+          paused_by?: string | null
+          reason?: string | null
+          updated_at?: string
+        }
+        Update: {
+          is_paused?: boolean
+          orchestrator_name?: string
+          paused_at?: string | null
+          paused_by?: string | null
+          reason?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_kill_switches_paused_by_fkey"
+            columns: ["paused_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_runs: {
         Row: {
           agent_version: string
@@ -237,6 +272,70 @@ export type Database = {
           },
         ]
       }
+      extracted_facts: {
+        Row: {
+          confidence_score: number | null
+          created_at: string
+          fact_type: Database["public"]["Enums"]["fact_type"]
+          fact_value: string
+          id: string
+          offer_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_document_id: string | null
+          source_quote: string | null
+          status: Database["public"]["Enums"]["fact_status"]
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string
+          fact_type: Database["public"]["Enums"]["fact_type"]
+          fact_value: string
+          id?: string
+          offer_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_document_id?: string | null
+          source_quote?: string | null
+          status?: Database["public"]["Enums"]["fact_status"]
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string
+          fact_type?: Database["public"]["Enums"]["fact_type"]
+          fact_value?: string
+          id?: string
+          offer_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_document_id?: string | null
+          source_quote?: string | null
+          status?: Database["public"]["Enums"]["fact_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "extracted_facts_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "extracted_facts_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "extracted_facts_source_document_id_fkey"
+            columns: ["source_document_id"]
+            isOneToOne: false
+            referencedRelation: "source_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       failed_messages: {
         Row: {
           attempts: number
@@ -275,6 +374,48 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      offer_evaluation_snapshots: {
+        Row: {
+          ai_run_id: string
+          created_at: string
+          id: string
+          is_current: boolean
+          offer_id: string
+          snapshot: Json
+        }
+        Insert: {
+          ai_run_id: string
+          created_at?: string
+          id?: string
+          is_current?: boolean
+          offer_id: string
+          snapshot: Json
+        }
+        Update: {
+          ai_run_id?: string
+          created_at?: string
+          id?: string
+          is_current?: boolean
+          offer_id?: string
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_evaluation_snapshots_ai_run_id_fkey"
+            columns: ["ai_run_id"]
+            isOneToOne: false
+            referencedRelation: "ai_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offer_evaluation_snapshots_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       offers: {
         Row: {
@@ -388,6 +529,129 @@ export type Database = {
         }
         Relationships: []
       }
+      source_documents: {
+        Row: {
+          created_at: string
+          doc_type: Database["public"]["Enums"]["source_doc_type"]
+          error_message: string | null
+          extracted_at: string | null
+          fetched_at: string | null
+          id: string
+          language: string | null
+          offer_id: string
+          raw_html_storage_path: string | null
+          raw_text: string | null
+          source_reliability_score: number | null
+          source_summary: string | null
+          status: Database["public"]["Enums"]["source_doc_status"]
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          doc_type?: Database["public"]["Enums"]["source_doc_type"]
+          error_message?: string | null
+          extracted_at?: string | null
+          fetched_at?: string | null
+          id?: string
+          language?: string | null
+          offer_id: string
+          raw_html_storage_path?: string | null
+          raw_text?: string | null
+          source_reliability_score?: number | null
+          source_summary?: string | null
+          status?: Database["public"]["Enums"]["source_doc_status"]
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          doc_type?: Database["public"]["Enums"]["source_doc_type"]
+          error_message?: string | null
+          extracted_at?: string | null
+          fetched_at?: string | null
+          id?: string
+          language?: string | null
+          offer_id?: string
+          raw_html_storage_path?: string | null
+          raw_text?: string | null
+          source_reliability_score?: number | null
+          source_summary?: string | null
+          status?: Database["public"]["Enums"]["source_doc_status"]
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "source_documents_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      source_fetch_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          offer_id: string
+          source_document_id: string | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["fetch_job_status"]
+          triggered_by: string
+          url: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          offer_id: string
+          source_document_id?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["fetch_job_status"]
+          triggered_by: string
+          url: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          offer_id?: string
+          source_document_id?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["fetch_job_status"]
+          triggered_by?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "source_fetch_jobs_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "source_fetch_jobs_source_document_id_fkey"
+            columns: ["source_document_id"]
+            isOneToOne: false
+            referencedRelation: "source_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "source_fetch_jobs_triggered_by_fkey"
+            columns: ["triggered_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       verticals: {
         Row: {
           created_at: string
@@ -414,6 +678,70 @@ export type Database = {
           slug?: string
         }
         Relationships: []
+      }
+      workspace_credit_caps: {
+        Row: {
+          daily_credits_cap: number
+          daily_usd_cap: number
+          monthly_credits_cap: number
+          monthly_usd_cap: number
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          daily_credits_cap?: number
+          daily_usd_cap?: number
+          monthly_credits_cap?: number
+          monthly_usd_cap?: number
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          daily_credits_cap?: number
+          daily_usd_cap?: number
+          monthly_credits_cap?: number
+          monthly_usd_cap?: number
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_credit_caps_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_daily_usage: {
+        Row: {
+          credits_spent: number
+          day: string
+          usd_spent: number
+          workspace_id: string
+        }
+        Insert: {
+          credits_spent?: number
+          day: string
+          usd_spent?: number
+          workspace_id: string
+        }
+        Update: {
+          credits_spent?: number
+          day?: string
+          usd_spent?: number
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_daily_usage_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       workspace_members: {
         Row: {
@@ -513,12 +841,42 @@ export type Database = {
         | "subscription.create"
         | "subscription.cancel"
       error_severity: "debug" | "info" | "warning" | "error" | "critical"
+      fact_status: "proposed" | "verified" | "rejected"
+      fact_type:
+        | "commission_value"
+        | "commission_type"
+        | "payout_delay"
+        | "cookie_duration"
+        | "traffic_rule_paid_social"
+        | "traffic_rule_google"
+        | "traffic_rule_native"
+        | "traffic_rule_youtube"
+        | "traffic_rule_brand_bidding"
+        | "traffic_rule_direct_link"
+        | "traffic_rule_email"
+        | "traffic_rule_seo"
+        | "traffic_rule_organic_social"
+        | "allowed_geo"
+        | "restricted_geo"
+        | "cap"
+        | "refund_policy"
+        | "compliance_claim"
+        | "pricing_aov"
+        | "minimum_payout"
+        | "contact"
+        | "other"
       failed_message_status: "pending" | "retrying" | "succeeded" | "abandoned"
       failed_message_type:
         | "ai_run"
         | "webhook_send"
         | "email_send"
         | "stripe_webhook"
+      fetch_job_status:
+        | "queued"
+        | "fetching"
+        | "extracting"
+        | "completed"
+        | "failed"
       offer_status:
         | "draft"
         | "needs_source_ingestion"
@@ -528,6 +886,17 @@ export type Database = {
         | "rejected"
         | "deprecated"
       offer_visibility: "global" | "workspace_private" | "admin_only"
+      source_doc_status: "pending" | "fetched" | "extracted" | "failed"
+      source_doc_type:
+        | "product_page"
+        | "pricing_page"
+        | "affiliate_terms"
+        | "checkout_page"
+        | "review_page"
+        | "ad_example"
+        | "landing_page"
+        | "manual_note"
+        | "unknown"
       system_role: "user" | "admin"
       workspace_role: "owner" | "member"
     }
@@ -682,12 +1051,44 @@ export const Constants = {
         "subscription.cancel",
       ],
       error_severity: ["debug", "info", "warning", "error", "critical"],
+      fact_status: ["proposed", "verified", "rejected"],
+      fact_type: [
+        "commission_value",
+        "commission_type",
+        "payout_delay",
+        "cookie_duration",
+        "traffic_rule_paid_social",
+        "traffic_rule_google",
+        "traffic_rule_native",
+        "traffic_rule_youtube",
+        "traffic_rule_brand_bidding",
+        "traffic_rule_direct_link",
+        "traffic_rule_email",
+        "traffic_rule_seo",
+        "traffic_rule_organic_social",
+        "allowed_geo",
+        "restricted_geo",
+        "cap",
+        "refund_policy",
+        "compliance_claim",
+        "pricing_aov",
+        "minimum_payout",
+        "contact",
+        "other",
+      ],
       failed_message_status: ["pending", "retrying", "succeeded", "abandoned"],
       failed_message_type: [
         "ai_run",
         "webhook_send",
         "email_send",
         "stripe_webhook",
+      ],
+      fetch_job_status: [
+        "queued",
+        "fetching",
+        "extracting",
+        "completed",
+        "failed",
       ],
       offer_status: [
         "draft",
@@ -699,6 +1100,18 @@ export const Constants = {
         "deprecated",
       ],
       offer_visibility: ["global", "workspace_private", "admin_only"],
+      source_doc_status: ["pending", "fetched", "extracted", "failed"],
+      source_doc_type: [
+        "product_page",
+        "pricing_page",
+        "affiliate_terms",
+        "checkout_page",
+        "review_page",
+        "ad_example",
+        "landing_page",
+        "manual_note",
+        "unknown",
+      ],
       system_role: ["user", "admin"],
       workspace_role: ["owner", "member"],
     },
