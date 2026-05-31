@@ -19,7 +19,15 @@
 
 ## Migration order (לפי milestone)
 
-### M1 — Foundation (8 migrations)
+> **Numbering note (2026-05-31):** During M1 we inserted an extra migration
+> `0009_handle_new_user.sql` — a SECURITY DEFINER trigger on `auth.users` that
+> auto-creates the matching `profiles` row on signup (without it, the demo FK-errors
+> on the first signup). The original plan didn't include it, so **all migrations
+> from M2 onward shift +1 from the numbers in this document**. The actual on-disk
+> numbering in `supabase/migrations/` is the source of truth (M2 = 0010-0015, etc.).
+> The SQL bodies below are still the spec for each migration.
+
+### M1 — Foundation (8 + 1 migrations)
 
 #### 0001_init_roles.sql
 ```sql
