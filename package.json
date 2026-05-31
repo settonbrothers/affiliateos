@@ -15,7 +15,8 @@
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "prompts:sync": "node scripts/prompts-sync.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

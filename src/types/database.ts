@@ -529,6 +529,50 @@ export type Database = {
         }
         Relationships: []
       }
+      prompts: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_active: boolean
+          notes: string | null
+          orchestrator_name: string
+          prompt_type: Database["public"]["Enums"]["prompt_type"]
+          version: string
+          vertical_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          orchestrator_name: string
+          prompt_type?: Database["public"]["Enums"]["prompt_type"]
+          version: string
+          vertical_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          orchestrator_name?: string
+          prompt_type?: Database["public"]["Enums"]["prompt_type"]
+          version?: string
+          vertical_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompts_vertical_id_fkey"
+            columns: ["vertical_id"]
+            isOneToOne: false
+            referencedRelation: "verticals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       source_documents: {
         Row: {
           created_at: string
@@ -886,6 +930,7 @@ export type Database = {
         | "rejected"
         | "deprecated"
       offer_visibility: "global" | "workspace_private" | "admin_only"
+      prompt_type: "main" | "judge" | "extractor" | "compliance"
       source_doc_status: "pending" | "fetched" | "extracted" | "failed"
       source_doc_type:
         | "product_page"
@@ -1100,6 +1145,7 @@ export const Constants = {
         "deprecated",
       ],
       offer_visibility: ["global", "workspace_private", "admin_only"],
+      prompt_type: ["main", "judge", "extractor", "compliance"],
       source_doc_status: ["pending", "fetched", "extracted", "failed"],
       source_doc_type: [
         "product_page",
