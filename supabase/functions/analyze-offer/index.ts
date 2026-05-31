@@ -2,6 +2,7 @@ import { ForbiddenError, requireUser, UnauthorizedError } from '../_shared/auth.
 import { handleCors, jsonResponse } from '../_shared/cors.ts'
 import { assertNotPaused, OrchestratorPausedError } from '../_shared/killSwitch.ts'
 import { createTrace, recordGeneration } from '../_shared/langfuseClient.ts'
+import { judgeOutput } from '../_shared/llmJudge.ts'
 import { runUnderwriting } from '../_shared/orchestrators/underwriting.ts'
 import {
   recordRunError,
@@ -86,6 +87,23 @@ Deno.serve(async (req: Request) => {
             facts,
           })
 
+          // Judge runs only when real LLM produced the output — mock fixtures
+          // are presumed safe. Degrade-open: judge failures don't disrupt
+          // the user flow (see _shared/llmJudge.ts).
+          const judgement =
+            result.mode === 'real'
+              ? await judgeOutput({
+                  aiRunId: runId,
+                  orchestratorName: 'UnderwritingOrchestrator',
+                  userInput: JSON.stringify(
+                    { offer_id: offerId, verified_fact_count: facts.length },
+                    null,
+                    2
+                  ),
+                  agentOutput: result.output,
+                })
+              : null
+
           const traceId = await createTrace({
             name: `analyze-offer:${offerId}`,
             userId: user.id,
@@ -103,13 +121,16 @@ Deno.serve(async (req: Request) => {
             endTime: new Date(),
           })
 
+          const totalCostUsd =
+            (result.usage?.cost_usd ?? 0) + (judgement?.judge_cost_usd ?? 0)
+
           await recordRunSuccess(runId, {
             outputPayload: result.output,
             validatedOutput: result.output,
             envelope: result.output,
             tokensInput: result.usage?.input_tokens,
             tokensOutput: result.usage?.output_tokens,
-            estimatedCost: result.usage?.cost_usd ?? 0,
+            estimatedCost: totalCostUsd,
             langfuseTraceId: traceId,
           })
         } catch (err) {

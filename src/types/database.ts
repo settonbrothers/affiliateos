@@ -513,6 +513,44 @@ export type Database = {
           },
         ]
       }
+      judge_results: {
+        Row: {
+          ai_run_id: string
+          created_at: string
+          findings: Database["public"]["Enums"]["judge_finding"][]
+          id: string
+          judge_cost_usd: number | null
+          judge_model: string
+          reasoning: string | null
+        }
+        Insert: {
+          ai_run_id: string
+          created_at?: string
+          findings?: Database["public"]["Enums"]["judge_finding"][]
+          id?: string
+          judge_cost_usd?: number | null
+          judge_model?: string
+          reasoning?: string | null
+        }
+        Update: {
+          ai_run_id?: string
+          created_at?: string
+          findings?: Database["public"]["Enums"]["judge_finding"][]
+          id?: string
+          judge_cost_usd?: number | null
+          judge_model?: string
+          reasoning?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "judge_results_ai_run_id_fkey"
+            columns: ["ai_run_id"]
+            isOneToOne: false
+            referencedRelation: "ai_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offer_evaluation_snapshots: {
         Row: {
           ai_run_id: string
@@ -1060,6 +1098,15 @@ export type Database = {
         | "extracting"
         | "completed"
         | "failed"
+      judge_finding:
+        | "pass"
+        | "income_promise"
+        | "price_leak"
+        | "ai_disclosure"
+        | "invented_fact"
+        | "off_topic"
+        | "compliance_violation"
+        | "low_confidence"
       offer_status:
         | "draft"
         | "needs_source_ingestion"
@@ -1274,6 +1321,16 @@ export const Constants = {
         "extracting",
         "completed",
         "failed",
+      ],
+      judge_finding: [
+        "pass",
+        "income_promise",
+        "price_leak",
+        "ai_disclosure",
+        "invented_fact",
+        "off_topic",
+        "compliance_violation",
+        "low_confidence",
       ],
       offer_status: [
         "draft",
