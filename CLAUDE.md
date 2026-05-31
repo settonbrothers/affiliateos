@@ -2,45 +2,62 @@
 
 ## Project Context
 - **Project**: AffiliateOS Pro — affiliate underwriting SaaS
-- **Owner**: Izak (settonbrothers)
-- **Current Milestone**: M1 (Started 2026-05-25). DoD in [03_MILESTONES.md](file:///c:/Users/97252/.gemini/antigravity/scratch/affiliateos/docs/plan/03_MILESTONES.md)
+- **Owner**: Izak (settonbrothers) · GitHub: `settonbrothers/affiliateos`
+- **Current Milestone**: **M1 verified end-to-end (2026-05-31)** — full pipeline confirmed (signup → profile trigger → admin RLS → offers → analyze-offer edge fn → ai_runs). DoD in `docs/plan/03_MILESTONES.md`.
+- **Supabase project**: `affiliateos-prod` (ref `pfuwahtntsnlprjqlwcn`, region `eu-central-1`).
 
 ## Read First
-Please read the planning documents in order to understand the architecture, guidelines, and milestone goals:
-1. [00_README.md](file:///c:/Users/97252/.gemini/antigravity/scratch/affiliateos/docs/plan/00_README.md) → Background & overview of the repo plan.
-2. [01_PRINCIPLES.md](file:///c:/Users/97252/.gemini/antigravity/scratch/affiliateos/docs/plan/01_PRINCIPLES.md) → Architecture principles and what has been trimmed.
-3. [02_STACK.md](file:///c:/Users/97252/.gemini/antigravity/scratch/affiliateos/docs/plan/02_STACK.md) → Detailed technology stack & rules.
-4. [03_MILESTONES.md](file:///c:/Users/97252/.gemini/antigravity/scratch/affiliateos/docs/plan/03_MILESTONES.md) → Milestones (M1-M6) and Definition of Done.
-5. [04_SCHEMA_LEAN.md](file:///c:/Users/97252/.gemini/antigravity/scratch/affiliateos/docs/plan/04_SCHEMA_LEAN.md) → Database schema definitions and migrations.
-6. [05_AGENT_ROSTER.md](file:///c:/Users/97252/.gemini/antigravity/scratch/affiliateos/docs/plan/05_AGENT_ROSTER.md) → Agent orchestrators & schema envelopes.
-7. [06_PARALLEL_CLAUDE_PROTOCOL.md](file:///c:/Users/97252/.gemini/antigravity/scratch/affiliateos/docs/plan/06_PARALLEL_CLAUDE_PROTOCOL.md) → Protocol for parallel sessions of Claude Code (Crucial!).
-8. [07_EVAL_HARNESS.md](file:///c:/Users/97252/.gemini/antigravity/scratch/affiliateos/docs/plan/07_EVAL_HARNESS.md) → Evaluation harness & golden dataset.
-9. [08_OBSERVABILITY_OPS.md](file:///c:/Users/97252/.gemini/antigravity/scratch/affiliateos/docs/plan/08_OBSERVABILITY_OPS.md) → Observability, Langfuse, DLQ, & Sentry.
-10. [09_FIRST_WEEK_TASKS.md](file:///c:/Users/97252/.gemini/antigravity/scratch/affiliateos/docs/plan/09_FIRST_WEEK_TASKS.md) → Day-by-day task lists for Milestone 1.
+Read in order before writing code:
+1. `docs/plan/00_README.md` — overview of the doc set
+2. `docs/plan/01_PRINCIPLES.md` — locked architectural decisions
+3. `docs/plan/02_STACK.md` — tech stack + forbidden packages
+4. `docs/plan/03_MILESTONES.md` — milestones + DoD
+5. `docs/plan/04_SCHEMA_LEAN.md` — DB schema + migration order
+6. `docs/plan/05_AGENT_ROSTER.md` — 5 orchestrators + Universal Envelope
+7. `docs/plan/06_PARALLEL_CLAUDE_PROTOCOL.md` — branch/PR discipline
+8. `docs/plan/07_EVAL_HARNESS.md` — golden set + regression
+9. `docs/plan/08_OBSERVABILITY_OPS.md` — Langfuse/Sentry/DLQ
+10. `docs/plan/09_FIRST_WEEK_TASKS.md` — M1 day-by-day (now mostly done)
 
-## Build, Test and Run Commands
-- Run development server: `pnpm dev`
-- Build project: `pnpm build`
-- Typecheck: `pnpm tsc --noEmit`
+Past decisions: `decisions/001-admin-rls-helper.md`, `decisions/002-agent-contract-location.md`.
+
+## Commands
+- Dev server: `pnpm dev`
+- Build: `pnpm build`
+- Typecheck: `pnpm typecheck`
 - Lint: `pnpm lint`
-- Run Deno check (for edge functions): `deno check <file>`
-- Supabase migrations list: `supabase db list`
-- Supabase migrations push: `supabase db push`
+- Tests (Vitest): `pnpm test`
+- Format: `pnpm format`
+- Supabase CLI (no install — uses dlx): `pnpm dlx supabase@latest <cmd>`
+- Apply migrations: `pnpm dlx supabase@latest db push`
+- Regenerate DB types: `pnpm dlx supabase@latest gen types typescript --linked | Out-File src/types/database.ts -Encoding utf8`
+- Deploy edge fn: `pnpm dlx supabase@latest functions deploy <name>`
 
-## Hard Rules (Survival Checklist)
-- **Branch Strategy**: Every session works on its own dedicated feature branch (e.g. `feat/m1-auth-ui`). Never push directly to `main` or amend pushed commits.
-- **Code Style**: 
-  - Never use `any`. Use `unknown` + narrow.
-  - All form validation must be via React Hook Form + zodResolver.
-  - All API responses must be validated with Zod.
-  - All Supabase calls must go through `src/lib/supabase/{client,server}.ts` (no ad-hoc `createClient`).
-- **Database Rules**:
-  - All migrations are admin-coordinated (ask before adding).
-  - All new tables must receive RLS policies in the same migration file.
-  - Do not auto-regenerate `database.ts` inside a branch — let the maintainer run the regen on `main` merge.
-- **Forbidden Packages**: Never use Drizzle, Prisma, tRPC, Redux, Zustand, or LangChain.
-- **Supabase Deploy**: Never run `supabase functions deploy` from a local session — deployment is handled exclusively by CI.
-- **Linear History**: Rebase only. No merge commits.
+## Current State (snapshot)
+- Migrations 0001-0009 applied; 0009 is the `handle_new_user` trigger that auto-creates a `profiles` row on signup (the plan's migrations omitted it — required for the demo).
+- `@supabase/ssr` is pinned at **0.10.3** (bumped from the plan's 0.5.2 — the older version typed inserts as `never[]` against the new generated-type format).
+- `src/middleware.ts` early-returns when Supabase env is absent (pre-setup dev safety).
+- `src/types/database.ts` is generated; `src/types/db.ts` derives domain types from it (narrows `evaluation`/`output_payload` jsonb to `UnderwritingResponse`).
+- Edge function `analyze-offer` is deployed (one-time manual; no CI deploy job yet).
+- Branch protection on `main` is currently OFF.
 
-## When in Doubt
-Stop and ask Izak (settonbrothers). Do not guess.
+## Hard Rules
+- **Branching**: feature branches (`feat/m1-...`); never push directly to `main` once branch protection is enabled. Rebase only — no merge commits.
+- **TypeScript**: never `any`; use `unknown` + narrow. Project is strict + `noUncheckedIndexedAccess`.
+- **Forms**: React Hook Form + zodResolver. **API/agent boundaries**: validate with Zod.
+- **Supabase access**: only through `src/lib/supabase/{client,server,admin}.ts` — no ad-hoc `createClient`.
+- **DB rules**:
+  - All migrations admin-coordinated (ask before adding).
+  - New tables ship RLS in the same migration.
+  - Don't regenerate `database.ts` from a feature branch — regen on `main` after merge.
+- **Forbidden packages**: Drizzle, Prisma, tRPC, Redux, Zustand, LangChain.
+- **Secrets**: `.env.local` is gitignored — never commit it; never paste secrets into code or chat. `SUPABASE_SERVICE_ROLE_KEY` is server-only (`admin.ts` uses `import 'server-only'`).
+- **Edge fn deploys**: should move to CI before regular use; until then, a manual `supabase functions deploy` is acceptable (note in PR).
+
+## Windows / dev gotchas
+- After switching branches, clean the stale Next build cache: `Remove-Item -Recurse -Force .next` — Next leaks route validator types across branches and `tsc` complains.
+- PowerShell `>` redirect writes UTF-16 (breaks TS files). Use `| Out-File -Encoding utf8`.
+- Supabase CLI: use `pnpm dlx supabase@latest <cmd>` — `winget` does not carry a `Supabase.CLI` package; the npm/dlx route is documented and avoids a global install.
+
+## When in doubt
+Stop and ask Izak. Do not guess.

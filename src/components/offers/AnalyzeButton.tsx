@@ -1,12 +1,14 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { triggerAnalyze } from '@/lib/actions/offers'
 import { createClient } from '@/lib/supabase/client'
 import type { AiRunStatus } from '@/types/db'
+
+const TERMINAL: AiRunStatus[] = ['success', 'failed', 'partial']
 
 export function AnalyzeButton({
   offerId,
@@ -19,27 +21,42 @@ export function AnalyzeButton({
   const [status, setStatus] = useState<AiRunStatus | 'idle'>(
     initialStatus ?? 'idle'
   )
+  const [runId, setRunId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const isRunning = status === 'pending' || status === 'running'
 
-  // M1: poll ai_runs every 2s. Replaced by Supabase Realtime in M1 Task 6.2.
-  function pollRun(runId: string) {
+  // Subscribe to UPDATEs on the active ai_run via Supabase Realtime.
+  // ai_runs is in the supabase_realtime publication (migration 0006); RLS
+  // (users read own ai_runs) lets the owning user receive the event.
+  useEffect(() => {
+    if (!runId || !isRunning) return
+
     const supabase = createClient()
-    const interval = setInterval(async () => {
-      const { data } = await supabase
-        .from('ai_runs')
-        .select('status')
-        .eq('id', runId)
-        .maybeSingle()
-      const next = (data as { status: AiRunStatus } | null)?.status
-      if (next === 'success' || next === 'failed' || next === 'partial') {
-        clearInterval(interval)
-        setStatus(next)
-        router.refresh()
-      }
-    }, 2000)
-  }
+    const channel = supabase
+      .channel(`ai_run:${runId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'ai_runs',
+          filter: `id=eq.${runId}`,
+        },
+        (payload) => {
+          const next = (payload.new as { status: AiRunStatus }).status
+          if (TERMINAL.includes(next)) {
+            setStatus(next)
+            router.refresh()
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [runId, isRunning, router])
 
   async function onAnalyze() {
     setError(null)
@@ -50,7 +67,7 @@ export function AnalyzeButton({
       setStatus('idle')
       return
     }
-    pollRun(result.run_id)
+    setRunId(result.run_id)
   }
 
   return (
