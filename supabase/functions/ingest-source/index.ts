@@ -2,6 +2,7 @@ import { ForbiddenError, requireAdmin, UnauthorizedError } from '../_shared/auth
 import { handleCors, jsonResponse } from '../_shared/cors.ts'
 import { assertNotPaused, OrchestratorPausedError } from '../_shared/killSwitch.ts'
 import { runSourceExtraction } from '../_shared/orchestrators/sourceExtraction.ts'
+import { recordRunError, recordRunStart, recordRunSuccess } from '../_shared/recordAiRun.ts'
 import { getAdminClient } from '../_shared/supabaseAdmin.ts'
 import { truncate } from '../_shared/truncate.ts'
 
@@ -33,12 +34,11 @@ Deno.serve(async (req: Request) => {
 
     const { data: offer, error: offerErr } = await admin
       .from('offers')
-      .select('id')
+      .select('id, workspace_id')
       .eq('id', offerId)
       .maybeSingle()
     if (offerErr || !offer) return jsonResponse({ error: 'Offer not found' }, 404)
 
-    // Synchronous kill-switch check — fail fast before queuing a job.
     try {
       await assertNotPaused('SourceExtractionOrchestrator')
     } catch (err) {
@@ -59,7 +59,15 @@ Deno.serve(async (req: Request) => {
     if (jobErr || !jobRow) return jsonResponse({ error: 'Failed to queue job' }, 500)
     const jobId = jobRow.id
 
-    EdgeRuntime.waitUntil(processIngestion({ jobId, offerId, url }))
+    EdgeRuntime.waitUntil(
+      processIngestion({
+        jobId,
+        offerId,
+        url,
+        userId: user.id,
+        workspaceId: offer.workspace_id ?? undefined,
+      })
+    )
 
     return jsonResponse({ job_id: jobId }, 200)
   } catch (err) {
@@ -73,8 +81,14 @@ async function processIngestion(args: {
   jobId: string
   offerId: string
   url: string
+  userId: string
+  workspaceId?: string
 }): Promise<void> {
   const admin = getAdminClient()
+  const willCallReal = !!Deno.env.get('ANTHROPIC_API_KEY')
+  const model = willCallReal ? 'claude-haiku-4-5-20251001' : 'mock'
+  const agentVersion = willCallReal ? 'real-v1' : 'mock-v1'
+
   try {
     await admin
       .from('source_fetch_jobs')
@@ -104,6 +118,23 @@ async function processIngestion(args: {
       .update({ status: 'extracting', source_document_id: sdId })
       .eq('id', args.jobId)
 
+    // Record an ai_runs row for the extraction call so cost + tokens are
+    // tracked the same way as analyze-offer's underwriting call.
+    const runId = await recordRunStart({
+      orchestratorName: 'SourceExtractionOrchestrator',
+      agentVersion,
+      model,
+      inputPayload: {
+        offer_id: args.offerId,
+        source_document_id: sdId,
+        url: args.url,
+        raw_text_len: rawText.length,
+      },
+      userId: args.userId,
+      workspaceId: args.workspaceId,
+      offerId: args.offerId,
+    })
+
     type ExtractionPayload = {
       doc_type: string
       source_summary: string
@@ -116,18 +147,26 @@ async function processIngestion(args: {
         confidence_score: number
       }>
     }
-    const extraction = (await runSourceExtraction({
-      offerId: args.offerId,
-      url: args.url,
-      rawText,
-    })) as { payload: ExtractionPayload }
-    const p = extraction.payload
+
+    let result
+    try {
+      result = await runSourceExtraction({
+        offerId: args.offerId,
+        url: args.url,
+        rawText,
+      })
+    } catch (err) {
+      await recordRunError(runId, err instanceof Error ? err.message : String(err))
+      throw err
+    }
+
+    const p = (result.output as { payload: ExtractionPayload }).payload
 
     await admin
       .from('source_documents')
       .update({
         status: 'extracted',
-        doc_type: p.doc_type as never, // mock returns string; runtime narrows to enum
+        doc_type: p.doc_type as never,
         source_summary: p.source_summary,
         language: p.language,
         source_reliability_score: p.source_reliability_score,
@@ -147,6 +186,15 @@ async function processIngestion(args: {
         }))
       )
     }
+
+    await recordRunSuccess(runId, {
+      outputPayload: result.output,
+      validatedOutput: result.output,
+      envelope: result.output,
+      tokensInput: result.usage?.input_tokens,
+      tokensOutput: result.usage?.output_tokens,
+      estimatedCost: result.usage?.cost_usd ?? 0,
+    })
 
     await admin
       .from('source_fetch_jobs')
