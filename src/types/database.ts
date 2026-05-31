@@ -272,6 +272,69 @@ export type Database = {
           },
         ]
       }
+      eval_runs: {
+        Row: {
+          accuracy_pct: number
+          completed_at: string | null
+          details: Json | null
+          id: string
+          matched_risk_flags_count: number
+          matched_score_range_count: number
+          matched_verdict_count: number
+          prompt_id: string
+          started_at: string
+          total_cost_usd: number | null
+          total_offers: number
+          trigger_type: Database["public"]["Enums"]["eval_run_trigger"]
+          triggered_by: string | null
+        }
+        Insert: {
+          accuracy_pct: number
+          completed_at?: string | null
+          details?: Json | null
+          id?: string
+          matched_risk_flags_count: number
+          matched_score_range_count: number
+          matched_verdict_count: number
+          prompt_id: string
+          started_at?: string
+          total_cost_usd?: number | null
+          total_offers: number
+          trigger_type: Database["public"]["Enums"]["eval_run_trigger"]
+          triggered_by?: string | null
+        }
+        Update: {
+          accuracy_pct?: number
+          completed_at?: string | null
+          details?: Json | null
+          id?: string
+          matched_risk_flags_count?: number
+          matched_score_range_count?: number
+          matched_verdict_count?: number
+          prompt_id?: string
+          started_at?: string
+          total_cost_usd?: number | null
+          total_offers?: number
+          trigger_type?: Database["public"]["Enums"]["eval_run_trigger"]
+          triggered_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eval_runs_prompt_id_fkey"
+            columns: ["prompt_id"]
+            isOneToOne: false
+            referencedRelation: "prompts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eval_runs_triggered_by_fkey"
+            columns: ["triggered_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       extracted_facts: {
         Row: {
           confidence_score: number | null
@@ -374,6 +437,81 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      golden_set_offers: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expected_dimension_ranges: Json | null
+          expected_high_ceiling_signal: string | null
+          expected_risk_flags: string[] | null
+          expected_score_range: unknown
+          expected_verdict: string
+          external_id: string | null
+          facts_snapshot: Json
+          id: string
+          must_mention: string[] | null
+          must_not_mention: string[] | null
+          notes: string | null
+          offer_name: string
+          offer_url: string | null
+          updated_at: string
+          vertical_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expected_dimension_ranges?: Json | null
+          expected_high_ceiling_signal?: string | null
+          expected_risk_flags?: string[] | null
+          expected_score_range?: unknown
+          expected_verdict: string
+          external_id?: string | null
+          facts_snapshot?: Json
+          id?: string
+          must_mention?: string[] | null
+          must_not_mention?: string[] | null
+          notes?: string | null
+          offer_name: string
+          offer_url?: string | null
+          updated_at?: string
+          vertical_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expected_dimension_ranges?: Json | null
+          expected_high_ceiling_signal?: string | null
+          expected_risk_flags?: string[] | null
+          expected_score_range?: unknown
+          expected_verdict?: string
+          external_id?: string | null
+          facts_snapshot?: Json
+          id?: string
+          must_mention?: string[] | null
+          must_not_mention?: string[] | null
+          notes?: string | null
+          offer_name?: string
+          offer_url?: string | null
+          updated_at?: string
+          vertical_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "golden_set_offers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "golden_set_offers_vertical_id_fkey"
+            columns: ["vertical_id"]
+            isOneToOne: false
+            referencedRelation: "verticals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       offer_evaluation_snapshots: {
         Row: {
@@ -885,6 +1023,7 @@ export type Database = {
         | "subscription.create"
         | "subscription.cancel"
       error_severity: "debug" | "info" | "warning" | "error" | "critical"
+      eval_run_trigger: "manual" | "cron" | "pre_publish"
       fact_status: "proposed" | "verified" | "rejected"
       fact_type:
         | "commission_value"
@@ -1096,6 +1235,7 @@ export const Constants = {
         "subscription.cancel",
       ],
       error_severity: ["debug", "info", "warning", "error", "critical"],
+      eval_run_trigger: ["manual", "cron", "pre_publish"],
       fact_status: ["proposed", "verified", "rejected"],
       fact_type: [
         "commission_value",
