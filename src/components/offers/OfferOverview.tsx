@@ -1,6 +1,15 @@
+import Link from 'next/link'
+
+import { DeleteOfferButton } from '@/components/offers/DeleteOfferButton'
+import { Button } from '@/components/ui/button'
 import type { Offer } from '@/types/db'
 
-export function OfferOverview({ offer }: { offer: Offer }) {
+type Props = {
+  offer: Offer
+  operatorNotes: string | null
+}
+
+export function OfferOverview({ offer, operatorNotes }: Props) {
   const rows: Array<[string, string | null]> = [
     ['Status', offer.status],
     ['Website', offer.website_url],
@@ -9,15 +18,38 @@ export function OfferOverview({ offer }: { offer: Offer }) {
   ]
 
   return (
-    <dl className="flex flex-col gap-3">
-      {rows.map(([label, value]) => (
-        <div key={label} className="flex gap-4">
+    <div className="flex flex-col gap-6">
+      <dl className="flex flex-col gap-3">
+        {rows.map(([label, value]) => (
+          <div key={label} className="flex gap-4">
+            <dt className="w-40 text-sm text-[var(--color-muted-foreground)]">
+              {label}
+            </dt>
+            <dd className="text-sm break-words">{value ?? '—'}</dd>
+          </div>
+        ))}
+        <div className="flex gap-4">
           <dt className="w-40 text-sm text-[var(--color-muted-foreground)]">
-            {label}
+            Operator notes
           </dt>
-          <dd className="text-sm">{value ?? '—'}</dd>
+          <dd className="text-sm whitespace-pre-wrap">
+            {operatorNotes ?? (
+              <span className="text-[var(--color-muted-foreground)]">—</span>
+            )}
+          </dd>
         </div>
-      ))}
-    </dl>
+      </dl>
+
+      <div className="flex items-center gap-3 border-t border-[var(--color-border)] pt-4">
+        <Button asChild size="sm" variant="outline">
+          <Link href={`/offers/${offer.id}/edit`}>Edit</Link>
+        </Button>
+        <Button asChild size="sm" variant="ghost">
+          <Link href={`/admin/offers/${offer.id}/sources`}>Manage sources</Link>
+        </Button>
+        <div className="flex-1" />
+        <DeleteOfferButton offerId={offer.id} offerName={offer.name} />
+      </div>
+    </div>
   )
 }

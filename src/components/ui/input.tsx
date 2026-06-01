@@ -14,6 +14,10 @@ const Input = React.forwardRef<
         'flex h-10 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm placeholder:text-[var(--color-muted-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] disabled:cursor-not-allowed disabled:opacity-50',
         className
       )}
+      // Form-fill browser extensions (Edge Shopping, password managers, etc.)
+      // inject attributes like `fdprocessedid` between SSR and hydration. This
+      // is the React-supported escape hatch for that exact case.
+      suppressHydrationWarning
       {...props}
     />
   )

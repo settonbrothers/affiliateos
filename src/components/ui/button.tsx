@@ -41,6 +41,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
+        // Same reason as Input: form-fill extensions inject `fdprocessedid`.
+        suppressHydrationWarning
         {...props}
       />
     )

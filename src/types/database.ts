@@ -603,6 +603,7 @@ export type Database = {
           logo_url: string | null
           name: string
           network: string | null
+          operator_notes: string | null
           primary_language: string | null
           short_description: string | null
           slug: string
@@ -623,6 +624,7 @@ export type Database = {
           logo_url?: string | null
           name: string
           network?: string | null
+          operator_notes?: string | null
           primary_language?: string | null
           short_description?: string | null
           slug: string
@@ -643,6 +645,7 @@ export type Database = {
           logo_url?: string | null
           name?: string
           network?: string | null
+          operator_notes?: string | null
           primary_language?: string | null
           short_description?: string | null
           slug?: string

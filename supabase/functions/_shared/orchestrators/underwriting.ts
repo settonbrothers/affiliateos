@@ -18,6 +18,7 @@ type UnderwritingInput = {
   offerName?: string
   verticalSlug?: string
   facts?: UnderwritingFactInput[]
+  operatorNotes?: string | null
 }
 
 export type OrchestratorResult = {
@@ -45,6 +46,11 @@ export async function runUnderwriting(
     input.verticalSlug
   )
 
+  const operatorNotes =
+    input.operatorNotes && input.operatorNotes.trim().length > 0
+      ? input.operatorNotes.trim()
+      : null
+
   const userMessage = JSON.stringify(
     {
       offer_id: input.offerId,
@@ -56,6 +62,7 @@ export async function runUnderwriting(
         source_quote: f.source_quote,
         confidence: f.confidence_score,
       })),
+      operator_notes: operatorNotes,
     },
     null,
     2

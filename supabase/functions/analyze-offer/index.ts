@@ -29,7 +29,7 @@ Deno.serve(async (req: Request) => {
     const admin = getAdminClient()
     const { data: offer, error: offerErr } = await admin
       .from('offers')
-      .select('id, workspace_id, vertical_id, name, verticals(slug)')
+      .select('id, workspace_id, vertical_id, name, operator_notes, verticals(slug)')
       .eq('id', offerId)
       .single()
     if (offerErr || !offer) return jsonResponse({ error: 'Offer not found' }, 404)
@@ -85,6 +85,7 @@ Deno.serve(async (req: Request) => {
             offerName: offer.name,
             verticalSlug,
             facts,
+            operatorNotes: offer.operator_notes,
           })
 
           // Judge runs only when real LLM produced the output — mock fixtures

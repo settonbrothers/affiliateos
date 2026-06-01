@@ -7,11 +7,30 @@ import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { createOffer } from '@/lib/actions/offers'
-import { OfferCreateSchema, type OfferCreateInput } from '@/lib/validations/offer'
+import { Textarea } from '@/components/ui/textarea'
+import { createOffer, updateOffer } from '@/lib/actions/offers'
+import {
+  OfferCreateSchema,
+  type OfferCreateInput,
+} from '@/lib/validations/offer'
 import type { Vertical } from '@/types/db'
 
-export function CreateOfferForm({ verticals }: { verticals: Vertical[] }) {
+type Mode = { kind: 'create' } | { kind: 'edit'; offerId: string }
+
+type Props = {
+  verticals: Vertical[]
+  mode: Mode
+  initial?: Partial<OfferCreateInput>
+}
+
+const NOTES_PLACEHOLDER = `Anything you know that an extractor wouldn't pick up from a URL:
+- internal CPA / payout you've confirmed privately
+- target audience (geo, age, language, intent)
+- traffic-rule details you got in DMs or affiliate manager calls
+- vendor history (payment reliability, chargebacks, churn)
+- compliance context (non-profit, regulated, etc.)`
+
+export function OfferForm({ verticals, mode, initial }: Props) {
   const [isPending, startTransition] = useTransition()
   const [serverError, setServerError] = useState<string | null>(null)
 
@@ -22,20 +41,27 @@ export function CreateOfferForm({ verticals }: { verticals: Vertical[] }) {
   } = useForm<OfferCreateInput>({
     resolver: zodResolver(OfferCreateSchema),
     defaultValues: {
-      name: '',
-      vertical_id: '',
-      website_url: '',
-      affiliate_program_url: '',
+      name: initial?.name ?? '',
+      vertical_id: initial?.vertical_id ?? '',
+      website_url: initial?.website_url ?? '',
+      affiliate_program_url: initial?.affiliate_program_url ?? '',
+      operator_notes: initial?.operator_notes ?? '',
     },
   })
 
   function onSubmit(values: OfferCreateInput) {
     setServerError(null)
     startTransition(async () => {
-      const result = await createOffer(values)
+      const result =
+        mode.kind === 'create'
+          ? await createOffer(values)
+          : await updateOffer(mode.offerId, values)
       if (result && 'error' in result) setServerError(result.error)
     })
   }
+
+  const submitLabel = mode.kind === 'create' ? 'Create offer' : 'Save changes'
+  const pendingLabel = mode.kind === 'create' ? 'Creating…' : 'Saving…'
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
@@ -88,10 +114,27 @@ export function CreateOfferForm({ verticals }: { verticals: Vertical[] }) {
         )}
       </div>
 
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="operator_notes">Operator notes</Label>
+        <p className="text-xs text-[var(--color-muted-foreground)]">
+          What you know as a media buyer that isn&apos;t on any web page. The
+          analyzer treats this as verified facts.
+        </p>
+        <Textarea
+          id="operator_notes"
+          rows={8}
+          placeholder={NOTES_PLACEHOLDER}
+          {...register('operator_notes')}
+        />
+        {errors.operator_notes && (
+          <p className="text-sm text-red-600">{errors.operator_notes.message}</p>
+        )}
+      </div>
+
       {serverError && <p className="text-sm text-red-600">{serverError}</p>}
 
       <Button type="submit" disabled={isPending}>
-        {isPending ? 'Creating…' : 'Create offer'}
+        {isPending ? pendingLabel : submitLabel}
       </Button>
     </form>
   )

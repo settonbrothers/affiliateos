@@ -13,6 +13,15 @@ export const OfferCreateSchema = z.object({
     .url('Enter a valid URL.')
     .optional()
     .or(z.literal('')),
+  operator_notes: z
+    .string()
+    .max(8000, 'Notes are too long — keep under 8000 characters.')
+    .optional()
+    .or(z.literal('')),
 })
 
 export type OfferCreateInput = z.infer<typeof OfferCreateSchema>
+
+// Edit takes the same shape — the server action wires it to UPDATE rather than INSERT.
+export const OfferUpdateSchema = OfferCreateSchema
+export type OfferUpdateInput = z.infer<typeof OfferUpdateSchema>

@@ -1,4 +1,4 @@
-import { CreateOfferForm } from '@/components/offers/CreateOfferForm'
+import { OfferForm } from '@/components/offers/OfferForm'
 import {
   Card,
   CardContent,
@@ -11,13 +11,13 @@ export default async function NewOfferPage() {
   const verticals = await listVerticals()
 
   return (
-    <div className="mx-auto max-w-lg">
+    <div className="mx-auto max-w-2xl">
       <Card>
         <CardHeader>
           <CardTitle>Add offer</CardTitle>
         </CardHeader>
         <CardContent>
-          <CreateOfferForm verticals={verticals} />
+          <OfferForm verticals={verticals} mode={{ kind: 'create' }} />
         </CardContent>
       </Card>
     </div>
