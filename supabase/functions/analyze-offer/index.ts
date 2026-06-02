@@ -1,5 +1,6 @@
 import { ForbiddenError, requireUser, UnauthorizedError } from '../_shared/auth.ts'
 import { handleCors, jsonResponse } from '../_shared/cors.ts'
+import { assertUnderDailyCap, DailyCapExceededError } from '../_shared/costCap.ts'
 import { assertNotPaused, OrchestratorPausedError } from '../_shared/killSwitch.ts'
 import { createTrace, recordGeneration } from '../_shared/langfuseClient.ts'
 import { judgeOutput } from '../_shared/llmJudge.ts'
@@ -40,6 +41,16 @@ Deno.serve(async (req: Request) => {
     } catch (err) {
       if (err instanceof OrchestratorPausedError) return jsonResponse({ error: err.message }, 503)
       throw err
+    }
+
+    // Daily USD budget guard — fail fast before opening an ai_runs row.
+    if (offer.workspace_id) {
+      try {
+        await assertUnderDailyCap(offer.workspace_id)
+      } catch (err) {
+        if (err instanceof DailyCapExceededError) return jsonResponse({ error: err.message }, 429)
+        throw err
+      }
     }
 
     const { data: factsRows } = await admin
