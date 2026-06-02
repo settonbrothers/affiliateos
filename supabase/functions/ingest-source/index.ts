@@ -1,5 +1,6 @@
 import { ForbiddenError, requireAdmin, UnauthorizedError } from '../_shared/auth.ts'
 import { handleCors, jsonResponse } from '../_shared/cors.ts'
+import { assertUnderDailyCap, DailyCapExceededError } from '../_shared/costCap.ts'
 import { assertNotPaused, OrchestratorPausedError } from '../_shared/killSwitch.ts'
 import { runSourceExtraction } from '../_shared/orchestrators/sourceExtraction.ts'
 import { recordRunError, recordRunStart, recordRunSuccess } from '../_shared/recordAiRun.ts'
@@ -44,6 +45,16 @@ Deno.serve(async (req: Request) => {
     } catch (err) {
       if (err instanceof OrchestratorPausedError) return jsonResponse({ error: err.message }, 503)
       throw err
+    }
+
+    // Daily USD budget guard — fail fast before queuing the ingestion job.
+    if (offer.workspace_id) {
+      try {
+        await assertUnderDailyCap(offer.workspace_id)
+      } catch (err) {
+        if (err instanceof DailyCapExceededError) return jsonResponse({ error: err.message }, 429)
+        throw err
+      }
     }
 
     const { data: jobRow, error: jobErr } = await admin
