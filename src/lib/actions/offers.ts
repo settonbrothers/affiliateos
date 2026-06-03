@@ -31,6 +31,17 @@ export async function createOffer(
   } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated.' }
 
+  // Scope the offer to the creator's workspace (1 user : 1 workspace in MVP).
+  // Without this, workspace_id stays NULL and the daily-USD-cap guard — which
+  // is keyed on workspace_id — never fires. Provisioned by the signup trigger
+  // (migration 0021); falls back to NULL defensively if membership is missing.
+  const { data: membership } = await supabase
+    .from('workspace_members')
+    .select('workspace_id')
+    .eq('user_id', user.id)
+    .limit(1)
+    .maybeSingle()
+
   const { data, error } = await supabase
     .from('offers')
     .insert({
@@ -41,6 +52,7 @@ export async function createOffer(
       affiliate_program_url: parsed.data.affiliate_program_url || null,
       operator_notes: parsed.data.operator_notes || null,
       created_by_user_id: user.id,
+      workspace_id: membership?.workspace_id ?? null,
       status: 'draft',
       visibility: 'admin_only',
     })
