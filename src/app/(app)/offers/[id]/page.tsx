@@ -5,6 +5,7 @@ import { AnalyzeButton } from '@/components/offers/AnalyzeButton'
 import { OfferOverview } from '@/components/offers/OfferOverview'
 import { OfferScorecard } from '@/components/offers/OfferScorecard'
 import { OfferVerdict } from '@/components/offers/OfferVerdict'
+import { isCurrentUserAdmin } from '@/lib/auth/role'
 import { getLatestRun, getOfferById } from '@/lib/queries/offers'
 import { cn } from '@/lib/utils'
 
@@ -31,6 +32,7 @@ export default async function OfferDetailPage({
   const evaluation = run?.output_payload ?? offer.evaluation
   const activeTab =
     tab === 'scorecard' || tab === 'verdict' ? tab : 'overview'
+  const isAdmin = await isCurrentUserAdmin()
 
   return (
     <div className="flex flex-col gap-6">
@@ -43,7 +45,17 @@ export default async function OfferDetailPage({
             </p>
           )}
         </div>
-        <AnalyzeButton offerId={offer.id} initialStatus={run?.status ?? null} />
+        <div className="flex items-center gap-3">
+          {isAdmin && (
+            <Link
+              href={`/admin/offers/${offer.id}/sources`}
+              className="text-sm text-[var(--color-muted-foreground)] underline"
+            >
+              Manage sources
+            </Link>
+          )}
+          <AnalyzeButton offerId={offer.id} initialStatus={run?.status ?? null} />
+        </div>
       </div>
 
       <nav className="flex gap-2 border-b border-[var(--color-border)]">
