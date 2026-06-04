@@ -3,7 +3,7 @@
 ## Project Context
 - **Project**: AffiliateOS Pro — affiliate underwriting SaaS
 - **Owner**: Izak (settonbrothers) · GitHub: `settonbrothers/affiliateos`
-- **Current Milestone**: **M2 functionally complete; M3 largely done (2026-06-04)**. M1 verified 2026-05-31. M2 demo loop works end-to-end (offer → ingest sources → real Haiku extraction → facts → analyze → scorecard) with kill-switch, daily-USD cost-cap, and DLQ replay. M3 has real Sonnet underwriting + LLM-judge + eval harness wired; remaining M3 work is owner-gated (label 20 golden offers, run real evals/judge — needs `ANTHROPIC_API_KEY` locally or a cron on the Supabase secret). DoD in `docs/plan/03_MILESTONES.md`.
+- **Current Milestone**: **M4 functionally complete (2026-06-04)**. M1 verified 2026-05-31. Full operator journey works end-to-end: offer → ingest sources → real Haiku extraction → analyze (real Sonnet) → scorecard/verdict → Generate Test Kit → create campaign → paste results → Diagnosis → Compliance check (caps verdict for risky health/mental offers). All **5 orchestrators are real**. Guardrails throughout (kill-switch, daily-USD cost-cap, DLQ-on-failure, LLM-judge). Remaining work is owner-gated: label golden sets + run real evals/judge (needs `ANTHROPIC_API_KEY` locally or a cron on the Supabase secret); test-kit/diagnosis quality evals. DoD in `docs/plan/03_MILESTONES.md`.
 - **Supabase project**: `affiliateos-prod` (ref `pfuwahtntsnlprjqlwcn`, region `eu-central-1`).
 
 ## Read First
@@ -34,13 +34,13 @@ Past decisions: `decisions/001-admin-rls-helper.md`, `decisions/002-agent-contra
 - Deploy edge fn: `pnpm dlx supabase@latest functions deploy <name>`
 
 ## Current State (snapshot, 2026-06-04)
-- **Migrations 0001-0021 applied** (local == remote). 0009 = `handle_new_user`; **0021** extended it to also provision a workspace + owner membership + `workspace_credit_caps` row on signup (1 user : 1 workspace) and backfilled existing users/offers/ai_runs. Before 0021, `workspace_id` was always NULL, which silently disabled the daily-USD cost-cap.
-- **Edge functions deployed (manual)**: `analyze-offer` (kill-switch + daily-USD cap + LLM-judge + DLQ on failure) and `ingest-source` (fetch → Haiku extraction → facts). Both ACTIVE; redeploy with `pnpm dlx supabase@latest functions deploy <name>` after editing — there's still no CI deploy.
-- **Real AI is live**: analyze runs real Sonnet underwriting; ingest runs real Haiku extraction (keys are Supabase secrets). `ANTHROPIC_API_KEY` is **empty in local `.env.local`** → local CLI scripts (`eval:run`) get 401 until set.
-- **Admin surfaces**: `/admin/{ai-runs,prompts,eval,eval/golden,kill-switches,failed}`. Offer page → "Manage sources" (admin) → `/admin/offers/[id]/sources`.
-- **Eval harness**: `scripts/eval-run.mts` (was `.ts` — renamed to fix a top-level-await/CJS crash) + golden-set UI; needs golden offers labeled + a real key to produce accuracy.
-- **Manual integration tests** live in `scripts/test-*-e2e.mjs` (cost-cap 429, ingest, kill-switch 503, DLQ RLS) — they create + clean up throwaway users; run with `node scripts/<name>.mjs`.
-- `@supabase/ssr` pinned at **0.10.3**; `src/middleware.ts` early-returns when Supabase env is absent; `src/types/db.ts` derives domain types from generated `database.ts`.
+- **Migrations 0001-0024 applied** (local == remote). 0009 = `handle_new_user`; **0021** extended it to also provision a workspace + owner membership + `workspace_credit_caps` on signup (1 user : 1 workspace) and backfilled existing rows — before 0021 `workspace_id` was always NULL, silently disabling the daily-USD cost-cap. **0022** test_kits, **0023** campaigns/campaign_results/result_diagnoses, **0024** compliance_rules (seeded) + offer_compliance_warnings.
+- **5 edge functions deployed (manual)**, all with auth + kill-switch + daily-USD cap + DLQ-on-failure: `analyze-offer` (Sonnet underwriting + judge), `ingest-source` (Haiku extraction), `generate-test-kit` (Sonnet, needs a prior verdict), `diagnose-results` (Sonnet, needs saved results), `check-compliance` (Haiku, sets a verdict cap). Redeploy with `pnpm dlx supabase@latest functions deploy <name>` — still no CI deploy.
+- **Real AI is live** (keys are Supabase secrets). `ANTHROPIC_API_KEY` is **empty in local `.env.local`** → local CLI scripts (`eval:run`) get 401 until set.
+- **Orchestrators** (`supabase/functions/_shared/orchestrators/`): underwriting, sourceExtraction, testKit, diagnosis, complianceCheck — each real-or-mock, dual Zod contracts (Node `src/types/agents/*` + Deno `_shared/types/*`, KEEP IN SYNC), prompt in `prompts/<name>/` synced via `pnpm prompts:sync`.
+- **App surfaces**: Offers + Campaigns (sidebar). Offer page tabs: Overview/Scorecard/Verdict/Test Kit/Compliance, plus admin "Manage sources". Admin: `/admin/{ai-runs,prompts,eval,eval/golden,kill-switches,failed,compliance}`.
+- **Manual integration tests**: `scripts/test-*-e2e.mjs` (cap 429, ingest, kill-switch 503, DLQ RLS, testkit, diagnosis, compliance) — create + clean up throwaway users; `node scripts/<name>.mjs` (real-AI ones cost a little). Note: TestKit/Diagnosis Sonnet runs take ~40-90s.
+- `@supabase/ssr` pinned at **0.10.3**; `src/middleware.ts` early-returns when Supabase env is absent; `src/types/db.ts` derives domain types from generated `database.ts` (regen on `main` after a migration: `pnpm dlx supabase@latest gen types typescript --linked | Out-File src/types/database.ts -Encoding utf8`).
 - Branch protection on `main` is currently OFF (this session merged feature branches via `--ff-only` + push).
 
 ## Hard Rules
