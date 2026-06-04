@@ -1,0 +1,187 @@
+import { ForbiddenError, requireUser, UnauthorizedError } from '../_shared/auth.ts'
+import { handleCors, jsonResponse } from '../_shared/cors.ts'
+import { assertUnderDailyCap, DailyCapExceededError } from '../_shared/costCap.ts'
+import { sendToDlq } from '../_shared/dlq.ts'
+import { assertNotPaused, OrchestratorPausedError } from '../_shared/killSwitch.ts'
+import { createTrace, recordGeneration } from '../_shared/langfuseClient.ts'
+import { judgeOutput } from '../_shared/llmJudge.ts'
+import { runTestKit } from '../_shared/orchestrators/testKit.ts'
+import {
+  recordRunError,
+  recordRunStart,
+  recordRunSuccess,
+} from '../_shared/recordAiRun.ts'
+import { getAdminClient } from '../_shared/supabaseAdmin.ts'
+
+declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void }
+
+Deno.serve(async (req: Request) => {
+  const preflight = handleCors(req)
+  if (preflight) return preflight
+
+  try {
+    const user = await requireUser(req)
+
+    const body = (await req.json().catch(() => ({}))) as { offer_id?: string }
+    const offerId = body.offer_id
+    if (!offerId) return jsonResponse({ error: 'offer_id is required' }, 400)
+
+    const admin = getAdminClient()
+    const { data: offer, error: offerErr } = await admin
+      .from('offers')
+      .select('id, workspace_id, vertical_id, name, operator_notes, verticals(slug)')
+      .eq('id', offerId)
+      .single()
+    if (offerErr || !offer) return jsonResponse({ error: 'Offer not found' }, 404)
+
+    // Kill switch — fail fast before opening an ai_runs row.
+    try {
+      await assertNotPaused('TestKitOrchestrator')
+    } catch (err) {
+      if (err instanceof OrchestratorPausedError) return jsonResponse({ error: err.message }, 503)
+      throw err
+    }
+
+    // Daily USD budget guard — fail fast before opening an ai_runs row.
+    if (offer.workspace_id) {
+      try {
+        await assertUnderDailyCap(offer.workspace_id)
+      } catch (err) {
+        if (err instanceof DailyCapExceededError) return jsonResponse({ error: err.message }, 429)
+        throw err
+      }
+    }
+
+    // A test kit is built to execute a verdict — require a prior successful
+    // underwriting run for this offer.
+    const { data: uwRun } = await admin
+      .from('ai_runs')
+      .select('id, output_payload')
+      .eq('offer_id', offerId)
+      .eq('orchestrator_name', 'UnderwritingOrchestrator')
+      .eq('status', 'success')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (!uwRun) {
+      return jsonResponse(
+        { error: 'Run an analysis first — a test kit is built from the verdict.' },
+        400
+      )
+    }
+
+    const { data: factsRows } = await admin
+      .from('extracted_facts')
+      .select('fact_type, fact_value, source_quote, confidence_score')
+      .eq('offer_id', offerId)
+      .eq('status', 'verified')
+    const facts = factsRows ?? []
+
+    const verticalSlug =
+      (offer as unknown as { verticals?: { slug: string } | null }).verticals?.slug ??
+      undefined
+
+    const willCallReal = !!Deno.env.get('ANTHROPIC_API_KEY')
+    const model = willCallReal ? 'claude-sonnet-4-6' : 'mock'
+
+    const runId = await recordRunStart({
+      orchestratorName: 'TestKitOrchestrator',
+      agentVersion: willCallReal ? 'real-v1' : 'mock-v1',
+      model,
+      inputPayload: {
+        offer_id: offerId,
+        verified_fact_count: facts.length,
+        vertical: verticalSlug ?? null,
+        source_underwriting_run_id: uwRun.id,
+      },
+      userId: user.id,
+      workspaceId: offer.workspace_id ?? undefined,
+      offerId,
+    })
+
+    EdgeRuntime.waitUntil(
+      (async () => {
+        const startTime = new Date()
+        try {
+          const result = await runTestKit({
+            offerId,
+            offerName: offer.name,
+            verticalSlug,
+            facts,
+            underwriting: uwRun.output_payload as Record<string, unknown> | undefined,
+            operatorNotes: offer.operator_notes,
+          })
+
+          const judgement =
+            result.mode === 'real'
+              ? await judgeOutput({
+                  aiRunId: runId,
+                  orchestratorName: 'TestKitOrchestrator',
+                  userInput: JSON.stringify(
+                    { offer_id: offerId, verified_fact_count: facts.length },
+                    null,
+                    2
+                  ),
+                  agentOutput: result.output,
+                })
+              : null
+
+          const traceId = await createTrace({
+            name: `generate-test-kit:${offerId}`,
+            userId: user.id,
+          })
+          await recordGeneration({
+            traceId,
+            name: `TestKitOrchestrator (${result.mode})`,
+            model,
+            input: { offer_id: offerId, verified_fact_count: facts.length },
+            output: result.output,
+            promptTokens: result.usage?.input_tokens ?? 0,
+            completionTokens: result.usage?.output_tokens ?? 0,
+            costUsd: result.usage?.cost_usd ?? 0,
+            startTime,
+            endTime: new Date(),
+          })
+
+          const totalCostUsd =
+            (result.usage?.cost_usd ?? 0) + (judgement?.judge_cost_usd ?? 0)
+
+          // Persist the generated kit for the offer.
+          await admin.from('test_kits').insert({
+            offer_id: offerId,
+            workspace_id: offer.workspace_id ?? null,
+            created_by_user_id: user.id,
+            ai_run_id: runId,
+            source_underwriting_run_id: uwRun.id,
+            payload: result.output,
+            status: 'generated',
+          })
+
+          await recordRunSuccess(runId, {
+            outputPayload: result.output,
+            validatedOutput: result.output,
+            envelope: result.output,
+            tokensInput: result.usage?.input_tokens,
+            tokensOutput: result.usage?.output_tokens,
+            estimatedCost: totalCostUsd,
+            langfuseTraceId: traceId,
+          })
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err)
+          await recordRunError(runId, message)
+          await sendToDlq({
+            messageType: 'ai_run',
+            payload: { kind: 'generate-test-kit', offer_id: offerId, ai_run_id: runId },
+            error: message,
+          })
+        }
+      })()
+    )
+
+    return jsonResponse({ run_id: runId }, 200)
+  } catch (err) {
+    if (err instanceof UnauthorizedError) return jsonResponse({ error: err.message }, 401)
+    if (err instanceof ForbiddenError) return jsonResponse({ error: err.message }, 403)
+    return jsonResponse({ error: 'Internal error' }, 500)
+  }
+})

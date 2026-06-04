@@ -875,6 +875,81 @@ export type Database = {
           },
         ]
       }
+      test_kits: {
+        Row: {
+          ai_run_id: string | null
+          created_at: string
+          created_by_user_id: string | null
+          id: string
+          offer_id: string
+          payload: Json
+          source_underwriting_run_id: string | null
+          status: string
+          updated_at: string
+          workspace_id: string | null
+        }
+        Insert: {
+          ai_run_id?: string | null
+          created_at?: string
+          created_by_user_id?: string | null
+          id?: string
+          offer_id: string
+          payload: Json
+          source_underwriting_run_id?: string | null
+          status?: string
+          updated_at?: string
+          workspace_id?: string | null
+        }
+        Update: {
+          ai_run_id?: string | null
+          created_at?: string
+          created_by_user_id?: string | null
+          id?: string
+          offer_id?: string
+          payload?: Json
+          source_underwriting_run_id?: string | null
+          status?: string
+          updated_at?: string
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_kits_ai_run_id_fkey"
+            columns: ["ai_run_id"]
+            isOneToOne: false
+            referencedRelation: "ai_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "test_kits_created_by_user_id_fkey"
+            columns: ["created_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "test_kits_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "test_kits_source_underwriting_run_id_fkey"
+            columns: ["source_underwriting_run_id"]
+            isOneToOne: false
+            referencedRelation: "ai_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "test_kits_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       verticals: {
         Row: {
           created_at: string

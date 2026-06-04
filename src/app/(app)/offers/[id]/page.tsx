@@ -2,17 +2,26 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { AnalyzeButton } from '@/components/offers/AnalyzeButton'
+import { GenerateTestKitButton } from '@/components/offers/GenerateTestKitButton'
 import { OfferOverview } from '@/components/offers/OfferOverview'
 import { OfferScorecard } from '@/components/offers/OfferScorecard'
 import { OfferVerdict } from '@/components/offers/OfferVerdict'
+import { TestKitView } from '@/components/offers/TestKitView'
 import { isCurrentUserAdmin } from '@/lib/auth/role'
-import { getLatestRun, getOfferById } from '@/lib/queries/offers'
+import {
+  getLatestRun,
+  getLatestRunByOrchestrator,
+  getLatestTestKit,
+  getOfferById,
+  hasSuccessfulUnderwriting,
+} from '@/lib/queries/offers'
 import { cn } from '@/lib/utils'
 
 const TABS = [
   { key: 'overview', label: 'Overview' },
   { key: 'scorecard', label: 'Scorecard' },
   { key: 'verdict', label: 'Verdict' },
+  { key: 'test-kit', label: 'Test Kit' },
 ] as const
 
 export default async function OfferDetailPage({
@@ -31,8 +40,20 @@ export default async function OfferDetailPage({
   const run = await getLatestRun(id)
   const evaluation = run?.output_payload ?? offer.evaluation
   const activeTab =
-    tab === 'scorecard' || tab === 'verdict' ? tab : 'overview'
+    tab === 'scorecard' || tab === 'verdict' || tab === 'test-kit'
+      ? tab
+      : 'overview'
   const isAdmin = await isCurrentUserAdmin()
+
+  // Test-kit tab needs its own data — only fetch when that tab is active.
+  const testKit =
+    activeTab === 'test-kit' ? await getLatestTestKit(id) : null
+  const testKitRun =
+    activeTab === 'test-kit'
+      ? await getLatestRunByOrchestrator(id, 'TestKitOrchestrator')
+      : null
+  const hasVerdict =
+    activeTab === 'test-kit' ? await hasSuccessfulUnderwriting(id) : false
 
   return (
     <div className="flex flex-col gap-6">
@@ -80,6 +101,25 @@ export default async function OfferDetailPage({
       )}
       {activeTab === 'scorecard' && <OfferScorecard evaluation={evaluation} />}
       {activeTab === 'verdict' && <OfferVerdict evaluation={evaluation} />}
+      {activeTab === 'test-kit' && (
+        <div className="flex flex-col gap-6">
+          <GenerateTestKitButton
+            offerId={offer.id}
+            initialStatus={testKitRun?.status ?? null}
+            hasVerdict={hasVerdict}
+            hasKit={!!testKit}
+          />
+          {testKit ? (
+            <TestKitView payload={testKit.payload} />
+          ) : (
+            hasVerdict && (
+              <p className="text-sm text-[var(--color-muted-foreground)]">
+                No test kit yet. Generate one from the current verdict.
+              </p>
+            )
+          )}
+        </div>
+      )}
     </div>
   )
 }
