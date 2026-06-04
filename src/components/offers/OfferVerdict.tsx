@@ -4,6 +4,18 @@ import {
   type UnderwritingResponse,
 } from '@/types/agents/underwriting'
 
+// Verdict tier → badge color, so "reject" vs "strong_test" reads at a glance.
+const VERDICT_BADGE_CLASS: Record<string, string> = {
+  reject: 'border-red-300 bg-red-100 text-red-800',
+  watch: 'border-amber-300 bg-amber-100 text-amber-800',
+  organic_only: 'border-amber-300 bg-amber-100 text-amber-800',
+  seo_review_only: 'border-amber-300 bg-amber-100 text-amber-800',
+  small_paid_test: 'border-green-300 bg-green-100 text-green-800',
+  strong_test: 'border-green-300 bg-green-100 text-green-800',
+  strategic_opportunity: 'border-emerald-400 bg-emerald-100 text-emerald-900',
+  high_ceiling_opportunity: 'border-emerald-400 bg-emerald-100 text-emerald-900',
+}
+
 export function OfferVerdict({
   evaluation,
 }: {
@@ -22,7 +34,9 @@ export function OfferVerdict({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
-        <Badge>{VERDICT_LABELS[p.verdict]}</Badge>
+        <Badge className={VERDICT_BADGE_CLASS[p.verdict]}>
+          {VERDICT_LABELS[p.verdict]}
+        </Badge>
         {p.recommended_channel && (
           <span className="text-sm text-[var(--color-muted-foreground)]">
             Channel: {p.recommended_channel}
