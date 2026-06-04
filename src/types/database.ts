@@ -224,6 +224,127 @@ export type Database = {
           },
         ]
       }
+      campaign_results: {
+        Row: {
+          campaign_id: string
+          clicks: number
+          conversions: number
+          created_at: string
+          days_running: number
+          id: string
+          impressions: number
+          landing_views: number
+          revenue_usd: number
+          spend_usd: number
+          updated_at: string
+        }
+        Insert: {
+          campaign_id: string
+          clicks?: number
+          conversions?: number
+          created_at?: string
+          days_running?: number
+          id?: string
+          impressions?: number
+          landing_views?: number
+          revenue_usd?: number
+          spend_usd?: number
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          clicks?: number
+          conversions?: number
+          created_at?: string
+          days_running?: number
+          id?: string
+          impressions?: number
+          landing_views?: number
+          revenue_usd?: number
+          spend_usd?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_results_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: true
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          channel: string | null
+          created_at: string
+          created_by_user_id: string | null
+          geo: string | null
+          id: string
+          name: string
+          offer_id: string
+          status: Database["public"]["Enums"]["campaign_status"]
+          test_kit_id: string | null
+          updated_at: string
+          workspace_id: string | null
+        }
+        Insert: {
+          channel?: string | null
+          created_at?: string
+          created_by_user_id?: string | null
+          geo?: string | null
+          id?: string
+          name: string
+          offer_id: string
+          status?: Database["public"]["Enums"]["campaign_status"]
+          test_kit_id?: string | null
+          updated_at?: string
+          workspace_id?: string | null
+        }
+        Update: {
+          channel?: string | null
+          created_at?: string
+          created_by_user_id?: string | null
+          geo?: string | null
+          id?: string
+          name?: string
+          offer_id?: string
+          status?: Database["public"]["Enums"]["campaign_status"]
+          test_kit_id?: string | null
+          updated_at?: string
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_created_by_user_id_fkey"
+            columns: ["created_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaigns_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaigns_test_kit_id_fkey"
+            columns: ["test_kit_id"]
+            isOneToOne: false
+            referencedRelation: "test_kits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaigns_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       error_logs: {
         Row: {
           context: Json | null
@@ -752,6 +873,55 @@ export type Database = {
           },
         ]
       }
+      result_diagnoses: {
+        Row: {
+          ai_run_id: string | null
+          campaign_id: string
+          created_at: string
+          id: string
+          payload: Json
+          workspace_id: string | null
+        }
+        Insert: {
+          ai_run_id?: string | null
+          campaign_id: string
+          created_at?: string
+          id?: string
+          payload: Json
+          workspace_id?: string | null
+        }
+        Update: {
+          ai_run_id?: string | null
+          campaign_id?: string
+          created_at?: string
+          id?: string
+          payload?: Json
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "result_diagnoses_ai_run_id_fkey"
+            columns: ["ai_run_id"]
+            isOneToOne: false
+            referencedRelation: "ai_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "result_diagnoses_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "result_diagnoses_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       source_documents: {
         Row: {
           created_at: string
@@ -1138,6 +1308,7 @@ export type Database = {
         | "fact.reject"
         | "subscription.create"
         | "subscription.cancel"
+      campaign_status: "draft" | "results_entered" | "diagnosed" | "archived"
       error_severity: "debug" | "info" | "warning" | "error" | "critical"
       eval_run_trigger: "manual" | "cron" | "pre_publish"
       fact_status: "proposed" | "verified" | "rejected"
@@ -1359,6 +1530,7 @@ export const Constants = {
         "subscription.create",
         "subscription.cancel",
       ],
+      campaign_status: ["draft", "results_entered", "diagnosed", "archived"],
       error_severity: ["debug", "info", "warning", "error", "critical"],
       eval_run_trigger: ["manual", "cron", "pre_publish"],
       fact_status: ["proposed", "verified", "rejected"],

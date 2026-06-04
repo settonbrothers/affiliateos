@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
+import { CreateCampaignButton } from '@/components/campaigns/CreateCampaignButton'
 import { AnalyzeButton } from '@/components/offers/AnalyzeButton'
 import { GenerateTestKitButton } from '@/components/offers/GenerateTestKitButton'
 import { OfferOverview } from '@/components/offers/OfferOverview'
@@ -110,7 +111,10 @@ export default async function OfferDetailPage({
             hasKit={!!testKit}
           />
           {testKit ? (
-            <TestKitView payload={testKit.payload} />
+            <>
+              <CreateCampaignButton offerId={offer.id} testKitId={testKit.id} />
+              <TestKitView payload={testKit.payload} />
+            </>
           ) : (
             hasVerdict && (
               <p className="text-sm text-[var(--color-muted-foreground)]">

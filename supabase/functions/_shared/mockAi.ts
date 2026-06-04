@@ -227,12 +227,97 @@ export function mockTestKit(): Record<string, unknown> {
   }
 }
 
+export type DiagnosisResultsInput = {
+  spend_usd: number
+  impressions: number
+  clicks: number
+  landing_views: number
+  conversions: number
+  revenue_usd: number
+  days_running: number
+}
+
+export function mockDiagnosis(
+  results?: DiagnosisResultsInput
+): Record<string, unknown> {
+  const r = results ?? {
+    spend_usd: 500,
+    impressions: 100000,
+    clicks: 900,
+    landing_views: 800,
+    conversions: 6,
+    revenue_usd: 420,
+    days_running: 5,
+  }
+  const ctr = r.impressions ? (r.clicks / r.impressions) * 100 : 0
+  const cpc = r.clicks ? r.spend_usd / r.clicks : 0
+  const cvr = r.clicks ? (r.conversions / r.clicks) * 100 : 0
+  const epc = r.clicks ? r.revenue_usd / r.clicks : 0
+  const clickout = r.clicks ? (r.landing_views / r.clicks) * 100 : 0
+  const thin = r.clicks < 100 || r.conversions < 5
+  const m = (actual: number, lo: number, hi: number) => ({
+    actual: Math.round(actual * 100) / 100,
+    expected: [lo, hi] as [number, number],
+    verdict: (actual < lo ? 'below' : actual > hi ? 'above' : 'within') as
+      | 'below'
+      | 'within'
+      | 'above',
+  })
+
+  return {
+    ...envelope('DiagnosisOrchestrator'),
+    confidence_score: thin ? 35 : 70,
+    assumptions: ['Mock output — not a real diagnosis.'],
+    human_review_required: thin,
+    human_review_reasons: thin ? ['Not enough data for a confident read.'] : [],
+    payload: {
+      diagnosis_summary: thin
+        ? 'Sample is too thin to draw a confident conclusion — keep gathering data.'
+        : 'Clicks are healthy but conversion rate lags expectations; the bottleneck is likely the landing page.',
+      data_quality_assessment: thin
+        ? 'Low volume: fewer than 100 clicks or 5 conversions.'
+        : 'Adequate click volume for a directional read; conversions still light.',
+      metric_analysis: {
+        ctr: m(ctr, 0.8, 2.0),
+        cpc: m(cpc, 0.5, 1.5),
+        clickout_rate: m(clickout, 60, 95),
+        cvr: m(cvr, 2.0, 5.0),
+        epc: m(epc, 0.8, 1.5),
+      },
+      primary_bottleneck: thin ? 'not_enough_data' : 'landing_page',
+      secondary_bottlenecks: thin ? [] : ['offer'],
+      recommended_action: thin ? 'continue_test' : 'improve_landing',
+      specific_recommendations: thin
+        ? [
+            {
+              area: 'data',
+              action: 'Run until at least 100 clicks and 5+ conversions.',
+              reasoning: 'Current volume is below a reliable read.',
+            },
+          ]
+        : [
+            {
+              area: 'landing_page',
+              action: 'Tighten the above-fold promise and add proof near the CTA.',
+              reasoning: 'CTR is fine but CVR is below range — the drop-off is post-click.',
+            },
+          ],
+      not_enough_data: thin,
+      not_enough_data_reason: thin
+        ? 'Fewer than 100 clicks or 5 conversions.'
+        : null,
+    },
+  }
+}
+
 export function mockForOrchestrator(orchestratorName: string): Record<string, unknown> {
   switch (orchestratorName) {
     case 'SourceExtractionOrchestrator':
       return mockSourceExtraction()
     case 'TestKitOrchestrator':
       return mockTestKit()
+    case 'DiagnosisOrchestrator':
+      return mockDiagnosis()
     case 'UnderwritingOrchestrator':
     default:
       return mockUnderwriting()
