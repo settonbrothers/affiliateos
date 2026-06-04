@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
 import { getCurrentBalance } from '@/lib/queries/credits'
+import { isOnboarded } from '@/lib/queries/onboarding'
 import { createClient } from '@/lib/supabase/server'
 
 export default async function AppLayout({
@@ -14,6 +15,9 @@ export default async function AppLayout({
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
+
+  // Gate the app until onboarding is done (/onboarding is outside this group).
+  if (!(await isOnboarded())) redirect('/onboarding')
 
   const balance = await getCurrentBalance()
 

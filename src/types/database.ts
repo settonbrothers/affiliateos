@@ -1052,6 +1052,57 @@ export type Database = {
           },
         ]
       }
+      operator_profiles: {
+        Row: {
+          budget_max_usd: number | null
+          budget_min_usd: number | null
+          cashflow_tolerance: string | null
+          experience_level: string | null
+          onboarded_at: string | null
+          preferred_vertical_id: string | null
+          primary_channels: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          budget_max_usd?: number | null
+          budget_min_usd?: number | null
+          cashflow_tolerance?: string | null
+          experience_level?: string | null
+          onboarded_at?: string | null
+          preferred_vertical_id?: string | null
+          primary_channels?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          budget_max_usd?: number | null
+          budget_min_usd?: number | null
+          cashflow_tolerance?: string | null
+          experience_level?: string | null
+          onboarded_at?: string | null
+          preferred_vertical_id?: string | null
+          primary_channels?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operator_profiles_preferred_vertical_id_fkey"
+            columns: ["preferred_vertical_id"]
+            isOneToOne: false
+            referencedRelation: "verticals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operator_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
