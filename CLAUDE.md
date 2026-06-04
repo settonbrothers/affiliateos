@@ -3,7 +3,7 @@
 ## Project Context
 - **Project**: AffiliateOS Pro — affiliate underwriting SaaS
 - **Owner**: Izak (settonbrothers) · GitHub: `settonbrothers/affiliateos`
-- **Current Milestone**: **M1 verified end-to-end (2026-05-31)** — full pipeline confirmed (signup → profile trigger → admin RLS → offers → analyze-offer edge fn → ai_runs). DoD in `docs/plan/03_MILESTONES.md`.
+- **Current Milestone**: **M2 functionally complete; M3 largely done (2026-06-04)**. M1 verified 2026-05-31. M2 demo loop works end-to-end (offer → ingest sources → real Haiku extraction → facts → analyze → scorecard) with kill-switch, daily-USD cost-cap, and DLQ replay. M3 has real Sonnet underwriting + LLM-judge + eval harness wired; remaining M3 work is owner-gated (label 20 golden offers, run real evals/judge — needs `ANTHROPIC_API_KEY` locally or a cron on the Supabase secret). DoD in `docs/plan/03_MILESTONES.md`.
 - **Supabase project**: `affiliateos-prod` (ref `pfuwahtntsnlprjqlwcn`, region `eu-central-1`).
 
 ## Read First
@@ -33,13 +33,15 @@ Past decisions: `decisions/001-admin-rls-helper.md`, `decisions/002-agent-contra
 - Regenerate DB types: `pnpm dlx supabase@latest gen types typescript --linked | Out-File src/types/database.ts -Encoding utf8`
 - Deploy edge fn: `pnpm dlx supabase@latest functions deploy <name>`
 
-## Current State (snapshot)
-- Migrations 0001-0009 applied; 0009 is the `handle_new_user` trigger that auto-creates a `profiles` row on signup (the plan's migrations omitted it — required for the demo).
-- `@supabase/ssr` is pinned at **0.10.3** (bumped from the plan's 0.5.2 — the older version typed inserts as `never[]` against the new generated-type format).
-- `src/middleware.ts` early-returns when Supabase env is absent (pre-setup dev safety).
-- `src/types/database.ts` is generated; `src/types/db.ts` derives domain types from it (narrows `evaluation`/`output_payload` jsonb to `UnderwritingResponse`).
-- Edge function `analyze-offer` is deployed (one-time manual; no CI deploy job yet).
-- Branch protection on `main` is currently OFF.
+## Current State (snapshot, 2026-06-04)
+- **Migrations 0001-0021 applied** (local == remote). 0009 = `handle_new_user`; **0021** extended it to also provision a workspace + owner membership + `workspace_credit_caps` row on signup (1 user : 1 workspace) and backfilled existing users/offers/ai_runs. Before 0021, `workspace_id` was always NULL, which silently disabled the daily-USD cost-cap.
+- **Edge functions deployed (manual)**: `analyze-offer` (kill-switch + daily-USD cap + LLM-judge + DLQ on failure) and `ingest-source` (fetch → Haiku extraction → facts). Both ACTIVE; redeploy with `pnpm dlx supabase@latest functions deploy <name>` after editing — there's still no CI deploy.
+- **Real AI is live**: analyze runs real Sonnet underwriting; ingest runs real Haiku extraction (keys are Supabase secrets). `ANTHROPIC_API_KEY` is **empty in local `.env.local`** → local CLI scripts (`eval:run`) get 401 until set.
+- **Admin surfaces**: `/admin/{ai-runs,prompts,eval,eval/golden,kill-switches,failed}`. Offer page → "Manage sources" (admin) → `/admin/offers/[id]/sources`.
+- **Eval harness**: `scripts/eval-run.mts` (was `.ts` — renamed to fix a top-level-await/CJS crash) + golden-set UI; needs golden offers labeled + a real key to produce accuracy.
+- **Manual integration tests** live in `scripts/test-*-e2e.mjs` (cost-cap 429, ingest, kill-switch 503, DLQ RLS) — they create + clean up throwaway users; run with `node scripts/<name>.mjs`.
+- `@supabase/ssr` pinned at **0.10.3**; `src/middleware.ts` early-returns when Supabase env is absent; `src/types/db.ts` derives domain types from generated `database.ts`.
+- Branch protection on `main` is currently OFF (this session merged feature branches via `--ff-only` + push).
 
 ## Hard Rules
 - **Branching**: feature branches (`feat/m1-...`); never push directly to `main` once branch protection is enabled. Rebase only — no merge commits.
