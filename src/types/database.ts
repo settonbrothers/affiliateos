@@ -386,6 +386,64 @@ export type Database = {
           },
         ]
       }
+      credit_ledger: {
+        Row: {
+          action: string | null
+          ai_run_id: string | null
+          amount: number
+          created_at: string
+          created_by: string | null
+          entry_type: Database["public"]["Enums"]["credit_entry_type"]
+          id: string
+          reason: string | null
+          workspace_id: string
+        }
+        Insert: {
+          action?: string | null
+          ai_run_id?: string | null
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          entry_type: Database["public"]["Enums"]["credit_entry_type"]
+          id?: string
+          reason?: string | null
+          workspace_id: string
+        }
+        Update: {
+          action?: string | null
+          ai_run_id?: string | null
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          entry_type?: Database["public"]["Enums"]["credit_entry_type"]
+          id?: string
+          reason?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_ledger_ai_run_id_fkey"
+            columns: ["ai_run_id"]
+            isOneToOne: false
+            referencedRelation: "ai_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_ledger_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_ledger_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       error_logs: {
         Row: {
           context: Json | null
@@ -1219,6 +1277,24 @@ export type Database = {
           },
         ]
       }
+      usage_pricing_rules: {
+        Row: {
+          action: string
+          credits: number
+          updated_at: string
+        }
+        Insert: {
+          action: string
+          credits: number
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          credits?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       verticals: {
         Row: {
           created_at: string
@@ -1408,6 +1484,13 @@ export type Database = {
         | "subscription.create"
         | "subscription.cancel"
       campaign_status: "draft" | "results_entered" | "diagnosed" | "archived"
+      credit_entry_type:
+        | "granted"
+        | "used"
+        | "refunded"
+        | "purchased"
+        | "expired"
+        | "adjusted"
       error_severity: "debug" | "info" | "warning" | "error" | "critical"
       eval_run_trigger: "manual" | "cron" | "pre_publish"
       fact_status: "proposed" | "verified" | "rejected"
@@ -1630,6 +1713,14 @@ export const Constants = {
         "subscription.cancel",
       ],
       campaign_status: ["draft", "results_entered", "diagnosed", "archived"],
+      credit_entry_type: [
+        "granted",
+        "used",
+        "refunded",
+        "purchased",
+        "expired",
+        "adjusted",
+      ],
       error_severity: ["debug", "info", "warning", "error", "critical"],
       eval_run_trigger: ["manual", "cron", "pre_publish"],
       fact_status: ["proposed", "verified", "rejected"],

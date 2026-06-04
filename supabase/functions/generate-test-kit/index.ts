@@ -1,6 +1,13 @@
 import { ForbiddenError, requireUser, UnauthorizedError } from '../_shared/auth.ts'
 import { handleCors, jsonResponse } from '../_shared/cors.ts'
 import { assertUnderDailyCap, DailyCapExceededError } from '../_shared/costCap.ts'
+import {
+  InsufficientCreditsError,
+  linkCreditToRun,
+  refundCredits,
+  reserveCredits,
+  type CreditHold,
+} from '../_shared/credits.ts'
 import { sendToDlq } from '../_shared/dlq.ts'
 import { assertNotPaused, OrchestratorPausedError } from '../_shared/killSwitch.ts'
 import { createTrace, recordGeneration } from '../_shared/langfuseClient.ts'
@@ -84,6 +91,17 @@ Deno.serve(async (req: Request) => {
     const willCallReal = !!Deno.env.get('ANTHROPIC_API_KEY')
     const model = willCallReal ? 'claude-sonnet-4-6' : 'mock'
 
+    // Credit guard — reserve after all validation gates, before any LLM work.
+    let creditHold: CreditHold | null = null
+    if (offer.workspace_id) {
+      try {
+        creditHold = await reserveCredits(offer.workspace_id, 'generate-test-kit')
+      } catch (err) {
+        if (err instanceof InsufficientCreditsError) return jsonResponse({ error: err.message }, 402)
+        throw err
+      }
+    }
+
     const runId = await recordRunStart({
       orchestratorName: 'TestKitOrchestrator',
       agentVersion: willCallReal ? 'real-v1' : 'mock-v1',
@@ -98,6 +116,7 @@ Deno.serve(async (req: Request) => {
       workspaceId: offer.workspace_id ?? undefined,
       offerId,
     })
+    await linkCreditToRun(creditHold, runId)
 
     EdgeRuntime.waitUntil(
       (async () => {
@@ -169,6 +188,9 @@ Deno.serve(async (req: Request) => {
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err)
           await recordRunError(runId, message)
+          if (offer.workspace_id) {
+            await refundCredits(offer.workspace_id, creditHold, 'generate-test-kit', runId)
+          }
           await sendToDlq({
             messageType: 'ai_run',
             payload: { kind: 'generate-test-kit', offer_id: offerId, ai_run_id: runId },

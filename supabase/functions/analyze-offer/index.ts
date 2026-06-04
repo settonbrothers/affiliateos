@@ -1,6 +1,13 @@
 import { ForbiddenError, requireUser, UnauthorizedError } from '../_shared/auth.ts'
 import { handleCors, jsonResponse } from '../_shared/cors.ts'
 import { assertUnderDailyCap, DailyCapExceededError } from '../_shared/costCap.ts'
+import {
+  InsufficientCreditsError,
+  linkCreditToRun,
+  refundCredits,
+  reserveCredits,
+  type CreditHold,
+} from '../_shared/credits.ts'
 import { sendToDlq } from '../_shared/dlq.ts'
 import { assertNotPaused, OrchestratorPausedError } from '../_shared/killSwitch.ts'
 import { createTrace, recordGeneration } from '../_shared/langfuseClient.ts'
@@ -54,6 +61,17 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    // Credit guard — reserve (debit) before any LLM work; refunded on failure.
+    let creditHold: CreditHold | null = null
+    if (offer.workspace_id) {
+      try {
+        creditHold = await reserveCredits(offer.workspace_id, 'analyze-offer')
+      } catch (err) {
+        if (err instanceof InsufficientCreditsError) return jsonResponse({ error: err.message }, 402)
+        throw err
+      }
+    }
+
     const { data: factsRows } = await admin
       .from('extracted_facts')
       .select('fact_type, fact_value, source_quote, confidence_score')
@@ -81,6 +99,7 @@ Deno.serve(async (req: Request) => {
       workspaceId: offer.workspace_id ?? undefined,
       offerId,
     })
+    await linkCreditToRun(creditHold, runId)
 
     EdgeRuntime.waitUntil(
       (async () => {
@@ -149,6 +168,10 @@ Deno.serve(async (req: Request) => {
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err)
           await recordRunError(runId, message)
+          // Refund the reserved credits — we don't charge for failed runs.
+          if (offer.workspace_id) {
+            await refundCredits(offer.workspace_id, creditHold, 'analyze-offer', runId)
+          }
           // Dead-letter so an admin can replay from /admin/failed once the
           // underlying cause (e.g. transient Anthropic 5xx) clears.
           await sendToDlq({

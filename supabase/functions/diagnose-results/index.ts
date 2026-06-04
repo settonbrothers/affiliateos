@@ -1,6 +1,13 @@
 import { ForbiddenError, requireUser, UnauthorizedError } from '../_shared/auth.ts'
 import { handleCors, jsonResponse } from '../_shared/cors.ts'
 import { assertUnderDailyCap, DailyCapExceededError } from '../_shared/costCap.ts'
+import {
+  InsufficientCreditsError,
+  linkCreditToRun,
+  refundCredits,
+  reserveCredits,
+  type CreditHold,
+} from '../_shared/credits.ts'
 import { sendToDlq } from '../_shared/dlq.ts'
 import { assertNotPaused, OrchestratorPausedError } from '../_shared/killSwitch.ts'
 import { createTrace, recordGeneration } from '../_shared/langfuseClient.ts'
@@ -97,6 +104,17 @@ Deno.serve(async (req: Request) => {
     const willCallReal = !!Deno.env.get('ANTHROPIC_API_KEY')
     const model = willCallReal ? 'claude-sonnet-4-6' : 'mock'
 
+    // Credit guard — reserve after the results gate, before any LLM work.
+    let creditHold: CreditHold | null = null
+    if (campaign.workspace_id) {
+      try {
+        creditHold = await reserveCredits(campaign.workspace_id, 'diagnose-results')
+      } catch (err) {
+        if (err instanceof InsufficientCreditsError) return jsonResponse({ error: err.message }, 402)
+        throw err
+      }
+    }
+
     const runId = await recordRunStart({
       orchestratorName: 'DiagnosisOrchestrator',
       agentVersion: willCallReal ? 'real-v1' : 'mock-v1',
@@ -110,6 +128,7 @@ Deno.serve(async (req: Request) => {
       workspaceId: campaign.workspace_id ?? undefined,
       offerId: campaign.offer_id ?? undefined,
     })
+    await linkCreditToRun(creditHold, runId)
 
     EdgeRuntime.waitUntil(
       (async () => {
@@ -181,6 +200,9 @@ Deno.serve(async (req: Request) => {
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err)
           await recordRunError(runId, message)
+          if (campaign.workspace_id) {
+            await refundCredits(campaign.workspace_id, creditHold, 'diagnose-results', runId)
+          }
           await sendToDlq({
             messageType: 'ai_run',
             payload: { kind: 'diagnose-results', campaign_id: campaignId, ai_run_id: runId },
