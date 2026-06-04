@@ -1,3 +1,4 @@
+import { BillingActions } from '@/components/billing/BillingActions'
 import { GrantCreditsButton } from '@/components/billing/GrantCreditsButton'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,6 +9,8 @@ import {
   getLedger,
   getPricing,
 } from '@/lib/queries/credits'
+import { isStripeConfigured } from '@/lib/stripe/client'
+import { createClient } from '@/lib/supabase/server'
 
 function fmtAmount(n: number) {
   return n > 0 ? `+${n}` : `${n}`
@@ -21,6 +24,25 @@ export default async function BillingPage() {
     getPricing(),
     isCurrentUserAdmin(),
   ])
+
+  // Subscription + customer state (RLS lets members read their own).
+  const supabase = await createClient()
+  const { data: subscription } = workspaceId
+    ? await supabase
+        .from('subscriptions')
+        .select('status, plan, current_period_end')
+        .eq('workspace_id', workspaceId)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    : { data: null }
+  const { data: customer } = workspaceId
+    ? await supabase
+        .from('stripe_customers')
+        .select('stripe_customer_id')
+        .eq('workspace_id', workspaceId)
+        .maybeSingle()
+    : { data: null }
 
   return (
     <div className="flex flex-col gap-6">
@@ -40,6 +62,33 @@ export default async function BillingPage() {
         <CardContent className="flex items-end justify-between gap-4">
           <span className="text-4xl font-bold">{balance}</span>
           {isAdmin && <GrantCreditsButton />}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Plan</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          {subscription ? (
+            <p className="text-sm">
+              <Badge>{subscription.status}</Badge>{' '}
+              <span className="text-[var(--color-muted-foreground)]">
+                {subscription.plan}
+                {subscription.current_period_end
+                  ? ` · renews ${new Date(subscription.current_period_end).toLocaleDateString()}`
+                  : ''}
+              </span>
+            </p>
+          ) : (
+            <p className="text-sm text-[var(--color-muted-foreground)]">
+              No active subscription.
+            </p>
+          )}
+          <BillingActions
+            configured={isStripeConfigured()}
+            hasCustomer={!!customer?.stripe_customer_id}
+          />
         </CardContent>
       </Card>
 
