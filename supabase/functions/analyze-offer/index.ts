@@ -1,6 +1,7 @@
 import { ForbiddenError, requireUser, UnauthorizedError } from '../_shared/auth.ts'
 import { handleCors, jsonResponse } from '../_shared/cors.ts'
 import { assertUnderDailyCap, DailyCapExceededError } from '../_shared/costCap.ts'
+import { sendToDlq } from '../_shared/dlq.ts'
 import { assertNotPaused, OrchestratorPausedError } from '../_shared/killSwitch.ts'
 import { createTrace, recordGeneration } from '../_shared/langfuseClient.ts'
 import { judgeOutput } from '../_shared/llmJudge.ts'
@@ -146,10 +147,15 @@ Deno.serve(async (req: Request) => {
             langfuseTraceId: traceId,
           })
         } catch (err) {
-          await recordRunError(
-            runId,
-            err instanceof Error ? err.message : String(err)
-          )
+          const message = err instanceof Error ? err.message : String(err)
+          await recordRunError(runId, message)
+          // Dead-letter so an admin can replay from /admin/failed once the
+          // underlying cause (e.g. transient Anthropic 5xx) clears.
+          await sendToDlq({
+            messageType: 'ai_run',
+            payload: { kind: 'analyze-offer', offer_id: offerId, ai_run_id: runId },
+            error: message,
+          })
         }
       })()
     )
