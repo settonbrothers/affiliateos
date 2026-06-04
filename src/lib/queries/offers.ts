@@ -75,6 +75,30 @@ export async function getLatestTestKit(offerId: string): Promise<LatestTestKit> 
   return (data as LatestTestKit) ?? null
 }
 
+export type LatestCompliance = {
+  overall_risk_level: string
+  compliance_score: number | null
+  suggested_verdict_cap: string | null
+  payload: unknown
+  created_at: string
+} | null
+
+export async function getLatestCompliance(
+  offerId: string
+): Promise<LatestCompliance> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('offer_compliance_warnings')
+    .select(
+      'overall_risk_level, compliance_score, suggested_verdict_cap, payload, created_at'
+    )
+    .eq('offer_id', offerId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  return (data as LatestCompliance) ?? null
+}
+
 // Does this offer have a usable verdict (a successful underwriting run)?
 export async function hasSuccessfulUnderwriting(
   offerId: string

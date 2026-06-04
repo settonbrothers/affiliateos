@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 
 import { CreateCampaignButton } from '@/components/campaigns/CreateCampaignButton'
 import { AnalyzeButton } from '@/components/offers/AnalyzeButton'
+import { CheckComplianceButton } from '@/components/offers/CheckComplianceButton'
+import { ComplianceView } from '@/components/offers/ComplianceView'
 import { GenerateTestKitButton } from '@/components/offers/GenerateTestKitButton'
 import { OfferOverview } from '@/components/offers/OfferOverview'
 import { OfferScorecard } from '@/components/offers/OfferScorecard'
@@ -10,6 +12,7 @@ import { OfferVerdict } from '@/components/offers/OfferVerdict'
 import { TestKitView } from '@/components/offers/TestKitView'
 import { isCurrentUserAdmin } from '@/lib/auth/role'
 import {
+  getLatestCompliance,
   getLatestRun,
   getLatestRunByOrchestrator,
   getLatestTestKit,
@@ -23,6 +26,7 @@ const TABS = [
   { key: 'scorecard', label: 'Scorecard' },
   { key: 'verdict', label: 'Verdict' },
   { key: 'test-kit', label: 'Test Kit' },
+  { key: 'compliance', label: 'Compliance' },
 ] as const
 
 export default async function OfferDetailPage({
@@ -41,10 +45,19 @@ export default async function OfferDetailPage({
   const run = await getLatestRun(id)
   const evaluation = run?.output_payload ?? offer.evaluation
   const activeTab =
-    tab === 'scorecard' || tab === 'verdict' || tab === 'test-kit'
+    tab === 'scorecard' ||
+    tab === 'verdict' ||
+    tab === 'test-kit' ||
+    tab === 'compliance'
       ? tab
       : 'overview'
   const isAdmin = await isCurrentUserAdmin()
+
+  // Compliance feeds the Compliance tab and the verdict-cap banner on Verdict.
+  const compliance =
+    activeTab === 'compliance' || activeTab === 'verdict'
+      ? await getLatestCompliance(id)
+      : null
 
   // Test-kit tab needs its own data — only fetch when that tab is active.
   const testKit =
@@ -101,7 +114,20 @@ export default async function OfferDetailPage({
         <OfferOverview offer={offer} operatorNotes={offer.operator_notes} />
       )}
       {activeTab === 'scorecard' && <OfferScorecard evaluation={evaluation} />}
-      {activeTab === 'verdict' && <OfferVerdict evaluation={evaluation} />}
+      {activeTab === 'verdict' && (
+        <div className="flex flex-col gap-4">
+          {compliance?.suggested_verdict_cap && (
+            <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm dark:bg-red-950/40">
+              <span className="font-medium">
+                Compliance cap: verdict limited to “
+                {compliance.suggested_verdict_cap}”.
+              </span>{' '}
+              See the Compliance tab.
+            </div>
+          )}
+          <OfferVerdict evaluation={evaluation} />
+        </div>
+      )}
       {activeTab === 'test-kit' && (
         <div className="flex flex-col gap-6">
           <GenerateTestKitButton
@@ -121,6 +147,22 @@ export default async function OfferDetailPage({
                 No test kit yet. Generate one from the current verdict.
               </p>
             )
+          )}
+        </div>
+      )}
+      {activeTab === 'compliance' && (
+        <div className="flex flex-col gap-6">
+          <CheckComplianceButton offerId={offer.id} hasReport={!!compliance} />
+          {compliance ? (
+            <ComplianceView
+              payload={compliance.payload}
+              suggestedVerdictCap={compliance.suggested_verdict_cap}
+            />
+          ) : (
+            <p className="text-sm text-[var(--color-muted-foreground)]">
+              No compliance check yet. Run one to surface claim risks and safe
+              framings.
+            </p>
           )}
         </div>
       )}

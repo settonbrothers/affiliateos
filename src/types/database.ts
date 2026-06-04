@@ -345,6 +345,47 @@ export type Database = {
           },
         ]
       }
+      compliance_rules: {
+        Row: {
+          channel: string | null
+          created_at: string
+          detail: string
+          id: string
+          rule_type: string
+          severity: string
+          title: string
+          vertical_id: string | null
+        }
+        Insert: {
+          channel?: string | null
+          created_at?: string
+          detail: string
+          id?: string
+          rule_type: string
+          severity?: string
+          title: string
+          vertical_id?: string | null
+        }
+        Update: {
+          channel?: string | null
+          created_at?: string
+          detail?: string
+          id?: string
+          rule_type?: string
+          severity?: string
+          title?: string
+          vertical_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_rules_vertical_id_fkey"
+            columns: ["vertical_id"]
+            isOneToOne: false
+            referencedRelation: "verticals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       error_logs: {
         Row: {
           context: Json | null
@@ -668,6 +709,64 @@ export type Database = {
             columns: ["ai_run_id"]
             isOneToOne: false
             referencedRelation: "ai_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offer_compliance_warnings: {
+        Row: {
+          ai_run_id: string | null
+          compliance_score: number | null
+          created_at: string
+          id: string
+          offer_id: string
+          overall_risk_level: string
+          payload: Json
+          suggested_verdict_cap: string | null
+          workspace_id: string | null
+        }
+        Insert: {
+          ai_run_id?: string | null
+          compliance_score?: number | null
+          created_at?: string
+          id?: string
+          offer_id: string
+          overall_risk_level: string
+          payload: Json
+          suggested_verdict_cap?: string | null
+          workspace_id?: string | null
+        }
+        Update: {
+          ai_run_id?: string | null
+          compliance_score?: number | null
+          created_at?: string
+          id?: string
+          offer_id?: string
+          overall_risk_level?: string
+          payload?: Json
+          suggested_verdict_cap?: string | null
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_compliance_warnings_ai_run_id_fkey"
+            columns: ["ai_run_id"]
+            isOneToOne: false
+            referencedRelation: "ai_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offer_compliance_warnings_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offer_compliance_warnings_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]

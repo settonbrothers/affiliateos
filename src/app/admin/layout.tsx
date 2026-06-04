@@ -53,6 +53,12 @@ export default async function AdminLayout({
             Kill Switches
           </Link>
           <Link
+            href="/admin/compliance"
+            className="rounded-md px-3 py-2 hover:bg-[var(--color-muted)]"
+          >
+            Compliance
+          </Link>
+          <Link
             href="/admin/failed"
             className="rounded-md px-3 py-2 hover:bg-[var(--color-muted)]"
           >

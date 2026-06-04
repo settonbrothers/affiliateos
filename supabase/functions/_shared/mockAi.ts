@@ -310,6 +310,42 @@ export function mockDiagnosis(
   }
 }
 
+export function mockCompliance(
+  verticalSlug?: string
+): Record<string, unknown> {
+  const health = verticalSlug === 'health' || verticalSlug === 'mental_wellness'
+  return {
+    ...envelope('ComplianceCheckOrchestrator'),
+    confidence_score: 70,
+    assumptions: ['Mock output — not a real compliance review.'],
+    payload: {
+      overall_risk_level: health ? 'high' : 'low',
+      compliance_score: health ? 45 : 85,
+      detected_claims: health
+        ? [
+            {
+              claim_type: 'medical_cure',
+              claim_text: 'Supports liver health and detoxifies the body.',
+              risk_level: 'high',
+              why_risky:
+                'Implies a disease/treatment benefit — FDA/FTC and Meta health-policy violation.',
+              safe_framing: 'Part of a healthy lifestyle; describe ingredients, not outcomes.',
+              forbidden_framing: 'Cures, detoxifies, or treats any condition.',
+              requires_disclaimer: true,
+            },
+          ]
+        : [],
+      platform_risks: health ? ['meta_health_ads'] : [],
+      geo_risks: [],
+      tos_risks: [],
+      required_disclaimers: health
+        ? ['These statements have not been evaluated by the FDA.']
+        : [],
+      paid_traffic_recommendation: health ? 'blocked_until_review' : 'allowed',
+    },
+  }
+}
+
 export function mockForOrchestrator(orchestratorName: string): Record<string, unknown> {
   switch (orchestratorName) {
     case 'SourceExtractionOrchestrator':
@@ -318,6 +354,8 @@ export function mockForOrchestrator(orchestratorName: string): Record<string, un
       return mockTestKit()
     case 'DiagnosisOrchestrator':
       return mockDiagnosis()
+    case 'ComplianceCheckOrchestrator':
+      return mockCompliance()
     case 'UnderwritingOrchestrator':
     default:
       return mockUnderwriting()
