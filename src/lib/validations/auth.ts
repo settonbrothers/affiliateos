@@ -5,7 +5,10 @@ export const LoginSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters.'),
 })
 
-export const SignupSchema = LoginSchema
+// Signup is invite-only (stealth). The code is validated server-side.
+export const SignupSchema = LoginSchema.extend({
+  invite_code: z.string().min(1, 'An invite code is required.'),
+})
 
 export const MagicLinkSchema = z.object({
   email: z.string().email('Enter a valid email address.'),

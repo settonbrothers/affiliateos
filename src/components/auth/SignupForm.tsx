@@ -23,7 +23,7 @@ export function SignupForm() {
     formState: { errors },
   } = useForm<SignupInput>({
     resolver: zodResolver(SignupSchema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { email: '', password: '', invite_code: '' },
   })
 
   function onSubmit(values: SignupInput) {
@@ -63,6 +63,14 @@ export function SignupForm() {
         />
         {errors.password && (
           <p className="text-sm text-red-600">{errors.password.message}</p>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="invite_code">Invite code</Label>
+        <Input id="invite_code" autoComplete="off" {...register('invite_code')} />
+        {errors.invite_code && (
+          <p className="text-sm text-red-600">{errors.invite_code.message}</p>
         )}
       </div>
 
