@@ -1,6 +1,7 @@
 import Link from 'next/link'
 
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/server'
 
 type EvalRow = {
@@ -41,12 +42,17 @@ export default async function EvalListPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Eval runs</h1>
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          Each row is one <code>pnpm eval:run</code> against the active prompt.
-          Verdict accuracy is the primary metric (plan target ≥ 75%).
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">Eval runs</h1>
+          <p className="text-sm text-[var(--color-muted-foreground)]">
+            Each row is one <code>pnpm eval:run</code> against the active prompt.
+            Verdict accuracy is the primary metric (plan target ≥ 75%).
+          </p>
+        </div>
+        <Link href="/admin/eval/golden">
+          <Button variant="outline">Manage golden set</Button>
+        </Link>
       </div>
 
       {rows.length === 0 ? (
