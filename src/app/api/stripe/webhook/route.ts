@@ -7,6 +7,7 @@ import {
   receiptEmail,
   subscriptionCanceledEmail,
 } from '@/lib/email/templates'
+import { captureException } from '@/lib/observability/sentry'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { applyStripeEffects } from '@/lib/stripe/applyEffects'
 import { getStripe } from '@/lib/stripe/client'
@@ -135,7 +136,10 @@ export async function POST(req: Request) {
         paymentFailedEmail()
       )
     }
-  } catch {
+  } catch (err) {
+    await captureException(err, {
+      tags: { route: 'stripe-webhook', event_type: event.type },
+    })
     return NextResponse.json({ error: 'Handler error' }, { status: 500 })
   }
 

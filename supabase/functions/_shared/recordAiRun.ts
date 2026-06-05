@@ -1,3 +1,4 @@
+import { capture, isPosthogConfigured } from './posthog.ts'
 import { getAdminClient } from './supabaseAdmin.ts'
 
 type RunStart = {
@@ -45,7 +46,8 @@ export async function recordRunSuccess(
     langfuseTraceId?: string
   }
 ): Promise<void> {
-  await getAdminClient()
+  const admin = getAdminClient()
+  await admin
     .from('ai_runs')
     .update({
       status: 'success',
@@ -59,6 +61,34 @@ export async function recordRunSuccess(
       completed_at: new Date().toISOString(),
     })
     .eq('id', runId)
+
+  // Cost/usage analytics (the M6 cost dashboard feed). Only touches the DB +
+  // network when PostHog is actually configured, so unconfigured runs pay
+  // nothing. Best-effort.
+  if (isPosthogConfigured()) {
+    try {
+      const { data: run } = await admin
+        .from('ai_runs')
+        .select('orchestrator_name, workspace_id, user_id')
+        .eq('id', runId)
+        .maybeSingle()
+      if (run) {
+        await capture(
+          run.workspace_id ?? run.user_id ?? runId,
+          'ai_run_completed',
+          {
+            orchestrator: run.orchestrator_name,
+            cost_usd: args.estimatedCost ?? 0,
+            tokens_input: args.tokensInput ?? 0,
+            tokens_output: args.tokensOutput ?? 0,
+            run_id: runId,
+          }
+        )
+      }
+    } catch {
+      // best-effort
+    }
+  }
 }
 
 export async function recordRunError(

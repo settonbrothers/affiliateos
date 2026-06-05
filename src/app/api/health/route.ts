@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 
+import { captureException } from '@/lib/observability/sentry'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 // Unauthenticated liveness/readiness probe for an uptime monitor (Better Stack,
@@ -18,7 +19,8 @@ export async function GET() {
       return NextResponse.json({ status: 'degraded', db: false }, { status: 503 })
     }
     return NextResponse.json({ status: 'ok', db: true })
-  } catch {
+  } catch (err) {
+    await captureException(err, { tags: { route: 'health' } })
     return NextResponse.json({ status: 'down', db: false }, { status: 503 })
   }
 }
