@@ -36,7 +36,7 @@ const SET = {
     {
       ext: 'gold-001',
       name: 'Jasper.ai',
-      verdict: 'strong_test',
+      verdict: 'small_paid_test',
       facts: [
         f('commission_value', '30% recurring', 'Earn 30% recurring commission'),
         f('cookie_duration', '30 days', '30-day cookie window'),
@@ -47,7 +47,7 @@ const SET = {
     {
       ext: 'gold-002',
       name: 'Shopify',
-      verdict: 'strong_test',
+      verdict: 'small_paid_test',
       facts: [
         f('commission_value', '$150 one-time bounty', 'Up to $150 per referral'),
         f('cookie_duration', '30 days', '30-day cookie'),
@@ -57,7 +57,7 @@ const SET = {
     {
       ext: 'gold-003',
       name: 'ClickFunnels',
-      verdict: 'strong_test',
+      verdict: 'small_paid_test',
       facts: [
         f('commission_value', '30% recurring', '30% lifetime recurring'),
         f('cookie_duration', '45 days', '45-day cookie'),
@@ -84,7 +84,7 @@ const SET = {
     {
       ext: 'gold-006',
       name: 'NordVPN',
-      verdict: 'strong_test',
+      verdict: 'small_paid_test',
       facts: [
         f('commission_value', '40-100% first order', 'Up to 100% on first order'),
         f('allowed_geo', 'Global', 'Worldwide', 70),
@@ -94,7 +94,7 @@ const SET = {
     {
       ext: 'gold-007',
       name: 'Semrush',
-      verdict: 'strong_test',
+      verdict: 'small_paid_test',
       facts: [
         f('commission_value', '$200 per sale', '$200 per new subscription'),
         f('cookie_duration', '120 days', '120-day cookie'),
