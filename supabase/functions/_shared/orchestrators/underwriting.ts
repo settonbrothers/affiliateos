@@ -13,12 +13,21 @@ const TOOL_NAME = 'submit_underwriting_decision'
 const TOOL_DESCRIPTION =
   'Submit the complete underwriting evaluation for this affiliate offer. Populate every field. Call this tool exactly once.'
 
+export type OperatorContext = {
+  experience_level?: string | null
+  cashflow_tolerance?: string | null
+  primary_channels?: string[]
+  typical_budget_range_usd?: [number, number] | null
+}
+
 type UnderwritingInput = {
   offerId: string
   offerName?: string
   verticalSlug?: string
   facts?: UnderwritingFactInput[]
   operatorNotes?: string | null
+  // The operator's profile (from onboarding) — feeds operator_fit scoring.
+  userContext?: OperatorContext | null
 }
 
 export type OrchestratorResult = {
@@ -63,6 +72,7 @@ export async function runUnderwriting(
         confidence: f.confidence_score,
       })),
       operator_notes: operatorNotes,
+      user_context: input.userContext ?? null,
     },
     null,
     2

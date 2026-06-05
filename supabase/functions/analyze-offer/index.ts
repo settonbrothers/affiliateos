@@ -83,6 +83,24 @@ Deno.serve(async (req: Request) => {
       (offer as unknown as { verticals?: { slug: string } | null }).verticals?.slug ??
       undefined
 
+    // Operator context (from onboarding) → feeds operator_fit scoring.
+    const { data: op } = await admin
+      .from('operator_profiles')
+      .select('experience_level, cashflow_tolerance, primary_channels, budget_min_usd, budget_max_usd')
+      .eq('user_id', user.id)
+      .maybeSingle()
+    const userContext = op
+      ? {
+          experience_level: op.experience_level,
+          cashflow_tolerance: op.cashflow_tolerance,
+          primary_channels: op.primary_channels ?? [],
+          typical_budget_range_usd:
+            op.budget_min_usd != null && op.budget_max_usd != null
+              ? ([op.budget_min_usd, op.budget_max_usd] as [number, number])
+              : null,
+        }
+      : null
+
     const willCallReal = !!Deno.env.get('ANTHROPIC_API_KEY')
     const model = willCallReal ? 'claude-sonnet-4-6' : 'mock'
 
@@ -116,6 +134,7 @@ Deno.serve(async (req: Request) => {
             offerName: offer.name,
             verticalSlug,
             facts,
+            userContext,
             operatorNotes: offer.operator_notes,
           })
 

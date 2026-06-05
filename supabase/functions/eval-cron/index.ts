@@ -14,6 +14,16 @@ import { getAdminClient } from '../_shared/supabaseAdmin.ts'
 const CONCURRENCY = 4
 const ALERT_BELOW_PCT = 70
 
+// The golden verdicts assume a capable operator; eval with a fixed
+// representative context so operator_fit is scored consistently (not the
+// no-context default of 70).
+const REP_OPERATOR_CONTEXT = {
+  experience_level: 'advanced',
+  cashflow_tolerance: 'flexible',
+  primary_channels: ['paid_social', 'native', 'google_ads'],
+  typical_budget_range_usd: [500, 5000] as [number, number],
+}
+
 async function mapPool<T, R>(
   items: T[],
   limit: number,
@@ -30,6 +40,8 @@ async function mapPool<T, R>(
   await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker))
   return results
 }
+
+declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void }
 
 Deno.serve(async (req: Request) => {
   const preflight = handleCors(req)
@@ -78,83 +90,81 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: `No golden offers for ${verticalSlug}` }, 400)
     }
 
-    const startedAt = new Date()
-    const results = await mapPool(goldens, CONCURRENCY, async (g) => {
-      try {
-        const r = await runUnderwriting({
-          offerId: g.id,
-          offerName: g.offer_name,
-          verticalSlug,
-          facts: (g.facts_snapshot as unknown[] as Array<{
-            fact_type: string
-            fact_value: string
-            source_quote: string | null
-            confidence_score: number | null
-          }>) ?? [],
+    // The eval is too long for the 150s request limit — run it in the
+    // background and write the eval_runs row when done. Callers poll /admin/eval.
+    const goldenList = goldens
+    EdgeRuntime.waitUntil(
+      (async () => {
+        const startedAt = new Date()
+        const results = await mapPool(goldenList, CONCURRENCY, async (g) => {
+          try {
+            const r = await runUnderwriting({
+              offerId: g.id,
+              offerName: g.offer_name,
+              verticalSlug,
+              facts: (g.facts_snapshot as unknown[] as Array<{
+                fact_type: string
+                fact_value: string
+                source_quote: string | null
+                confidence_score: number | null
+              }>) ?? [],
+              userContext: REP_OPERATOR_CONTEXT,
+            })
+            const actual =
+              (r.output as { payload?: { verdict?: string } }).payload?.verdict ?? null
+            return {
+              external_id: g.external_id,
+              offer_name: g.offer_name,
+              expected_verdict: g.expected_verdict,
+              actual_verdict: actual,
+              verdict_match: actual === g.expected_verdict,
+              cost_usd: r.usage?.cost_usd ?? 0,
+            }
+          } catch (err) {
+            return {
+              external_id: g.external_id,
+              offer_name: g.offer_name,
+              expected_verdict: g.expected_verdict,
+              actual_verdict: null,
+              verdict_match: false,
+              error: err instanceof Error ? err.message : String(err),
+              cost_usd: 0,
+            }
+          }
         })
-        const actual = (r.output as { payload?: { verdict?: string } }).payload?.verdict ?? null
-        return {
-          external_id: g.external_id,
-          offer_name: g.offer_name,
-          expected_verdict: g.expected_verdict,
-          actual_verdict: actual,
-          verdict_match: actual === g.expected_verdict,
-          cost_usd: r.usage?.cost_usd ?? 0,
+
+        const matched = results.filter((r) => r.verdict_match).length
+        const accuracyPct = Math.round((matched / goldenList.length) * 10000) / 100
+        const totalCost = results.reduce((s, r) => s + (r.cost_usd ?? 0), 0)
+
+        await admin.from('eval_runs').insert({
+          prompt_id: prompt.id,
+          trigger_type: trigger,
+          total_offers: goldenList.length,
+          matched_verdict_count: matched,
+          matched_score_range_count: 0,
+          matched_risk_flags_count: 0,
+          accuracy_pct: accuracyPct,
+          details: { vertical: verticalSlug, prompt_version: prompt.version, results },
+          total_cost_usd: totalCost,
+          started_at: startedAt.toISOString(),
+          completed_at: new Date().toISOString(),
+        })
+
+        if (accuracyPct < ALERT_BELOW_PCT) {
+          await sendEmail(
+            Deno.env.get('ADMIN_ALERT_EMAIL'),
+            `[AffiliateOS] Eval accuracy dropped to ${accuracyPct}%`,
+            `<p>Underwriting eval on <strong>${verticalSlug}</strong> (prompt ${prompt.version}) ` +
+              `matched ${matched}/${goldenList.length} (${accuracyPct}%), below the ${ALERT_BELOW_PCT}% threshold.</p>` +
+              `<p>Review at /admin/eval.</p>`
+          )
         }
-      } catch (err) {
-        return {
-          external_id: g.external_id,
-          offer_name: g.offer_name,
-          expected_verdict: g.expected_verdict,
-          actual_verdict: null,
-          verdict_match: false,
-          error: err instanceof Error ? err.message : String(err),
-          cost_usd: 0,
-        }
-      }
-    })
-
-    const matched = results.filter((r) => r.verdict_match).length
-    const accuracyPct = Math.round((matched / goldens.length) * 10000) / 100
-    const totalCost = results.reduce((s, r) => s + (r.cost_usd ?? 0), 0)
-
-    const { data: inserted } = await admin
-      .from('eval_runs')
-      .insert({
-        prompt_id: prompt.id,
-        trigger_type: trigger,
-        total_offers: goldens.length,
-        matched_verdict_count: matched,
-        matched_score_range_count: 0,
-        matched_risk_flags_count: 0,
-        accuracy_pct: accuracyPct,
-        details: { vertical: verticalSlug, prompt_version: prompt.version, results },
-        total_cost_usd: totalCost,
-        started_at: startedAt.toISOString(),
-        completed_at: new Date().toISOString(),
-      })
-      .select('id')
-      .single()
-
-    if (accuracyPct < ALERT_BELOW_PCT) {
-      await sendEmail(
-        Deno.env.get('ADMIN_ALERT_EMAIL'),
-        `[AffiliateOS] Eval accuracy dropped to ${accuracyPct}%`,
-        `<p>Underwriting eval on <strong>${verticalSlug}</strong> (prompt ${prompt.version}) ` +
-          `matched ${matched}/${goldens.length} (${accuracyPct}%), below the ${ALERT_BELOW_PCT}% threshold.</p>` +
-          `<p>Review at /admin/eval.</p>`
-      )
-    }
+      })()
+    )
 
     return jsonResponse(
-      {
-        eval_run_id: inserted?.id ?? null,
-        vertical: verticalSlug,
-        total: goldens.length,
-        matched,
-        accuracy_pct: accuracyPct,
-        total_cost_usd: Math.round(totalCost * 10000) / 10000,
-      },
+      { started: true, vertical: verticalSlug, total: goldenList.length },
       200
     )
   } catch (err) {

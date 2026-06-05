@@ -46,7 +46,8 @@ try {
   })
   const token = signIn.session.access_token
 
-  console.log(`Running eval-cron on ${vertical} (real Sonnet over the golden set)…\n`)
+  console.log(`Running eval-cron on ${vertical} (real Sonnet, runs in background)…\n`)
+  const t0 = new Date().toISOString()
   const res = await fetch(`${URL_}/functions/v1/eval-cron`, {
     method: 'POST',
     headers: {
@@ -56,18 +57,35 @@ try {
     },
     body: JSON.stringify({ vertical, trigger: 'manual' }),
   })
-  const out = await res.json()
-  console.log(`HTTP ${res.status}`)
-  console.log(JSON.stringify(out, null, 2))
+  console.log(`HTTP ${res.status}: ${JSON.stringify(await res.json())}`)
 
-  if (out.eval_run_id) {
-    const { data: details } = await admin
+  // Poll for the eval_runs row the background task writes when done.
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+  let row = null
+  for (let i = 0; i < 90; i++) {
+    await sleep(2000)
+    const { data } = await admin
       .from('eval_runs')
-      .select('details')
-      .eq('id', out.eval_run_id)
+      .select('id, accuracy_pct, matched_verdict_count, total_offers, total_cost_usd, details')
+      .gt('started_at', t0)
+      .order('started_at', { ascending: false })
+      .limit(1)
       .maybeSingle()
+    if (data) {
+      row = data
+      break
+    }
+    process.stdout.write('  …running\r')
+  }
+  console.log()
+  if (!row) {
+    console.log('Timed out waiting for the eval_runs row.')
+  } else {
+    console.log(
+      `accuracy ${row.accuracy_pct}%  (${row.matched_verdict_count}/${row.total_offers})  cost $${row.total_cost_usd}  eval_run ${row.id}`
+    )
     console.log('\nPer-offer:')
-    for (const r of details?.details?.results ?? []) {
+    for (const r of row.details?.results ?? []) {
       console.log(
         `  ${r.verdict_match ? '✓' : '✗'} ${String(r.external_id).padEnd(9)} ${String(r.offer_name).padEnd(34)} got=${r.actual_verdict ?? 'ERR'} expected=${r.expected_verdict}`
       )
