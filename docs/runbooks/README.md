@@ -8,6 +8,7 @@ Resend).
 - [Stripe webhook is failing](stripe-webhook-failing.md)
 - [Database is full / slow](db-full.md)
 - [Roll back a bad prompt](prompt-rollback.md)
+- [Set up the nightly eval cron](cron-eval.md)
 
 Health check: `GET /api/health` → `{ "status": "ok", "db": true }` (200) when the
 app + DB are reachable; 503 when degraded. Point the uptime monitor here.
