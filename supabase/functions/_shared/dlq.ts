@@ -1,3 +1,4 @@
+import { sendEmail } from './email.ts'
 import { getAdminClient } from './supabaseAdmin.ts'
 
 type FailedMessageType = 'ai_run' | 'webhook_send' | 'email_send' | 'stripe_webhook'
@@ -24,5 +25,17 @@ export async function sendToDlq(args: {
   } catch (err) {
     console.error('sendToDlq failed', args, err)
   }
-  // TODO(M2): alert admin (Resend) when messageType === 'ai_run'.
+
+  // Alert the admin on agent failures (best-effort; no-op without the keys).
+  if (args.messageType === 'ai_run') {
+    const adminEmail = Deno.env.get('ADMIN_ALERT_EMAIL')
+    const kind = String((args.payload as { kind?: string }).kind ?? 'ai_run')
+    await sendEmail(
+      adminEmail,
+      `[AffiliateOS] ${kind} failed`,
+      `<p><strong>${kind}</strong> failed and was dead-lettered.</p>` +
+        `<pre style="background:#f5f5f5;padding:8px;border-radius:6px;white-space:pre-wrap">${args.error}</pre>` +
+        `<p>Replay from /admin/failed once the cause clears.</p>`
+    )
+  }
 }

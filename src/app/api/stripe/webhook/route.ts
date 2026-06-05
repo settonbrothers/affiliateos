@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server'
 import type Stripe from 'stripe'
 
+import { sendEmail } from '@/lib/email/send'
+import {
+  paymentFailedEmail,
+  receiptEmail,
+  subscriptionCanceledEmail,
+} from '@/lib/email/templates'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { applyStripeEffects } from '@/lib/stripe/applyEffects'
 import { getStripe } from '@/lib/stripe/client'
@@ -29,6 +35,34 @@ export async function POST(req: Request) {
   }
 
   const admin = createAdminClient()
+
+  // Resolve the notification recipient (workspace owner's email).
+  const ownerEmail = async (workspaceId: string | null): Promise<string | null> => {
+    if (!workspaceId) return null
+    const { data: ws } = await admin
+      .from('workspaces')
+      .select('created_by')
+      .eq('id', workspaceId)
+      .maybeSingle()
+    if (!ws?.created_by) return null
+    const { data: p } = await admin
+      .from('profiles')
+      .select('email')
+      .eq('id', ws.created_by)
+      .maybeSingle()
+    return p?.email ?? null
+  }
+  const workspaceForCustomer = async (
+    customerId: string | undefined
+  ): Promise<string | null> => {
+    if (!customerId) return null
+    const { data } = await admin
+      .from('stripe_customers')
+      .select('workspace_id')
+      .eq('stripe_customer_id', customerId)
+      .maybeSingle()
+    return data?.workspace_id ?? null
+  }
 
   // Idempotency: first insert wins; a duplicate delivery hits the unique pk.
   const { error: dupErr } = await admin
@@ -60,8 +94,46 @@ export async function POST(req: Request) {
             amount: PRO_PLAN.credits_per_period,
             reason: 'Subscription renewal credits',
           })
+          await sendEmail(
+            await ownerEmail(cust.workspace_id),
+            receiptEmail({
+              credits: PRO_PLAN.credits_per_period,
+              amountCents: inv.amount_paid ?? PRO_PLAN.amount_cents,
+              kind: 'subscription',
+            })
+          )
         }
       }
+    }
+
+    // Notifications (best-effort; no-op without RESEND_API_KEY).
+    if (event.type === 'checkout.session.completed') {
+      const obj = event.data.object as Stripe.Checkout.Session
+      const wsId = obj.metadata?.workspace_id ?? null
+      const credits = Number(obj.metadata?.credits ?? 0)
+      if (wsId && credits > 0) {
+        await sendEmail(
+          await ownerEmail(wsId),
+          receiptEmail({
+            credits,
+            amountCents: obj.amount_total ?? 0,
+            kind: obj.mode === 'subscription' ? 'subscription' : 'credits',
+          })
+        )
+      }
+    } else if (event.type === 'customer.subscription.deleted') {
+      const obj = event.data.object as Stripe.Subscription
+      await sendEmail(
+        await ownerEmail(obj.metadata?.workspace_id ?? null),
+        subscriptionCanceledEmail()
+      )
+    } else if (event.type === 'invoice.payment_failed') {
+      const inv = event.data.object as Stripe.Invoice
+      const customerId = typeof inv.customer === 'string' ? inv.customer : inv.customer?.id
+      await sendEmail(
+        await ownerEmail(await workspaceForCustomer(customerId)),
+        paymentFailedEmail()
+      )
     }
   } catch {
     return NextResponse.json({ error: 'Handler error' }, { status: 500 })

@@ -1,4 +1,37 @@
+import { sendEmail } from './email.ts'
 import { getAdminClient } from './supabaseAdmin.ts'
+
+// Email the workspace owner once when a debit takes them below this balance.
+const LOW_CREDIT_THRESHOLD = 10
+
+async function notifyLowCredits(
+  workspaceId: string,
+  newBalance: number
+): Promise<void> {
+  // Fully best-effort: a low-credit warning must never break a paid action.
+  try {
+    const admin = getAdminClient()
+    const { data: ws } = await admin
+      .from('workspaces')
+      .select('created_by')
+      .eq('id', workspaceId)
+      .maybeSingle()
+    if (!ws?.created_by) return
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('email')
+      .eq('id', ws.created_by)
+      .maybeSingle()
+    await sendEmail(
+      profile?.email,
+      "You're low on AffiliateOS credits",
+      `<p>Your workspace is down to <strong>${newBalance} credits</strong>. ` +
+        `Top up or subscribe from the billing page so your analyses don't get interrupted.</p>`
+    )
+  } catch {
+    // ignore
+  }
+}
 
 // Fallback prices if usage_pricing_rules is missing a row. Mirrors the seed in
 // migration 0025.
@@ -68,6 +101,13 @@ export async function reserveCredits(
     .select('id')
     .single()
   if (error) throw error
+
+  // Warn the owner once, on the debit that crosses below the threshold.
+  const newBalance = balance - cost
+  if (balance >= LOW_CREDIT_THRESHOLD && newBalance < LOW_CREDIT_THRESHOLD) {
+    await notifyLowCredits(workspaceId, newBalance)
+  }
+
   return { cost, ledgerId: data.id as string }
 }
 

@@ -3,6 +3,8 @@
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
+import { sendEmail } from '@/lib/email/send'
+import { welcomeEmail } from '@/lib/email/templates'
 import { isInviteCodeValid, type InviteCodeRow } from '@/lib/invites'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
@@ -86,6 +88,12 @@ export async function signup(input: SignupInput): Promise<AuthActionResult> {
       .update({ uses: inviteCode.uses + 1 })
       .eq('id', inviteCode.id)
   }
+
+  // Welcome email (best-effort; no-ops without RESEND_API_KEY).
+  await sendEmail(
+    parsed.data.email,
+    welcomeEmail({ bonusCredits: inviteCode.bonus_credits })
+  )
 
   if (data.session) redirect('/offers')
   return { message: 'Check your email to confirm your account.' }
