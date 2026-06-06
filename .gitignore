@@ -40,3 +40,6 @@ next-env.d.ts
 
 # Misc
 *.tmp
+
+# Playwright screenshots (local artifacts)
+.playwright-shots/
