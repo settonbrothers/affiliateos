@@ -13,7 +13,6 @@ import { TestKitView } from '@/components/offers/TestKitView'
 import { isCurrentUserAdmin } from '@/lib/auth/role'
 import {
   getLatestCompliance,
-  getLatestRun,
   getLatestRunByOrchestrator,
   getLatestTestKit,
   getOfferById,
@@ -42,7 +41,10 @@ export default async function OfferDetailPage({
   const offer = await getOfferById(id)
   if (!offer) notFound()
 
-  const run = await getLatestRun(id)
+  // Scorecard/verdict need the latest UNDERWRITING run specifically — not the
+  // latest run of any orchestrator (test-kit/diagnosis/compliance payloads have
+  // no `scores`, which would crash the scorecard).
+  const run = await getLatestRunByOrchestrator(id, 'UnderwritingOrchestrator')
   const evaluation = run?.output_payload ?? offer.evaluation
   const activeTab =
     tab === 'scorecard' ||

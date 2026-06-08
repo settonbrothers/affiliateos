@@ -21,7 +21,11 @@ export function OfferVerdict({
 }: {
   evaluation: UnderwritingResponse | null
 }) {
-  if (!evaluation) {
+  // Defensive: guard against a non-underwriting payload (no `verdict`).
+  const hasVerdict = !!(
+    evaluation as { payload?: { verdict?: unknown } } | null
+  )?.payload?.verdict
+  if (!evaluation || !hasVerdict) {
     return (
       <p className="text-sm text-[var(--color-muted-foreground)]">
         No verdict yet. Run an analysis first.

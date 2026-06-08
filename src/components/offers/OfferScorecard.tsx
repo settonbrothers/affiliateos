@@ -17,7 +17,11 @@ export function OfferScorecard({
 }: {
   evaluation: UnderwritingResponse | null
 }) {
-  if (!evaluation) {
+  // Defensive: the value is jsonb at the boundary, so guard against a non-
+  // underwriting payload (no `scores`) instead of crashing on scores.economics.
+  const scores = (evaluation as { payload?: { scores?: ScoreDimensions } } | null)
+    ?.payload?.scores
+  if (!evaluation || !scores) {
     return (
       <p className="text-sm text-[var(--color-muted-foreground)]">
         No analysis yet. Run an analysis to see the scorecard.
@@ -25,7 +29,6 @@ export function OfferScorecard({
     )
   }
 
-  const scores = evaluation.payload.scores
   const keys = Object.keys(SCORE_DIMENSION_LABELS) as Array<keyof ScoreDimensions>
   const weighted = evaluation.payload.weighted_score
   const weightedBand = bandClasses(weighted)
