@@ -18,7 +18,7 @@ const env = Object.fromEntries(
 const svc = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
   auth: { persistSession: false },
 })
-const BASE = 'http://localhost:3000'
+const BASE = process.env.SCFIX_BASE || 'http://localhost:3000'
 const stamp = `${Date.now()}`
 const email = `scfix+${stamp}@example.com`
 const password = 'Test-Password-123!'
