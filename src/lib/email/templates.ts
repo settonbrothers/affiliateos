@@ -61,29 +61,3 @@ export function paymentFailedEmail(): EmailContent {
     ),
   }
 }
-
-export function lowCreditsEmail(opts: { balance: number }): EmailContent {
-  return {
-    subject: "You're low on AffiliateOS credits",
-    html: layout(
-      'Low on credits',
-      `<p>Your workspace is down to <strong>${opts.balance} credits</strong>. Top up or subscribe from the billing page so your analyses don't get interrupted.</p>`
-    ),
-  }
-}
-
-export function agentFailureEmail(opts: {
-  orchestrator: string
-  error: string
-  offerId?: string
-}): EmailContent {
-  return {
-    subject: `[AffiliateOS] ${opts.orchestrator} failed`,
-    html: layout(
-      'Agent failure',
-      `<p><strong>${opts.orchestrator}</strong> failed${opts.offerId ? ` for offer ${opts.offerId}` : ''}.</p>
-<pre style="background:#f5f5f5;padding:8px;border-radius:6px;white-space:pre-wrap">${opts.error}</pre>
-<p>It was dead-lettered — replay from /admin/failed once the cause clears.</p>`
-    ),
-  }
-}

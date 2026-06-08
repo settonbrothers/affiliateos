@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  agentFailureEmail,
-  lowCreditsEmail,
-  receiptEmail,
-  welcomeEmail,
-} from './templates'
+import { receiptEmail, welcomeEmail } from './templates'
 
 describe('email templates', () => {
   it('welcome sums trial + bonus credits', () => {
@@ -25,15 +20,5 @@ describe('email templates', () => {
     const e = receiptEmail({ credits: 30, amountCents: 2000, kind: 'credits' })
     expect(e.html).toContain('$20.00')
     expect(e.html).toContain('30 credits')
-  })
-
-  it('low credits shows the balance', () => {
-    expect(lowCreditsEmail({ balance: 5 }).html).toContain('5 credits')
-  })
-
-  it('agent failure includes orchestrator + error', () => {
-    const e = agentFailureEmail({ orchestrator: 'UnderwritingOrchestrator', error: 'boom' })
-    expect(e.subject).toContain('UnderwritingOrchestrator')
-    expect(e.html).toContain('boom')
   })
 })
