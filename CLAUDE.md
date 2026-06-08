@@ -44,6 +44,7 @@ Past decisions: `decisions/001-admin-rls-helper.md`, `decisions/002-agent-contra
 - **Manual integration tests**: `scripts/test-*-e2e.mjs` (cap 429, ingest, kill-switch 503, DLQ RLS, testkit, diagnosis, compliance) — create + clean up throwaway users; `node scripts/<name>.mjs` (real-AI ones cost a little). Note: TestKit/Diagnosis Sonnet runs take ~40-90s.
 - `@supabase/ssr` pinned at **0.10.3**; `src/middleware.ts` early-returns when Supabase env is absent; `src/types/db.ts` derives domain types from generated `database.ts` (regen on `main` after a migration: `pnpm dlx supabase@latest gen types typescript --linked | Out-File src/types/database.ts -Encoding utf8`).
 - Branch protection on `main` is currently OFF (this session merged feature branches via `--ff-only` + push).
+- **Deployed to Vercel** (project `affiliateos/affiliateos`): production at **https://affiliateos-sooty.vercel.app**, GitHub auto-deploy connected (push to `main` deploys). Vercel env vars set (Supabase, Stripe sk/pk, Resend, PostHog host, `NEXT_PUBLIC_SITE_URL`). Post-deploy TODO held by owner: add the Vercel URL to Supabase Auth → URL Configuration; create the real Stripe webhook endpoint (`/api/stripe/webhook`) and set the real `STRIPE_WEBHOOK_SECRET` in Vercel (currently a local-test value). `ANTHROPIC_API_KEY` etc. stay Supabase secrets, not Vercel.
 
 ## Hard Rules
 - **Branching**: feature branches (`feat/m1-...`); never push directly to `main` once branch protection is enabled. Rebase only — no merge commits.
