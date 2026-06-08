@@ -3,6 +3,7 @@
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
+import { magicLinkErrorMessage } from '@/lib/auth/magicLink'
 import { sendEmail } from '@/lib/email/send'
 import { welcomeEmail } from '@/lib/email/templates'
 import { isInviteCodeValid, type InviteCodeRow } from '@/lib/invites'
@@ -108,9 +109,13 @@ export async function sendMagicLink(
   const supabase = await createClient()
   const { error } = await supabase.auth.signInWithOtp({
     email: parsed.data.email,
-    options: { emailRedirectTo: `${await siteOrigin()}/callback` },
+    options: {
+      // Login only — never create an account here (invite-only signup).
+      shouldCreateUser: false,
+      emailRedirectTo: `${await siteOrigin()}/callback`,
+    },
   })
-  if (error) return { error: error.message }
+  if (error) return { error: magicLinkErrorMessage(error.message) }
 
   return { message: 'Magic link sent. Check your email.' }
 }
