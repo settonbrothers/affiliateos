@@ -1,0 +1,48 @@
+name: Deploy Edge Functions
+
+# Manual-only deploy of Supabase edge functions. Edge deploys were previously
+# only done by hand (`supabase functions deploy <name>`); this gives a
+# repeatable, audited path. Trigger from the Actions tab ("Run workflow") and
+# optionally name a single function, or leave blank to deploy all.
+#
+# Required repo secrets:
+#   SUPABASE_ACCESS_TOKEN  — personal access token (Supabase dashboard > Account)
+#   SUPABASE_PROJECT_REF   — pfuwahtntsnlprjqlwcn
+on:
+  workflow_dispatch:
+    inputs:
+      function:
+        description: 'Single function to deploy (blank = all)'
+        required: false
+        default: ''
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy edge function(s)
+        run: |
+          REF="${{ secrets.SUPABASE_PROJECT_REF }}"
+          FN="${{ github.event.inputs.function }}"
+          if [ -n "$FN" ]; then
+            supabase functions deploy "$FN" --project-ref "$REF"
+          else
+            for dir in supabase/functions/*/; do
+              name="$(basename "$dir")"
+              # Skip shared, non-deployable directories.
+              case "$name" in
+                _shared) continue ;;
+              esac
+              echo "Deploying $name"
+              supabase functions deploy "$name" --project-ref "$REF"
+            done
+          fi
