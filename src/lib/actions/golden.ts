@@ -9,6 +9,7 @@ import {
   GoldenOfferSchema,
   type GoldenOfferInput,
 } from '@/lib/validations/golden'
+import { VERDICTS } from '@/types/agents/underwriting'
 import type { Json } from '@/types/database'
 
 // Output of JSON.parse is valid JSON by construction, so asserting Json[] is
@@ -57,6 +58,28 @@ export async function createGoldenOffer(
 
   revalidatePath('/admin/eval/golden')
   redirect('/admin/eval/golden')
+}
+
+// Ratify (or correct) a golden offer's expected_verdict in place. This is the
+// owner-judgment step: the verdict here is the ground truth the eval scores
+// against, so it must be set by the owner, never copied from model output.
+export async function updateGoldenVerdict(
+  id: string,
+  verdict: string
+): Promise<{ error: string } | void> {
+  if (!(await isCurrentUserAdmin())) return { error: 'Admin only.' }
+  if (!(VERDICTS as readonly string[]).includes(verdict)) {
+    return { error: 'Unknown verdict.' }
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('golden_set_offers')
+    .update({ expected_verdict: verdict })
+    .eq('id', id)
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/eval/golden')
 }
 
 export async function deleteGoldenOffer(

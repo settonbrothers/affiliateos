@@ -1,6 +1,7 @@
 import Link from 'next/link'
 
 import { DeleteGoldenButton } from '@/components/admin/DeleteGoldenButton'
+import { GoldenVerdictSelect } from '@/components/admin/GoldenVerdictSelect'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -20,6 +21,27 @@ type GoldenRow = {
   facts_snapshot: unknown
   notes: string | null
   verticals: { slug: string; name: string } | null
+}
+
+type DisplayFact = { fact_type: string; fact_value: string }
+
+// facts_snapshot is free-form JSON; pull out just what we display, tolerating
+// rows whose facts don't match the extracted_facts shape.
+function parseFactList(raw: unknown): DisplayFact[] {
+  if (!Array.isArray(raw)) return []
+  const out: DisplayFact[] = []
+  for (const item of raw) {
+    if (item && typeof item === 'object') {
+      const rec = item as Record<string, unknown>
+      const factType = typeof rec.fact_type === 'string' ? rec.fact_type : 'fact'
+      const factValue =
+        typeof rec.fact_value === 'string'
+          ? rec.fact_value
+          : JSON.stringify(rec.fact_value)
+      out.push({ fact_type: factType, fact_value: factValue })
+    }
+  }
+  return out
 }
 
 export default async function GoldenSetPage() {
@@ -81,9 +103,7 @@ export default async function GoldenSetPage() {
         </p>
       ) : (
         rows.map((r) => {
-          const factCount = Array.isArray(r.facts_snapshot)
-            ? r.facts_snapshot.length
-            : 0
+          const facts = parseFactList(r.facts_snapshot)
           return (
             <Card key={r.id}>
               <CardHeader>
@@ -92,23 +112,45 @@ export default async function GoldenSetPage() {
                     {r.external_id ? `${r.external_id} · ` : ''}
                     {r.offer_name}
                   </CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Badge>{r.expected_verdict}</Badge>
+                  <div className="flex items-start gap-2">
+                    <GoldenVerdictSelect id={r.id} value={r.expected_verdict} />
                     <DeleteGoldenButton id={r.id} />
                   </div>
                 </div>
                 <p className="text-xs text-[var(--color-muted-foreground)]">
-                  {r.verticals?.slug ?? '—'} · {factCount} fact(s)
-                  {r.offer_url ? ` · ${r.offer_url}` : ''}
+                  {r.verticals?.slug ?? '—'} · {facts.length} fact(s)
+                  {r.offer_url ? ' · ' : ''}
+                  {r.offer_url && (
+                    <a
+                      href={r.offer_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline"
+                    >
+                      {r.offer_url}
+                    </a>
+                  )}
                 </p>
               </CardHeader>
-              {r.notes && (
-                <CardContent>
-                  <p className="text-sm text-[var(--color-muted-foreground)]">
+              <CardContent className="flex flex-col gap-3">
+                {facts.length > 0 && (
+                  <ul className="flex flex-col gap-1 text-sm">
+                    {facts.map((f, i) => (
+                      <li key={i} className="flex gap-2">
+                        <span className="shrink-0 font-mono text-xs text-[var(--color-muted-foreground)]">
+                          {f.fact_type}
+                        </span>
+                        <span>{f.fact_value}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {r.notes && (
+                  <p className="text-xs text-[var(--color-muted-foreground)]">
                     {r.notes}
                   </p>
-                </CardContent>
-              )}
+                )}
+              </CardContent>
             </Card>
           )
         })
