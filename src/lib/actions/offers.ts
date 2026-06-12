@@ -53,7 +53,11 @@ export async function createOffer(
       operator_notes: parsed.data.operator_notes || null,
       created_by_user_id: user.id,
       workspace_id: membership?.workspace_id ?? null,
-      status: 'draft',
+      // Lifecycle: needs_source_ingestion → ready_for_analysis (ingest) →
+      // ai_analyzed (underwriting) → published (admin). 'draft' is reserved
+      // for rows that aren't ready to enter the pipeline (e.g. promoted
+      // golden-set entries an admin is still editing).
+      status: 'needs_source_ingestion',
       visibility: 'admin_only',
     })
     .select('id')

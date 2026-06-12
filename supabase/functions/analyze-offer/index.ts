@@ -184,6 +184,21 @@ Deno.serve(async (req: Request) => {
             estimatedCost: totalCostUsd,
             langfuseTraceId: traceId,
           })
+
+          // A verdict exists now — reflect it on the offer. Guard so an
+          // already-published/rejected offer is never demoted.
+          await admin
+            .from('offers')
+            .update({
+              status: 'ai_analyzed',
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', offerId)
+            .in('status', [
+              'draft',
+              'needs_source_ingestion',
+              'ready_for_analysis',
+            ])
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err)
           await recordRunError(runId, message)

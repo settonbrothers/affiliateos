@@ -218,6 +218,17 @@ async function processIngestion(args: {
       .from('source_fetch_jobs')
       .update({ status: 'completed', completed_at: new Date().toISOString() })
       .eq('id', args.jobId)
+
+    // Sources exist now — advance the offer past the ingestion stage. The
+    // .in() guard never demotes a further-along status.
+    await admin
+      .from('offers')
+      .update({
+        status: 'ready_for_analysis',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', args.offerId)
+      .in('status', ['draft', 'needs_source_ingestion'])
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     await admin
