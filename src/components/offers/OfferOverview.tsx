@@ -1,16 +1,19 @@
 import Link from 'next/link'
 
 import { DeleteOfferButton } from '@/components/offers/DeleteOfferButton'
+import { OfferFactsList } from '@/components/offers/OfferFactsList'
 import { Button } from '@/components/ui/button'
+import type { VerifiedFact } from '@/lib/queries/offers'
 import type { Offer } from '@/types/db'
 
 type Props = {
   offer: Offer
   operatorNotes: string | null
   isAdmin: boolean
+  facts: VerifiedFact[]
 }
 
-export function OfferOverview({ offer, operatorNotes, isAdmin }: Props) {
+export function OfferOverview({ offer, operatorNotes, isAdmin, facts }: Props) {
   const rows: Array<[string, string | null]> = [
     ['Status', offer.status],
     ['Website', offer.website_url],
@@ -40,6 +43,13 @@ export function OfferOverview({ offer, operatorNotes, isAdmin }: Props) {
           </dd>
         </div>
       </dl>
+
+      <div className="border-t border-[var(--color-border)] pt-4">
+        <h3 className="mb-2 text-sm font-medium">
+          Verified facts ({facts.length})
+        </h3>
+        <OfferFactsList facts={facts} />
+      </div>
 
       <div className="flex items-center gap-3 border-t border-[var(--color-border)] pt-4">
         <Button asChild size="sm" variant="outline">

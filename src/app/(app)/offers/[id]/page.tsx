@@ -16,6 +16,7 @@ import {
   getLatestRunByOrchestrator,
   getLatestTestKit,
   getOfferById,
+  getVerifiedFacts,
   hasSuccessfulUnderwriting,
 } from '@/lib/queries/offers'
 import { cn } from '@/lib/utils'
@@ -54,6 +55,9 @@ export default async function OfferDetailPage({
       ? tab
       : 'overview'
   const isAdmin = await isCurrentUserAdmin()
+
+  // Verified facts feed the Overview's evidence section.
+  const facts = activeTab === 'overview' ? await getVerifiedFacts(id) : []
 
   // Compliance feeds the Compliance tab and the verdict-cap banner on Verdict.
   const compliance =
@@ -117,6 +121,7 @@ export default async function OfferDetailPage({
           offer={offer}
           operatorNotes={offer.operator_notes}
           isAdmin={isAdmin}
+          facts={facts}
         />
       )}
       {activeTab === 'scorecard' && <OfferScorecard evaluation={evaluation} />}

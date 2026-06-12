@@ -99,6 +99,32 @@ export async function getLatestCompliance(
   return (data as LatestCompliance) ?? null
 }
 
+export type VerifiedFact = {
+  id: string
+  fact_type: string
+  fact_value: string
+  source_quote: string | null
+  confidence_score: number | null
+  source_documents: { url: string } | null
+}
+
+// Verified facts + the URL of the source doc each one cites. RLS (0029)
+// scopes this to offers the current user can see; before 0029 is applied it
+// simply returns [] for non-admins.
+export async function getVerifiedFacts(
+  offerId: string
+): Promise<VerifiedFact[]> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('extracted_facts')
+    .select(
+      'id, fact_type, fact_value, source_quote, confidence_score, source_documents(url)'
+    )
+    .eq('offer_id', offerId)
+    .eq('status', 'verified')
+  return (data ?? []) as VerifiedFact[]
+}
+
 // Does this offer have a usable verdict (a successful underwriting run)?
 export async function hasSuccessfulUnderwriting(
   offerId: string
