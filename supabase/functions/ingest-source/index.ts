@@ -12,6 +12,10 @@ declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void }
 const FETCH_TIMEOUT_MS = 15_000
 const MAX_HTML_BYTES = 500_000
 const MAX_RAW_TEXT_LEN = 200_000
+// Facts at/above this extraction confidence (0-100) are auto-verified so the
+// underwriting run actually receives them; below it they stay 'proposed' for
+// admin review. Auto-verified rows keep reviewed_by NULL (≠ human-verified).
+const AUTO_VERIFY_MIN_CONFIDENCE = 70
 
 Deno.serve(async (req: Request) => {
   const preflight = handleCors(req)
@@ -194,6 +198,9 @@ async function processIngestion(args: {
           fact_value: f.fact_value,
           source_quote: f.source_quote,
           confidence_score: f.confidence_score,
+          status: (f.confidence_score >= AUTO_VERIFY_MIN_CONFIDENCE
+            ? 'verified'
+            : 'proposed') as never,
         }))
       )
     }
