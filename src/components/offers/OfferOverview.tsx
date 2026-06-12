@@ -7,9 +7,10 @@ import type { Offer } from '@/types/db'
 type Props = {
   offer: Offer
   operatorNotes: string | null
+  isAdmin: boolean
 }
 
-export function OfferOverview({ offer, operatorNotes }: Props) {
+export function OfferOverview({ offer, operatorNotes, isAdmin }: Props) {
   const rows: Array<[string, string | null]> = [
     ['Status', offer.status],
     ['Website', offer.website_url],
@@ -44,9 +45,13 @@ export function OfferOverview({ offer, operatorNotes }: Props) {
         <Button asChild size="sm" variant="outline">
           <Link href={`/offers/${offer.id}/edit`}>Edit</Link>
         </Button>
-        <Button asChild size="sm" variant="ghost">
-          <Link href={`/admin/offers/${offer.id}/sources`}>Manage sources</Link>
-        </Button>
+        {isAdmin && (
+          <Button asChild size="sm" variant="ghost">
+            <Link href={`/admin/offers/${offer.id}/sources`}>
+              Manage sources
+            </Link>
+          </Button>
+        )}
         <div className="flex-1" />
         <DeleteOfferButton offerId={offer.id} offerName={offer.name} />
       </div>

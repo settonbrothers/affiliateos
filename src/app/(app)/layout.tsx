@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
+import { isCurrentUserAdmin } from '@/lib/auth/role'
 import { getCurrentBalance } from '@/lib/queries/credits'
 import { isOnboarded } from '@/lib/queries/onboarding'
 import { createClient } from '@/lib/supabase/server'
@@ -20,6 +21,7 @@ export default async function AppLayout({
   if (!(await isOnboarded())) redirect('/onboarding')
 
   const balance = await getCurrentBalance()
+  const isAdmin = await isCurrentUserAdmin()
 
   return (
     <div className="flex min-h-screen">
@@ -38,6 +40,14 @@ export default async function AppLayout({
           >
             Campaigns
           </Link>
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="rounded-md px-3 py-2 hover:bg-[var(--color-muted)]"
+            >
+              Admin
+            </Link>
+          )}
         </nav>
         <Link
           href="/billing"

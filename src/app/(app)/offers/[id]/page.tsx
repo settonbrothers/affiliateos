@@ -113,7 +113,11 @@ export default async function OfferDetailPage({
       </nav>
 
       {activeTab === 'overview' && (
-        <OfferOverview offer={offer} operatorNotes={offer.operator_notes} />
+        <OfferOverview
+          offer={offer}
+          operatorNotes={offer.operator_notes}
+          isAdmin={isAdmin}
+        />
       )}
       {activeTab === 'scorecard' && <OfferScorecard evaluation={evaluation} />}
       {activeTab === 'verdict' && (
