@@ -1,6 +1,10 @@
 import Link from 'next/link'
 
 import { Badge } from '@/components/ui/badge'
+import {
+  OFFER_STATUS_BADGE_CLASS,
+  OFFER_STATUS_LABELS,
+} from '@/lib/offers/status'
 import type { Offer } from '@/types/db'
 
 export function OffersTable({ offers }: { offers: Offer[] }) {
@@ -30,7 +34,9 @@ export function OffersTable({ offers }: { offers: Offer[] }) {
               </Link>
             </td>
             <td className="py-2">
-              <Badge>{offer.status}</Badge>
+              <Badge className={OFFER_STATUS_BADGE_CLASS[offer.status]}>
+                {OFFER_STATUS_LABELS[offer.status]}
+              </Badge>
             </td>
             <td className="py-2 text-[var(--color-muted-foreground)]">
               {new Date(offer.created_at).toLocaleDateString()}

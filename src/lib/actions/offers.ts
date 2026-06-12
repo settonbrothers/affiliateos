@@ -3,9 +3,11 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
+import { isCurrentUserAdmin } from '@/lib/auth/role'
 import { createClient } from '@/lib/supabase/server'
 import {
   OfferCreateSchema,
+  OfferStatusUpdateSchema,
   OfferUpdateSchema,
   type OfferCreateInput,
   type OfferUpdateInput,
@@ -103,6 +105,31 @@ export async function deleteOffer(
 
   revalidatePath('/offers')
   redirect('/offers')
+}
+
+// Admin-only manual override of the lifecycle status (publish/reject/etc.).
+// RLS ("admin write offers") enforces this server-side too — the explicit
+// check exists to return a clear error instead of a silent 0-row update.
+export async function updateOfferStatus(
+  offerId: string,
+  status: string
+): Promise<{ error: string } | void> {
+  const parsed = OfferStatusUpdateSchema.safeParse({ status })
+  if (!parsed.success) return { error: 'Invalid status.' }
+  if (!(await isCurrentUserAdmin())) return { error: 'Admins only.' }
+
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('offers')
+    .update({
+      status: parsed.data.status,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', offerId)
+  if (error) return { error: error.message }
+
+  revalidatePath('/offers')
+  revalidatePath(`/offers/${offerId}`)
 }
 
 export type TriggerAnalyzeResult = { run_id: string } | { error: string }

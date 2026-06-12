@@ -2,7 +2,13 @@ import Link from 'next/link'
 
 import { DeleteOfferButton } from '@/components/offers/DeleteOfferButton'
 import { OfferFactsList } from '@/components/offers/OfferFactsList'
+import { OfferStatusSelect } from '@/components/offers/OfferStatusSelect'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  OFFER_STATUS_BADGE_CLASS,
+  OFFER_STATUS_LABELS,
+} from '@/lib/offers/status'
 import type { VerifiedFact } from '@/lib/queries/offers'
 import type { Offer } from '@/types/db'
 
@@ -15,7 +21,6 @@ type Props = {
 
 export function OfferOverview({ offer, operatorNotes, isAdmin, facts }: Props) {
   const rows: Array<[string, string | null]> = [
-    ['Status', offer.status],
     ['Website', offer.website_url],
     ['Affiliate program', offer.affiliate_program_url],
     ['Description', offer.short_description],
@@ -24,6 +29,20 @@ export function OfferOverview({ offer, operatorNotes, isAdmin, facts }: Props) {
   return (
     <div className="flex flex-col gap-6">
       <dl className="flex flex-col gap-3">
+        <div className="flex items-center gap-4">
+          <dt className="w-40 text-sm text-[var(--color-muted-foreground)]">
+            Status
+          </dt>
+          <dd className="text-sm">
+            {isAdmin ? (
+              <OfferStatusSelect offerId={offer.id} status={offer.status} />
+            ) : (
+              <Badge className={OFFER_STATUS_BADGE_CLASS[offer.status]}>
+                {OFFER_STATUS_LABELS[offer.status]}
+              </Badge>
+            )}
+          </dd>
+        </div>
         {rows.map(([label, value]) => (
           <div key={label} className="flex gap-4">
             <dt className="w-40 text-sm text-[var(--color-muted-foreground)]">

@@ -25,3 +25,19 @@ export type OfferCreateInput = z.infer<typeof OfferCreateSchema>
 // Edit takes the same shape — the server action wires it to UPDATE rather than INSERT.
 export const OfferUpdateSchema = OfferCreateSchema
 export type OfferUpdateInput = z.infer<typeof OfferUpdateSchema>
+
+// Mirrors the offer_status enum (migration 0005). Kept as a const tuple so
+// both z.enum and UI <select> options derive from one source.
+export const OFFER_STATUSES = [
+  'draft',
+  'needs_source_ingestion',
+  'ready_for_analysis',
+  'ai_analyzed',
+  'published',
+  'rejected',
+  'deprecated',
+] as const
+
+export const OfferStatusUpdateSchema = z.object({
+  status: z.enum(OFFER_STATUSES),
+})
