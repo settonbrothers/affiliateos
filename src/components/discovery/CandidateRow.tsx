@@ -16,7 +16,11 @@ export function CandidateRow({ candidate }: { candidate: DiscoveryCandidate }) {
   const [isPending, startTransition] = useTransition()
   const stage = candidate.stage as CandidateStage
   const deep = candidate.deep_analysis as
-    | { summary?: string; estimated_commission?: string | null }
+    | {
+        summary?: string
+        estimated_commission?: string | null
+        recommended?: boolean
+      }
     | null
 
   const act = (fn: () => Promise<{ error: string } | void>) =>
@@ -47,6 +51,11 @@ export function CandidateRow({ candidate }: { candidate: DiscoveryCandidate }) {
         {candidate.deep_score != null && (
           <span className="text-xs text-[var(--color-muted-foreground)]">
             score {candidate.deep_score}
+          </span>
+        )}
+        {deep?.recommended === false && (
+          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800">
+            not recommended
           </span>
         )}
       </div>

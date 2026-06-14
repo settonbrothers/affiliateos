@@ -27,14 +27,23 @@ export default async function DiscoveryRunPage({
     rejection_stage: (c.rejection_stage as CandidateLike['stage']) ?? null,
   })
 
+  // Deep-analysis quality gate: a low deep_score (e.g. a directory/listicle the
+  // deep read flagged) must NOT sit in "Top candidates" looking approvable.
+  const RECOMMENDED_MIN_SCORE = 55
+  const isStrong = (c: (typeof candidates)[number]): boolean =>
+    (c.deep_score ?? 0) >= RECOMMENDED_MIN_SCORE ||
+    c.stage === 'approved' ||
+    c.stage === 'promoted'
+
   const counts = funnelCounts(candidates.map(asLike))
   const rankedIds = new Set(
     rankAnalyzed(candidates.map(asLike)).map((c) => c.id)
   )
-  const reached = candidates.filter((c) => rankedIds.has(c.id))
-  const reachedSorted = [...reached].sort(
-    (a, b) => (b.deep_score ?? 0) - (a.deep_score ?? 0)
-  )
+  const reached = candidates
+    .filter((c) => rankedIds.has(c.id))
+    .sort((a, b) => (b.deep_score ?? 0) - (a.deep_score ?? 0))
+  const strong = reached.filter(isStrong)
+  const weak = reached.filter((c) => !isStrong(c))
   const dropped = candidates.filter((c) => !rankedIds.has(c.id))
 
   return (
@@ -52,19 +61,35 @@ export default async function DiscoveryRunPage({
 
       <section>
         <h2 className="mb-2 text-lg font-medium">
-          Top candidates ({reachedSorted.length})
+          Top candidates ({strong.length})
         </h2>
-        {reachedSorted.map((c) => (
+        {strong.map((c) => (
           <CandidateRow key={c.id} candidate={c} />
         ))}
-        {reachedSorted.length === 0 && (
+        {strong.length === 0 && (
           <p className="text-sm text-[var(--color-muted-foreground)]">
             {run.status === 'completed'
-              ? 'No candidates reached deep analysis.'
+              ? 'No strong candidates this run.'
               : 'Scan still running — refresh in a moment.'}
           </p>
         )}
       </section>
+
+      {weak.length > 0 && (
+        <section>
+          <h2 className="mb-1 text-lg font-medium">
+            Analyzed — low confidence ({weak.length})
+          </h2>
+          <p className="mb-2 text-xs text-[var(--color-muted-foreground)]">
+            Reached deep analysis but scored below {RECOMMENDED_MIN_SCORE} —
+            usually directories, listicles, or thin pages. Review before
+            approving.
+          </p>
+          {weak.map((c) => (
+            <CandidateRow key={c.id} candidate={c} />
+          ))}
+        </section>
+      )}
 
       <section>
         <h2 className="mb-2 text-lg font-medium">
