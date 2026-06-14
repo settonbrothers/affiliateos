@@ -1,0 +1,345 @@
+import { ForbiddenError, requireAdmin, UnauthorizedError } from '../_shared/auth.ts'
+import { handleCors, jsonResponse } from '../_shared/cors.ts'
+import { assertNotPaused, OrchestratorPausedError } from '../_shared/killSwitch.ts'
+import { runWebSearch } from '../_shared/adapters/webSearch.ts'
+import { runDiscoveryTriage } from '../_shared/orchestrators/discoveryTriage.ts'
+import { runDiscoveryDeep } from '../_shared/orchestrators/discoveryDeep.ts'
+import { recordRunError, recordRunStart, recordRunSuccess } from '../_shared/recordAiRun.ts'
+import { getAdminClient } from '../_shared/supabaseAdmin.ts'
+import { truncate } from '../_shared/truncate.ts'
+
+declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void }
+
+const FETCH_TIMEOUT_MS = 15_000
+const MAX_HTML_BYTES = 500_000
+const MAX_RAW_TEXT_LEN = 120_000
+const TRIAGE_KEEP_MIN_SCORE = 55
+const DEEP_ANALYSIS_CAP = 20
+
+// Breadth → fan-out. queries: how many of a source's templates to use;
+// resultsPerQuery: web-search results each.
+const BREADTH_PARAMS: Record<string, { queries: number; resultsPerQuery: number }> = {
+  quick: { queries: 1, resultsPerQuery: 5 },
+  standard: { queries: 3, resultsPerQuery: 10 },
+  deep: { queries: 5, resultsPerQuery: 15 },
+}
+
+Deno.serve(async (req: Request) => {
+  const preflight = handleCors(req)
+  if (preflight) return preflight
+
+  try {
+    const user = await requireAdmin(req)
+
+    const body = (await req.json().catch(() => ({}))) as {
+      vertical_id?: string
+      breadth?: string
+    }
+    if (!body.vertical_id) return jsonResponse({ error: 'vertical_id is required' }, 400)
+    const breadth = body.breadth && body.breadth in BREADTH_PARAMS ? body.breadth : 'standard'
+
+    try {
+      await assertNotPaused('DiscoveryTriageOrchestrator')
+      await assertNotPaused('DiscoveryDeepOrchestrator')
+    } catch (err) {
+      if (err instanceof OrchestratorPausedError) return jsonResponse({ error: err.message }, 503)
+      throw err
+    }
+
+    const admin = getAdminClient()
+
+    const { data: runRow, error: runErr } = await admin
+      .from('discovery_runs')
+      .insert({
+        triggered_by: user.id,
+        vertical_id: body.vertical_id,
+        status: 'queued',
+        config: { breadth },
+      })
+      .select('id')
+      .single()
+    if (runErr || !runRow) return jsonResponse({ error: 'Failed to create run' }, 500)
+    const runId = runRow.id as string
+
+    EdgeRuntime.waitUntil(
+      processDiscovery({ runId, verticalId: body.vertical_id, breadth, userId: user.id })
+    )
+
+    return jsonResponse({ run_id: runId }, 200)
+  } catch (err) {
+    if (err instanceof UnauthorizedError) return jsonResponse({ error: err.message }, 401)
+    if (err instanceof ForbiddenError) return jsonResponse({ error: err.message }, 403)
+    return jsonResponse({ error: 'Internal error' }, 500)
+  }
+})
+
+async function processDiscovery(args: {
+  runId: string
+  verticalId: string
+  breadth: string
+  userId: string
+}): Promise<void> {
+  const admin = getAdminClient()
+  const params = BREADTH_PARAMS[args.breadth] ?? BREADTH_PARAMS.standard
+  let totalCost = 0
+
+  try {
+    await admin
+      .from('discovery_runs')
+      .update({ status: 'discovering', started_at: new Date().toISOString() })
+      .eq('id', args.runId)
+
+    // Vertical slug for prompt routing.
+    const { data: vertical } = await admin
+      .from('verticals')
+      .select('slug')
+      .eq('id', args.verticalId)
+      .maybeSingle()
+    const verticalSlug = (vertical as { slug?: string } | null)?.slug
+
+    // 1) DISCOVER — run enabled web_search sources for this vertical.
+    const { data: sources } = await admin
+      .from('discovery_sources')
+      .select('id, config')
+      .eq('enabled', true)
+      .eq('kind', 'web_search')
+      .or(`vertical_id.eq.${args.verticalId},vertical_id.is.null`)
+
+    type Raw = { name: string; url: string; snippet: string; sourceId: string }
+    const raw: Raw[] = []
+    for (const s of sources ?? []) {
+      const templates =
+        ((s.config as { query_templates?: string[] }).query_templates ?? []).slice(
+          0,
+          params.queries
+        )
+      for (const q of templates) {
+        try {
+          const found = await runWebSearch(q, params.resultsPerQuery)
+          for (const f of found) raw.push({ ...f, sourceId: s.id as string })
+        } catch {
+          // one failed query shouldn't kill the run
+        }
+      }
+    }
+
+    // Dedup against existing offers' domains + within the batch.
+    const { data: existingOffers } = await admin
+      .from('offers')
+      .select('website_url')
+    const known = new Set<string>()
+    for (const o of existingOffers ?? []) {
+      const d = domainOf((o as { website_url: string | null }).website_url)
+      if (d) known.add(d)
+    }
+    const deduped: Array<Raw & { domain: string }> = []
+    for (const r of raw) {
+      const domain = domainOf(r.url)
+      if (!domain || known.has(domain)) continue
+      known.add(domain)
+      deduped.push({ ...r, domain })
+    }
+
+    if (deduped.length === 0) {
+      await admin
+        .from('discovery_runs')
+        .update({
+          status: 'completed',
+          counts: { discovered: 0, triaged: 0, analyzed: 0, approved: 0 },
+          completed_at: new Date().toISOString(),
+        })
+        .eq('id', args.runId)
+      return
+    }
+
+    const { data: candRows } = await admin
+      .from('discovery_candidates')
+      .insert(
+        deduped.map((d) => ({
+          run_id: args.runId,
+          source_id: d.sourceId,
+          vertical_id: args.verticalId,
+          name: d.name,
+          url: d.url,
+          domain: d.domain,
+          raw_snippet: d.snippet,
+          stage: 'discovered',
+        }))
+      )
+      .select('id, name, url, raw_snippet')
+    const candidates = (candRows ?? []) as Array<{
+      id: string
+      name: string
+      url: string | null
+      raw_snippet: string | null
+    }>
+
+    // 2) TRIAGE — one cheap Haiku batch call.
+    await admin.from('discovery_runs').update({ status: 'triaging' }).eq('id', args.runId)
+    const triageRunId = await recordRunStart({
+      orchestratorName: 'DiscoveryTriageOrchestrator',
+      agentVersion: Deno.env.get('ANTHROPIC_API_KEY') ? 'real-v1' : 'mock-v1',
+      model: Deno.env.get('ANTHROPIC_API_KEY') ? 'claude-haiku-4-5-20251001' : 'mock',
+      inputPayload: { run_id: args.runId, candidate_count: candidates.length },
+      userId: args.userId,
+    })
+    let triage
+    try {
+      triage = await runDiscoveryTriage(
+        candidates.map((c) => ({ name: c.name, url: c.url, snippet: c.raw_snippet ?? '' })),
+        verticalSlug
+      )
+      totalCost += triage.usage?.cost_usd ?? 0
+      await recordRunSuccess(triageRunId, {
+        outputPayload: triage.output,
+        estimatedCost: triage.usage?.cost_usd ?? 0,
+        tokensInput: triage.usage?.input_tokens,
+        tokensOutput: triage.usage?.output_tokens,
+      })
+    } catch (err) {
+      await recordRunError(triageRunId, err instanceof Error ? err.message : String(err))
+      throw err
+    }
+
+    const results = (triage.output as {
+      results: Array<{ index: number; is_affiliate_offer: boolean; score: number; reason: string }>
+    }).results
+    const byIndex = new Map(results.map((r) => [r.index, r]))
+
+    const survivors: Array<{ id: string; name: string; url: string | null }> = []
+    for (let i = 0; i < candidates.length; i++) {
+      const c = candidates[i]
+      const r = byIndex.get(i)
+      const score = r?.score ?? 0
+      const keep = !!r?.is_affiliate_offer && score >= TRIAGE_KEEP_MIN_SCORE
+      if (keep) {
+        await admin
+          .from('discovery_candidates')
+          .update({ stage: 'triaged', triage_score: score, triage_reason: r?.reason ?? null })
+          .eq('id', c.id)
+        survivors.push({ id: c.id, name: c.name, url: c.url })
+      } else {
+        await admin
+          .from('discovery_candidates')
+          .update({
+            stage: 'rejected',
+            triage_score: score,
+            triage_reason: r?.reason ?? 'Below triage threshold.',
+            rejection_stage: 'triaged',
+            rejection_reason: r?.reason ?? 'Below triage threshold.',
+          })
+          .eq('id', c.id)
+      }
+    }
+
+    // 3) DEEP — Sonnet on the top survivors (cap), fetching each page.
+    await admin.from('discovery_runs').update({ status: 'analyzing' }).eq('id', args.runId)
+    const toAnalyze = survivors.slice(0, DEEP_ANALYSIS_CAP)
+    let analyzedCount = 0
+    for (const s of toAnalyze) {
+      let rawText = ''
+      try {
+        const html = await fetchWithTimeout(s.url ?? '', FETCH_TIMEOUT_MS)
+        rawText = truncate(stripHtml(html.slice(0, MAX_HTML_BYTES)), MAX_RAW_TEXT_LEN)
+      } catch {
+        // no page text — deep analysis still runs on name/url + snippet only
+      }
+
+      const deepRunId = await recordRunStart({
+        orchestratorName: 'DiscoveryDeepOrchestrator',
+        agentVersion: Deno.env.get('ANTHROPIC_API_KEY') ? 'real-v1' : 'mock-v1',
+        model: Deno.env.get('ANTHROPIC_API_KEY') ? 'claude-sonnet-4-6' : 'mock',
+        inputPayload: { candidate_id: s.id },
+        userId: args.userId,
+      })
+      try {
+        const deep = await runDiscoveryDeep({ name: s.name, url: s.url, rawText }, verticalSlug)
+        totalCost += deep.usage?.cost_usd ?? 0
+        const payload = deep.output as { overall_score?: number }
+        await admin
+          .from('discovery_candidates')
+          .update({
+            stage: 'analyzed',
+            deep_analysis: deep.output,
+            deep_score: payload.overall_score ?? null,
+          })
+          .eq('id', s.id)
+        await recordRunSuccess(deepRunId, {
+          outputPayload: deep.output,
+          estimatedCost: deep.usage?.cost_usd ?? 0,
+          tokensInput: deep.usage?.input_tokens,
+          tokensOutput: deep.usage?.output_tokens,
+        })
+        analyzedCount++
+      } catch (err) {
+        await recordRunError(deepRunId, err instanceof Error ? err.message : String(err))
+        // leave the candidate at 'triaged' — partial run, not a hard failure
+      }
+    }
+
+    await admin
+      .from('discovery_runs')
+      .update({
+        status: 'completed',
+        counts: {
+          discovered: candidates.length,
+          triaged: survivors.length,
+          analyzed: analyzedCount,
+          approved: 0,
+        },
+        total_cost_usd: totalCost,
+        completed_at: new Date().toISOString(),
+      })
+      .eq('id', args.runId)
+  } catch (err) {
+    await admin
+      .from('discovery_runs')
+      .update({
+        status: 'failed',
+        error_message: err instanceof Error ? err.message : String(err),
+        total_cost_usd: totalCost,
+        completed_at: new Date().toISOString(),
+      })
+      .eq('id', args.runId)
+  }
+}
+
+// Local copy of the dedup domain normalizer (the Node helper in
+// src/lib/discovery/dedup.ts is the unit-tested source of truth; this mirrors
+// it for the Deno runtime).
+function domainOf(url: string | null): string | null {
+  if (!url || !url.trim()) return null
+  const withScheme = /^https?:\/\//i.test(url) ? url : `https://${url.trim()}`
+  try {
+    const host = new URL(withScheme).hostname.toLowerCase().replace(/^www\./, '')
+    return host.includes('.') ? host : null
+  } catch {
+    return null
+  }
+}
+
+async function fetchWithTimeout(url: string, timeoutMs: number): Promise<string> {
+  if (!url) throw new Error('no url')
+  const controller = new AbortController()
+  const t = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: { 'User-Agent': 'AffiliateOS-Discovery/1.0' },
+    })
+    if (!res.ok) throw new Error(`fetch ${url} failed: HTTP ${res.status}`)
+    return await res.text()
+  } finally {
+    clearTimeout(t)
+  }
+}
+
+function stripHtml(s: string): string {
+  return s
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
