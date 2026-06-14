@@ -346,6 +346,34 @@ export function mockCompliance(
   }
 }
 
+// Discovery triage mock: score each input candidate by index. Deterministic —
+// gives a spread so the funnel visibly drops some.
+export function mockDiscoveryTriage(count: number): Record<string, unknown> {
+  return {
+    results: Array.from({ length: count }, (_, i) => ({
+      index: i,
+      is_affiliate_offer: i % 3 !== 2,
+      score: i % 3 === 2 ? 30 : 70 + ((i * 7) % 25),
+      reason:
+        i % 3 === 2
+          ? 'Not clearly an affiliate offer / thin terms.'
+          : 'Plausible affiliate program with discoverable terms.',
+    })),
+  }
+}
+
+// Discovery deep-analysis mock for one candidate.
+export function mockDiscoveryDeep(): Record<string, unknown> {
+  return {
+    overall_score: 78,
+    summary: 'Mock deep analysis: solid recurring program, decent fit.',
+    key_strengths: ['Recurring commission', 'Growing category'],
+    key_risks: ['Limited GEO coverage'],
+    estimated_commission: '30% recurring',
+    recommended: true,
+  }
+}
+
 export function mockForOrchestrator(orchestratorName: string): Record<string, unknown> {
   switch (orchestratorName) {
     case 'SourceExtractionOrchestrator':
