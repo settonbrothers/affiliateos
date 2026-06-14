@@ -107,6 +107,9 @@ async function processDiscovery(args: {
 
     type Raw = { name: string; url: string; snippet: string; sourceId: string }
     const raw: Raw[] = []
+    let searchAttempts = 0
+    let searchErrors = 0
+    let lastSearchError = ''
     for (const s of sources ?? []) {
       const templates =
         ((s.config as { query_templates?: string[] }).query_templates ?? []).slice(
@@ -114,11 +117,16 @@ async function processDiscovery(args: {
           params.queries
         )
       for (const q of templates) {
+        searchAttempts++
         try {
           const found = await runWebSearch(q, params.resultsPerQuery)
           for (const f of found) raw.push({ ...f, sourceId: s.id as string })
-        } catch {
-          // one failed query shouldn't kill the run
+        } catch (err) {
+          // one failed query shouldn't kill the run — but if they ALL fail
+          // (e.g. a bad/missing API key) we surface it below instead of
+          // completing with a silent zero.
+          searchErrors++
+          lastSearchError = err instanceof Error ? err.message : String(err)
         }
       }
     }
@@ -141,6 +149,11 @@ async function processDiscovery(args: {
     }
 
     if (deduped.length === 0) {
+      // Every search attempt errored → a config problem (likely the API key),
+      // not a genuine "no results". Fail loudly so the admin sees the cause.
+      if (searchAttempts > 0 && searchErrors === searchAttempts) {
+        throw new Error(`All web-search queries failed: ${lastSearchError}`)
+      }
       await admin
         .from('discovery_runs')
         .update({

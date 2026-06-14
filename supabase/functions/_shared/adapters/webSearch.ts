@@ -35,18 +35,24 @@ export async function runWebSearch(
     return MOCK_CANDIDATES.slice(0, maxResults)
   }
 
-  // Tavily search API. Returns results[].{title,url,content}.
+  // Tavily search API. Auth is a Bearer token in the Authorization header
+  // (the legacy body `api_key` is deprecated). Returns results[].{title,url,content}.
   const res = await fetch('https://api.tavily.com/search', {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: {
+      'content-type': 'application/json',
+      authorization: `Bearer ${apiKey}`,
+    },
     body: JSON.stringify({
-      api_key: apiKey,
       query,
       max_results: maxResults,
       search_depth: 'basic',
     }),
   })
-  if (!res.ok) throw new Error(`web search failed: HTTP ${res.status}`)
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '')
+    throw new Error(`web search failed: HTTP ${res.status} ${detail.slice(0, 200)}`)
+  }
   const data = (await res.json()) as {
     results?: Array<{ title?: string; url?: string; content?: string }>
   }
