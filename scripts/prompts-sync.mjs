@@ -1,7 +1,7 @@
 // scripts/prompts-sync.mjs
 // Sync prompts/<orchestrator>/<version>.md files into the prompts DB table.
-// Runs locally (or in CI on main merge); reads NEXT_PUBLIC_SUPABASE_URL +
-// SUPABASE_SERVICE_ROLE_KEY from .env.local.
+// Reads NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY from .env.local
+// when present (local dev); otherwise falls back to process.env (CI).
 //
 // Behavior:
 // - For each prompts/<dir>/<version>.md, upsert a row (orchestrator_name,
@@ -15,17 +15,22 @@ import { join } from 'node:path'
 
 import { createClient } from '@supabase/supabase-js'
 
-const env = {}
-for (const line of readFileSync('.env.local', 'utf-8').split('\n')) {
-  const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.+?)\s*$/)
-  if (m) env[m[1]] = m[2]
+// Start from process.env (CI), then let a local .env.local override it if present.
+const env = { ...process.env }
+try {
+  for (const line of readFileSync('.env.local', 'utf-8').split('\n')) {
+    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.+?)\s*$/)
+    if (m) env[m[1]] = m[2]
+  }
+} catch {
+  // No .env.local (e.g. CI) — process.env is used as-is.
 }
 
 const URL = env.NEXT_PUBLIC_SUPABASE_URL
 const SR = env.SUPABASE_SERVICE_ROLE_KEY
 if (!URL || !SR) {
   console.error(
-    'prompts-sync: missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local'
+    'prompts-sync: missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY (.env.local or env)'
   )
   process.exit(1)
 }

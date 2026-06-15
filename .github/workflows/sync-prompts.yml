@@ -1,0 +1,36 @@
+name: Sync Prompts
+
+# Manual-only sync of prompts/<orchestrator>/<version>.md into the `prompts` DB
+# table (the orchestrators load the active prompt from the DB at runtime, so
+# editing a prompt file only takes effect after this sync). Trigger from the
+# Actions tab ("Run workflow").
+#
+# Required repo secrets:
+#   NEXT_PUBLIC_SUPABASE_URL    — project URL (Supabase dashboard > Settings > API)
+#   SUPABASE_SERVICE_ROLE_KEY   — service role key (server-only; never client)
+on:
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Sync prompts
+        run: pnpm prompts:sync
