@@ -362,15 +362,42 @@ export function mockDiscoveryTriage(count: number): Record<string, unknown> {
   }
 }
 
-// Discovery deep-analysis mock for one candidate.
+// Discovery deep-analysis mock for one candidate — new rubric shape.
 export function mockDiscoveryDeep(): Record<string, unknown> {
   return {
     overall_score: 78,
-    summary: 'Mock deep analysis: solid recurring program, decent fit.',
+    summary: 'Mock deep analysis: solid recurring program, decent operator fit.',
     key_strengths: ['Recurring commission', 'Growing category'],
-    key_risks: ['Limited GEO coverage'],
-    estimated_commission: '30% recurring',
+    key_risks: ['Smaller, lesser-known brand'],
+    estimated_commission: '20% lifetime recurring',
+    estimated_epc_band: '$0.80–1.60 EPC est.',
+    network: 'in-house',
     recommended: true,
+    must_verify_before_budget: [
+      'Confirm paid-social is allowed with the affiliate manager',
+    ],
+    hard_filters: {
+      economics: {
+        status: 'pass',
+        evidence: '20% lifetime recurring on the $149/mo plan',
+        source_url: null,
+      },
+      paid_traffic: {
+        status: 'unknown_verify',
+        evidence: 'No paid-traffic policy stated on the page',
+        source_url: null,
+      },
+      monetization_integrity: {
+        status: 'pass',
+        evidence: 'Net-30, PayPal/Stripe payouts',
+        source_url: null,
+      },
+      scale_ceiling: {
+        status: 'pass',
+        evidence: 'No cap mentioned; growing category',
+        source_url: null,
+      },
+    },
   }
 }
 
