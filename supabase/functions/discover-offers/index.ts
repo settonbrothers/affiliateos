@@ -2,6 +2,7 @@ import { ForbiddenError, requireAdmin, UnauthorizedError } from '../_shared/auth
 import { handleCors, jsonResponse } from '../_shared/cors.ts'
 import { assertNotPaused, OrchestratorPausedError } from '../_shared/killSwitch.ts'
 import { runWebSearch } from '../_shared/adapters/webSearch.ts'
+import { runDiscoveryMine } from '../_shared/orchestrators/discoveryMine.ts'
 import { runDiscoveryTriage } from '../_shared/orchestrators/discoveryTriage.ts'
 import { runDiscoveryDeep } from '../_shared/orchestrators/discoveryDeep.ts'
 import { recordRunError, recordRunStart, recordRunSuccess } from '../_shared/recordAiRun.ts'
@@ -15,6 +16,33 @@ const MAX_HTML_BYTES = 500_000
 const MAX_RAW_TEXT_LEN = 120_000
 const TRIAGE_KEEP_MIN_SCORE = 55
 const DEEP_ANALYSIS_CAP = 20
+const CONTAINER_MINE_CAP = 10 // max container pages to mine per run
+const MINED_OFFERS_CAP = 30 // max offers to take from one container
+
+// Deno mirror of src/lib/discovery/queries.ts expandQueries (unit-tested there).
+const QUERY_MODIFIERS = [
+  'high commission',
+  'recurring commission',
+  'affiliate program review',
+  'partner program payout',
+]
+function expandQueries(base: string[], vertical: string): string[] {
+  const v = vertical.trim()
+  const generated = [
+    `best ${v} affiliate programs`,
+    `top ${v} affiliate programs`,
+    ...QUERY_MODIFIERS.map((m) => `${v} ${m}`),
+  ]
+  const out: string[] = []
+  const seen = new Set<string>()
+  for (const q of [...base, ...generated]) {
+    const key = q.trim().toLowerCase()
+    if (!key || seen.has(key)) continue
+    seen.add(key)
+    out.push(q)
+  }
+  return out
+}
 
 // Breadth → fan-out. queries: how many of a source's templates to use;
 // resultsPerQuery: web-search results each.
@@ -111,11 +139,12 @@ async function processDiscovery(args: {
     let searchErrors = 0
     let lastSearchError = ''
     for (const s of sources ?? []) {
-      const templates =
-        ((s.config as { query_templates?: string[] }).query_templates ?? []).slice(
-          0,
-          params.queries
-        )
+      const baseTemplates =
+        (s.config as { query_templates?: string[] }).query_templates ?? []
+      const templates = expandQueries(
+        baseTemplates,
+        verticalSlug ?? args.verticalId
+      ).slice(0, params.queries)
       for (const q of templates) {
         searchAttempts++
         try {
@@ -214,23 +243,44 @@ async function processDiscovery(args: {
       throw err
     }
 
-    const results = (triage.output as {
-      results: Array<{ index: number; is_affiliate_offer: boolean; score: number; reason: string }>
-    }).results
+    type TriageResult = {
+      index: number
+      classification: 'offer' | 'container' | 'reject'
+      score: number
+      reason: string
+    }
+    const results = (triage.output as { results: TriageResult[] }).results
     const byIndex = new Map(results.map((r) => [r.index, r]))
 
-    const survivors: Array<{ id: string; name: string; url: string | null }> = []
-    for (let i = 0; i < candidates.length; i++) {
-      const c = candidates[i]
-      const r = byIndex.get(i)
+    const survivors: Array<{ id: string; name: string; url: string | null; score: number }> = []
+    const containers: Array<{ url: string }> = []
+
+    const applyTriage = async (
+      cand: { id: string; name: string; url: string | null },
+      r: TriageResult | undefined,
+      allowContainer: boolean
+    ): Promise<void> => {
       const score = r?.score ?? 0
-      const keep = !!r?.is_affiliate_offer && score >= TRIAGE_KEEP_MIN_SCORE
-      if (keep) {
+      const cls = r?.classification ?? 'reject'
+      if (cls === 'offer' && score >= TRIAGE_KEEP_MIN_SCORE) {
         await admin
           .from('discovery_candidates')
           .update({ stage: 'triaged', triage_score: score, triage_reason: r?.reason ?? null })
-          .eq('id', c.id)
-        survivors.push({ id: c.id, name: c.name, url: c.url })
+          .eq('id', cand.id)
+        survivors.push({ id: cand.id, name: cand.name, url: cand.url, score })
+      } else if (cls === 'container' && allowContainer && cand.url) {
+        await admin
+          .from('discovery_candidates')
+          .update({
+            stage: 'rejected',
+            triage_score: score,
+            triage_reason: r?.reason ?? 'Container — mined for offers.',
+            rejection_stage: 'triaged',
+            rejection_reason:
+              'Container (network/directory/listicle) — mined for the offers inside it.',
+          })
+          .eq('id', cand.id)
+        containers.push({ url: cand.url })
       } else {
         await admin
           .from('discovery_candidates')
@@ -239,11 +289,121 @@ async function processDiscovery(args: {
             triage_score: score,
             triage_reason: r?.reason ?? 'Below triage threshold.',
             rejection_stage: 'triaged',
-            rejection_reason: r?.reason ?? 'Below triage threshold.',
+            rejection_reason: r?.reason ?? 'Not a concrete offer.',
           })
-          .eq('id', c.id)
+          .eq('id', cand.id)
       }
     }
+
+    for (let i = 0; i < candidates.length; i++) {
+      await applyTriage(candidates[i], byIndex.get(i), true)
+    }
+
+    // MINE containers → extract the individual offers inside them, insert as new
+    // candidates, and triage those (one pass; mined containers are not mined
+    // again — bounded). dedup reuses the `known` domain set from discovery.
+    let minedTotal = 0
+    type MinedRaw = { name: string; url: string; domain: string; parent: string }
+    const minedRaw: MinedRaw[] = []
+    for (const ct of containers.slice(0, CONTAINER_MINE_CAP)) {
+      let pageText = ''
+      try {
+        const html = await fetchWithTimeout(ct.url, FETCH_TIMEOUT_MS)
+        pageText = truncate(stripHtml(html.slice(0, MAX_HTML_BYTES)), MAX_RAW_TEXT_LEN)
+      } catch {
+        continue
+      }
+      const mineRunId = await recordRunStart({
+        orchestratorName: 'DiscoveryMineOrchestrator',
+        agentVersion: Deno.env.get('ANTHROPIC_API_KEY') ? 'real-v1' : 'mock-v1',
+        model: Deno.env.get('ANTHROPIC_API_KEY') ? 'claude-haiku-4-5-20251001' : 'mock',
+        inputPayload: { container_url: ct.url },
+        userId: args.userId,
+      })
+      try {
+        const mined = await runDiscoveryMine({ url: ct.url, pageText }, verticalSlug)
+        totalCost += mined.usage?.cost_usd ?? 0
+        await recordRunSuccess(mineRunId, {
+          outputPayload: mined.output,
+          estimatedCost: mined.usage?.cost_usd ?? 0,
+          tokensInput: mined.usage?.input_tokens,
+          tokensOutput: mined.usage?.output_tokens,
+        })
+        const offers = (mined.output as { offers: Array<{ name: string; url: string | null }> })
+          .offers
+        for (const o of offers.slice(0, MINED_OFFERS_CAP)) {
+          const domain = domainOf(o.url)
+          if (!domain || known.has(domain)) continue
+          known.add(domain)
+          minedRaw.push({ name: o.name, url: o.url as string, domain, parent: ct.url })
+        }
+      } catch (err) {
+        await recordRunError(mineRunId, err instanceof Error ? err.message : String(err))
+      }
+    }
+
+    if (minedRaw.length > 0) {
+      const { data: minedRows } = await admin
+        .from('discovery_candidates')
+        .insert(
+          minedRaw.map((m) => ({
+            run_id: args.runId,
+            vertical_id: args.verticalId,
+            name: m.name,
+            url: m.url,
+            domain: m.domain,
+            raw_snippet: `[mined from ${m.parent}]`,
+            stage: 'discovered',
+          }))
+        )
+        .select('id, name, url, raw_snippet')
+      const minedCandidates = (minedRows ?? []) as Array<{
+        id: string
+        name: string
+        url: string | null
+        raw_snippet: string | null
+      }>
+      minedTotal = minedCandidates.length
+
+      if (minedCandidates.length > 0) {
+        const t2RunId = await recordRunStart({
+          orchestratorName: 'DiscoveryTriageOrchestrator',
+          agentVersion: Deno.env.get('ANTHROPIC_API_KEY') ? 'real-v1' : 'mock-v1',
+          model: Deno.env.get('ANTHROPIC_API_KEY') ? 'claude-haiku-4-5-20251001' : 'mock',
+          inputPayload: { run_id: args.runId, mined_count: minedCandidates.length },
+          userId: args.userId,
+        })
+        try {
+          const t2 = await runDiscoveryTriage(
+            minedCandidates.map((c) => ({
+              name: c.name,
+              url: c.url,
+              snippet: c.raw_snippet ?? '',
+            })),
+            verticalSlug
+          )
+          totalCost += t2.usage?.cost_usd ?? 0
+          await recordRunSuccess(t2RunId, {
+            outputPayload: t2.output,
+            estimatedCost: t2.usage?.cost_usd ?? 0,
+            tokensInput: t2.usage?.input_tokens,
+            tokensOutput: t2.usage?.output_tokens,
+          })
+          const r2 = (t2.output as { results: TriageResult[] }).results
+          const r2byIndex = new Map(r2.map((r) => [r.index, r]))
+          for (let i = 0; i < minedCandidates.length; i++) {
+            // allowContainer=false: a mined item that's itself a container is
+            // just rejected (no recursive mining in Phase A).
+            await applyTriage(minedCandidates[i], r2byIndex.get(i), false)
+          }
+        } catch (err) {
+          await recordRunError(t2RunId, err instanceof Error ? err.message : String(err))
+        }
+      }
+    }
+
+    // Best triage scores first, so the deep cap takes the strongest survivors.
+    survivors.sort((a, b) => b.score - a.score)
 
     // 3) DEEP — Sonnet on the top survivors (cap), fetching each page.
     await admin.from('discovery_runs').update({ status: 'analyzing' }).eq('id', args.runId)
@@ -295,7 +455,7 @@ async function processDiscovery(args: {
       .update({
         status: 'completed',
         counts: {
-          discovered: candidates.length,
+          discovered: candidates.length + minedTotal,
           triaged: survivors.length,
           analyzed: analyzedCount,
           approved: 0,
