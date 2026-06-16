@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { DeepAnalysisSchema } from './discovery'
+import {
+  DeepAnalysisSchema,
+  MineResponseSchema,
+  TriageResponseSchema,
+} from './discovery'
 
 const valid = {
   overall_score: 78,
@@ -49,5 +53,35 @@ describe('DeepAnalysisSchema', () => {
   it('requires all four hard filters', () => {
     const bad = { ...valid, hard_filters: { economics: valid.hard_filters.economics } }
     expect(DeepAnalysisSchema.safeParse(bad).success).toBe(false)
+  })
+})
+
+describe('TriageResponseSchema (classification)', () => {
+  it('accepts the three classifications', () => {
+    for (const classification of ['offer', 'container', 'reject'] as const) {
+      const r = TriageResponseSchema.safeParse({
+        results: [{ index: 0, classification, score: 60, reason: 'x' }],
+      })
+      expect(r.success).toBe(true)
+    }
+  })
+
+  it('rejects an unknown classification', () => {
+    const r = TriageResponseSchema.safeParse({
+      results: [{ index: 0, classification: 'maybe', score: 60, reason: 'x' }],
+    })
+    expect(r.success).toBe(false)
+  })
+})
+
+describe('MineResponseSchema', () => {
+  it('accepts a list of offers with name + nullable url', () => {
+    const r = MineResponseSchema.safeParse({
+      offers: [
+        { name: 'Acme', url: 'https://acme.com/affiliates' },
+        { name: 'NoUrl', url: null },
+      ],
+    })
+    expect(r.success).toBe(true)
   })
 })

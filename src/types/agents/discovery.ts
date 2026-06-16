@@ -1,11 +1,14 @@
 // Node copy. KEEP IN SYNC with supabase/functions/_shared/types/discovery.ts.
 import { z } from 'zod'
 
-// Triage scores a BATCH of candidates cheaply: is this a real, promotable
-// affiliate offer, and how promising? One result per input, matched by index.
+export const TRIAGE_CLASSIFICATIONS = ['offer', 'container', 'reject'] as const
+
+// Triage classifies each candidate: 'offer' = a single concrete offer to deep-
+// analyze; 'container' = a network/directory/listicle to MINE for the offers
+// inside it; 'reject' = neither (blog, forum, junk).
 export const TriageItemSchema = z.object({
   index: z.number().int().min(0),
-  is_affiliate_offer: z.boolean(),
+  classification: z.enum(TRIAGE_CLASSIFICATIONS),
   score: z.number().int().min(0).max(100),
   reason: z.string().min(1),
 })
@@ -44,3 +47,13 @@ export const DeepAnalysisSchema = z.object({
 })
 export type DeepAnalysis = z.infer<typeof DeepAnalysisSchema>
 export type HardFilter = z.infer<typeof HardFilterSchema>
+
+// Mining extracts the individual offers listed on a container page.
+export const MinedOfferSchema = z.object({
+  name: z.string().min(1),
+  url: z.string().nullable(),
+})
+export const MineResponseSchema = z.object({
+  offers: z.array(MinedOfferSchema),
+})
+export type MineResponse = z.infer<typeof MineResponseSchema>
