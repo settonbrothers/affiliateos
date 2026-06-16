@@ -407,6 +407,16 @@ export function mockDiscoveryDeep(): Record<string, unknown> {
   }
 }
 
+// Mining mock: a couple of concrete offers "extracted" from a container page.
+export function mockDiscoveryMine(): Record<string, unknown> {
+  return {
+    offers: [
+      { name: 'Mined Offer One', url: 'https://mined-one.com/affiliates' },
+      { name: 'Mined Offer Two', url: 'https://mined-two.com/partners' },
+    ],
+  }
+}
+
 export function mockForOrchestrator(orchestratorName: string): Record<string, unknown> {
   switch (orchestratorName) {
     case 'SourceExtractionOrchestrator':
