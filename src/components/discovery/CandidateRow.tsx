@@ -16,6 +16,8 @@ type HardFilterView = {
   source_url?: string | null
 }
 
+type SignalView = { value?: string; confidence?: string; evidence?: string }
+
 type DeepView = {
   summary?: string
   estimated_commission?: string | null
@@ -28,6 +30,12 @@ type DeepView = {
     paid_traffic?: HardFilterView
     monetization_integrity?: HardFilterView
     scale_ceiling?: HardFilterView
+  }
+  signals?: {
+    demand_trend?: SignalView
+    scale_proxy?: SignalView
+    momentum?: SignalView
+    best_payout_route?: SignalView
   }
 }
 
@@ -42,6 +50,20 @@ const FILTER_STATUS_CLASS: Record<string, string> = {
   pass: 'bg-green-100 text-green-800',
   fail: 'bg-red-100 text-red-800',
   unknown_verify: 'bg-amber-100 text-amber-800',
+}
+
+const SIGNAL_LABELS: Array<[keyof NonNullable<DeepView['signals']>, string]> = [
+  ['best_payout_route', 'Best payout'],
+  ['demand_trend', 'Demand'],
+  ['scale_proxy', 'At scale'],
+  ['momentum', 'Momentum'],
+]
+
+const SIGNAL_CONFIDENCE_CLASS: Record<string, string> = {
+  high: 'bg-green-100 text-green-800',
+  medium: 'bg-blue-100 text-blue-800',
+  low: 'bg-zinc-100 text-zinc-600',
+  unknown: 'bg-amber-100 text-amber-800',
 }
 
 export function CandidateRow({ candidate }: { candidate: DiscoveryCandidate }) {
@@ -136,6 +158,28 @@ export function CandidateRow({ candidate }: { candidate: DiscoveryCandidate }) {
             {deep.must_verify_before_budget.join('; ')}
           </div>
         )}
+
+      {deep?.signals && (
+        <div className="mt-1 flex flex-col gap-1">
+          {SIGNAL_LABELS.map(([key, label]) => {
+            const sig = deep.signals?.[key]
+            if (!sig?.value) return null
+            return (
+              <div key={key} className="flex items-baseline gap-2 text-xs">
+                <span className="w-24 shrink-0 font-medium">{label}</span>
+                <span>{sig.value}</span>
+                {sig.confidence && (
+                  <span
+                    className={`rounded px-1 py-0.5 ${SIGNAL_CONFIDENCE_CLASS[sig.confidence] ?? ''}`}
+                  >
+                    {sig.confidence}
+                  </span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
       {candidate.rejection_reason && (
         <p className="text-xs text-red-700">
           Rejected at {candidate.rejection_stage}: {candidate.rejection_reason}
