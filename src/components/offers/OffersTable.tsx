@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 
 import { Badge } from '@/components/ui/badge'
@@ -8,10 +9,11 @@ import {
 import type { Offer } from '@/types/db'
 
 export function OffersTable({ offers }: { offers: Offer[] }) {
+  const t = useTranslations('offers')
   if (offers.length === 0) {
     return (
       <p className="text-sm text-[var(--color-muted-foreground)]">
-        No offers yet. Add your first offer to get started.
+        {t('empty')}
       </p>
     )
   }
@@ -19,10 +21,10 @@ export function OffersTable({ offers }: { offers: Offer[] }) {
   return (
     <table className="w-full text-sm">
       <thead>
-        <tr className="border-b border-[var(--color-border)] text-left">
-          <th className="py-2 font-medium">Name</th>
-          <th className="py-2 font-medium">Status</th>
-          <th className="py-2 font-medium">Created</th>
+        <tr className="border-b border-[var(--color-border)] text-start">
+          <th className="py-2 font-medium">{t('colName')}</th>
+          <th className="py-2 font-medium">{t('colStatus')}</th>
+          <th className="py-2 font-medium">{t('colCreated')}</th>
         </tr>
       </thead>
       <tbody>

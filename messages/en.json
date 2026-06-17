@@ -63,5 +63,36 @@
     "next": "Next",
     "finish": "Finish",
     "saving": "Saving…"
+  },
+  "offers": {
+    "title": "Offers",
+    "addOffer": "Add Offer",
+    "newTitle": "Add offer",
+    "editTitle": "Edit offer",
+    "empty": "No offers yet. Add your first offer to get started.",
+    "colName": "Name",
+    "colStatus": "Status",
+    "colCreated": "Created",
+    "manageSources": "Manage sources",
+    "tabOverview": "Overview",
+    "tabScorecard": "Scorecard",
+    "tabVerdict": "Verdict",
+    "tabTestKit": "Test Kit",
+    "tabCompliance": "Compliance",
+    "analyze": "Analyze",
+    "analyzing": "Analyzing…",
+    "verifiedFacts": "Verified facts",
+    "website": "Website",
+    "affiliateProgram": "Affiliate program",
+    "description": "Description",
+    "operatorNotes": "Operator notes",
+    "status": "Status"
+  },
+  "campaigns": {
+    "title": "Campaigns",
+    "empty": "No campaigns yet."
+  },
+  "billing": {
+    "title": "Billing"
   }
 }

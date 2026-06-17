@@ -63,5 +63,36 @@
     "next": "הבא",
     "finish": "סיום",
     "saving": "שומר…"
+  },
+  "offers": {
+    "title": "הצעות",
+    "addOffer": "הוספת הצעה",
+    "newTitle": "הוספת הצעה",
+    "editTitle": "עריכת הצעה",
+    "empty": "אין הצעות עדיין. הוסף את ההצעה הראשונה כדי להתחיל.",
+    "colName": "שם",
+    "colStatus": "סטטוס",
+    "colCreated": "נוצר",
+    "manageSources": "ניהול מקורות",
+    "tabOverview": "סקירה",
+    "tabScorecard": "כרטיס ניקוד",
+    "tabVerdict": "פסיקה",
+    "tabTestKit": "ערכת בדיקה",
+    "tabCompliance": "רגולציה",
+    "analyze": "ניתוח",
+    "analyzing": "מנתח…",
+    "verifiedFacts": "עובדות מאומתות",
+    "website": "אתר",
+    "affiliateProgram": "תוכנית שותפים",
+    "description": "תיאור",
+    "operatorNotes": "הערות מפעיל",
+    "status": "סטטוס"
+  },
+  "campaigns": {
+    "title": "קמפיינים",
+    "empty": "אין קמפיינים עדיין."
+  },
+  "billing": {
+    "title": "חיוב"
   }
 }

@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
@@ -21,12 +22,12 @@ import {
 } from '@/lib/queries/offers'
 import { cn } from '@/lib/utils'
 
-const TABS = [
-  { key: 'overview', label: 'Overview' },
-  { key: 'scorecard', label: 'Scorecard' },
-  { key: 'verdict', label: 'Verdict' },
-  { key: 'test-kit', label: 'Test Kit' },
-  { key: 'compliance', label: 'Compliance' },
+const TAB_KEYS = [
+  'overview',
+  'scorecard',
+  'verdict',
+  'test-kit',
+  'compliance',
 ] as const
 
 export default async function OfferDetailPage({
@@ -55,6 +56,14 @@ export default async function OfferDetailPage({
       ? tab
       : 'overview'
   const isAdmin = await isCurrentUserAdmin()
+  const t = await getTranslations('offers')
+  const TAB_LABELS: Record<(typeof TAB_KEYS)[number], string> = {
+    overview: t('tabOverview'),
+    scorecard: t('tabScorecard'),
+    verdict: t('tabVerdict'),
+    'test-kit': t('tabTestKit'),
+    compliance: t('tabCompliance'),
+  }
 
   // Verified facts feed the Overview's evidence section.
   const facts = activeTab === 'overview' ? await getVerifiedFacts(id) : []
@@ -92,7 +101,7 @@ export default async function OfferDetailPage({
               href={`/admin/offers/${offer.id}/sources`}
               className="text-sm text-[var(--color-muted-foreground)] underline"
             >
-              Manage sources
+              {t('manageSources')}
             </Link>
           )}
           <AnalyzeButton offerId={offer.id} initialStatus={run?.status ?? null} />
@@ -100,18 +109,18 @@ export default async function OfferDetailPage({
       </div>
 
       <nav className="flex gap-2 border-b border-[var(--color-border)]">
-        {TABS.map((t) => (
+        {TAB_KEYS.map((tabKey) => (
           <Link
-            key={t.key}
-            href={`/offers/${offer.id}?tab=${t.key}`}
+            key={tabKey}
+            href={`/offers/${offer.id}?tab=${tabKey}`}
             className={cn(
               'px-3 py-2 text-sm',
-              activeTab === t.key
+              activeTab === tabKey
                 ? 'border-b-2 border-[var(--color-foreground)] font-medium'
                 : 'text-[var(--color-muted-foreground)]'
             )}
           >
-            {t.label}
+            {TAB_LABELS[tabKey]}
           </Link>
         ))}
       </nav>

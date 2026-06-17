@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server'
+
 import { OfferForm } from '@/components/offers/OfferForm'
 import {
   Card,
@@ -9,12 +11,13 @@ import { listVerticals } from '@/lib/queries/offers'
 
 export default async function NewOfferPage() {
   const verticals = await listVerticals()
+  const t = await getTranslations('offers')
 
   return (
     <div className="mx-auto max-w-2xl">
       <Card>
         <CardHeader>
-          <CardTitle>Add offer</CardTitle>
+          <CardTitle>{t('newTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <OfferForm verticals={verticals} mode={{ kind: 'create' }} />
