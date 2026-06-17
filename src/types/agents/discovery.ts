@@ -25,9 +25,20 @@ export const HardFilterSchema = z.object({
   source_url: z.string().nullable(),
 })
 
+export const SIGNAL_CONFIDENCES = ['high', 'medium', 'low', 'unknown'] as const
+
+// A buyer-grade enrichment signal: a short value, how confident we are, and the
+// evidence/source behind it.
+export const SignalSchema = z.object({
+  value: z.string(),
+  confidence: z.enum(SIGNAL_CONFIDENCES),
+  evidence: z.string(),
+})
+
 // Deep analysis of one candidate against the advanced-affiliate rubric: a per
 // hard-filter verdict with evidence, the items to verify before spending, an
-// EPC band + network when derivable, and an overall recommendation.
+// EPC band + network when derivable, the enrichment signals, and an overall
+// recommendation.
 export const DeepAnalysisSchema = z.object({
   overall_score: z.number().int().min(0).max(100),
   summary: z.string().min(1),
@@ -44,9 +55,16 @@ export const DeepAnalysisSchema = z.object({
     monetization_integrity: HardFilterSchema,
     scale_ceiling: HardFilterSchema,
   }),
+  signals: z.object({
+    demand_trend: SignalSchema,
+    scale_proxy: SignalSchema,
+    momentum: SignalSchema,
+    best_payout_route: SignalSchema,
+  }),
 })
 export type DeepAnalysis = z.infer<typeof DeepAnalysisSchema>
 export type HardFilter = z.infer<typeof HardFilterSchema>
+export type Signal = z.infer<typeof SignalSchema>
 
 // Mining extracts the individual offers listed on a container page.
 export const MinedOfferSchema = z.object({

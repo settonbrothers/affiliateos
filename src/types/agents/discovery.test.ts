@@ -22,6 +22,12 @@ const valid = {
     monetization_integrity: { status: 'pass', evidence: 'Net-30', source_url: 'https://x.com/terms' },
     scale_ceiling: { status: 'pass', evidence: 'No cap', source_url: null },
   },
+  signals: {
+    demand_trend: { value: 'rising', confidence: 'medium', evidence: 'Search interest up' },
+    scale_proxy: { value: 'widely promoted', confidence: 'low', evidence: 'Appears in many roundups' },
+    momentum: { value: 'Series B 2026', confidence: 'high', evidence: 'TechCrunch' },
+    best_payout_route: { value: 'Impact — $200/sale', confidence: 'medium', evidence: 'PostAffiliatePro' },
+  },
 }
 
 describe('DeepAnalysisSchema', () => {
@@ -83,5 +89,53 @@ describe('MineResponseSchema', () => {
       ],
     })
     expect(r.success).toBe(true)
+  })
+})
+
+describe('DeepAnalysisSchema signals', () => {
+  const base = {
+    overall_score: 70,
+    summary: 's',
+    key_strengths: [],
+    key_risks: [],
+    estimated_commission: null,
+    estimated_epc_band: null,
+    network: null,
+    recommended: false,
+    must_verify_before_budget: [],
+    hard_filters: {
+      economics: { status: 'pass', evidence: 'e', source_url: null },
+      paid_traffic: { status: 'pass', evidence: 'e', source_url: null },
+      monetization_integrity: { status: 'pass', evidence: 'e', source_url: null },
+      scale_ceiling: { status: 'pass', evidence: 'e', source_url: null },
+    },
+    signals: {
+      demand_trend: { value: 'rising', confidence: 'medium', evidence: 'x' },
+      scale_proxy: { value: 'unknown', confidence: 'unknown', evidence: 'x' },
+      momentum: { value: 'none found', confidence: 'low', evidence: 'x' },
+      best_payout_route: { value: 'in-house', confidence: 'low', evidence: 'x' },
+    },
+  }
+
+  it('accepts a payload with all four signals', () => {
+    expect(DeepAnalysisSchema.safeParse(base).success).toBe(true)
+  })
+
+  it('rejects an invalid signal confidence', () => {
+    const bad = {
+      ...base,
+      signals: {
+        ...base.signals,
+        demand_trend: { value: 'rising', confidence: 'sometimes', evidence: 'x' },
+      },
+    }
+    expect(DeepAnalysisSchema.safeParse(bad).success).toBe(false)
+  })
+
+  it('requires all four signal keys', () => {
+    const { best_payout_route: _omit, ...partial } = base.signals
+    expect(
+      DeepAnalysisSchema.safeParse({ ...base, signals: partial }).success
+    ).toBe(false)
   })
 })
