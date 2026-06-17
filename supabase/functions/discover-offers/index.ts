@@ -15,7 +15,8 @@ const FETCH_TIMEOUT_MS = 15_000
 const MAX_HTML_BYTES = 500_000
 const MAX_RAW_TEXT_LEN = 120_000
 const TRIAGE_KEEP_MIN_SCORE = 55
-const DEEP_ANALYSIS_CAP = 20
+const DEEP_ANALYSIS_CAP = 100
+const DEEP_CONCURRENCY = 5 // deep analyses run in parallel waves to cut wall-time
 const CONTAINER_MINE_CAP = 25 // max container pages to mine per run
 const MINED_OFFERS_CAP = 20 // max offers to take from one container
 const MINED_TOTAL_CAP = 150 // overall cap on mined candidates (bounds 2nd triage)
@@ -435,15 +436,22 @@ async function processDiscovery(args: {
     await admin.from('discovery_runs').update({ status: 'analyzing' }).eq('id', args.runId)
     const toAnalyze = survivors.slice(0, DEEP_ANALYSIS_CAP)
     let analyzedCount = 0
-    for (const s of toAnalyze) {
+
+    // One candidate's deep analysis — returns its cost + success so parallel
+    // waves don't race the shared counters. Each candidate is persisted as it
+    // finishes, so partial progress survives even if the run is cut short.
+    const analyzeOne = async (s: {
+      id: string
+      name: string
+      url: string | null
+    }): Promise<{ cost: number; analyzed: boolean }> => {
       let rawText = ''
       try {
         const html = await fetchWithTimeout(s.url ?? '', FETCH_TIMEOUT_MS)
         rawText = truncate(stripHtml(html.slice(0, MAX_HTML_BYTES)), MAX_RAW_TEXT_LEN)
       } catch {
-        // no page text — deep analysis still runs on name/url + snippet only
+        // no page text — deep analysis still runs on name/url + research
       }
-
       const deepRunId = await recordRunStart({
         orchestratorName: 'DiscoveryDeepOrchestrator',
         agentVersion: Deno.env.get('ANTHROPIC_API_KEY') ? 'real-v1' : 'mock-v1',
@@ -453,7 +461,6 @@ async function processDiscovery(args: {
       })
       try {
         const deep = await runDiscoveryDeep({ name: s.name, url: s.url, rawText }, verticalSlug)
-        totalCost += deep.usage?.cost_usd ?? 0
         const payload = deep.output as { overall_score?: number }
         await admin
           .from('discovery_candidates')
@@ -469,10 +476,21 @@ async function processDiscovery(args: {
           tokensInput: deep.usage?.input_tokens,
           tokensOutput: deep.usage?.output_tokens,
         })
-        analyzedCount++
+        return { cost: deep.usage?.cost_usd ?? 0, analyzed: true }
       } catch (err) {
         await recordRunError(deepRunId, err instanceof Error ? err.message : String(err))
         // leave the candidate at 'triaged' — partial run, not a hard failure
+        return { cost: 0, analyzed: false }
+      }
+    }
+
+    // Parallel waves to cut wall-time (the deep cap can be large).
+    for (let off = 0; off < toAnalyze.length; off += DEEP_CONCURRENCY) {
+      const wave = toAnalyze.slice(off, off + DEEP_CONCURRENCY)
+      const rs = await Promise.all(wave.map((s) => analyzeOne(s)))
+      for (const r of rs) {
+        totalCost += r.cost
+        if (r.analyzed) analyzedCount++
       }
     }
 
