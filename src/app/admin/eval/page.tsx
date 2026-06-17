@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 
 import { Badge } from '@/components/ui/badge'
@@ -39,39 +40,37 @@ export default async function EvalListPage() {
     .returns<EvalRow[]>()
 
   const rows = data ?? []
+  const t = await getTranslations('discoveryAdmin')
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Eval runs</h1>
+          <h1 className="text-2xl font-semibold">{t('evalTitle')}</h1>
           <p className="text-sm text-[var(--color-muted-foreground)]">
-            Each row is one <code>pnpm eval:run</code> against the active prompt.
-            Verdict accuracy is the primary metric (plan target ≥ 75%).
+            {t('evalSubtitle')}
           </p>
         </div>
         <Link href="/admin/eval/golden">
-          <Button variant="outline">Manage golden set</Button>
+          <Button variant="outline">{t('manageGoldenSet')}</Button>
         </Link>
       </div>
 
       {rows.length === 0 ? (
         <p className="text-sm text-[var(--color-muted-foreground)]">
-          No eval runs yet. Seed <code>golden_set_offers</code> via SQL, set
-          <code> ANTHROPIC_API_KEY</code> in <code>.env.local</code>, then run{' '}
-          <code>pnpm eval:run</code> from the repo root.
+          {t('evalEmpty')}
         </p>
       ) : (
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-[var(--color-border)] text-left">
-              <th className="py-2 font-medium">When</th>
-              <th className="py-2 font-medium">Prompt</th>
-              <th className="py-2 font-medium">Trigger</th>
-              <th className="py-2 font-medium">Total</th>
-              <th className="py-2 font-medium">Matched</th>
-              <th className="py-2 font-medium">Accuracy</th>
-              <th className="py-2 font-medium">Cost</th>
+            <tr className="border-b border-[var(--color-border)] text-start">
+              <th className="py-2 font-medium">{t('colWhen')}</th>
+              <th className="py-2 font-medium">{t('colPrompt')}</th>
+              <th className="py-2 font-medium">{t('colTrigger')}</th>
+              <th className="py-2 font-medium">{t('colTotal')}</th>
+              <th className="py-2 font-medium">{t('colMatched')}</th>
+              <th className="py-2 font-medium">{t('colAccuracy')}</th>
+              <th className="py-2 font-medium">{t('colCost')}</th>
             </tr>
           </thead>
           <tbody>

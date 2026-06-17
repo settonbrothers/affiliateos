@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server'
+
 import { GenerateInviteForm } from '@/components/admin/GenerateInviteForm'
 import { RevokeInviteButton } from '@/components/admin/RevokeInviteButton'
 import { Badge } from '@/components/ui/badge'
@@ -32,20 +34,20 @@ export default async function InviteCodesPage() {
 
   const rows = data ?? []
   const now = Date.now()
+  const t = await getTranslations('discoveryAdmin')
 
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">Invite codes</h1>
+        <h1 className="text-2xl font-semibold">{t('inviteTitle')}</h1>
         <p className="text-sm text-[var(--color-muted-foreground)]">
-          Signup is invite-only. Each redemption grants the bonus credits to the
-          new user&apos;s workspace.
+          {t('inviteSubtitle')}
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Generate a code</CardTitle>
+          <CardTitle className="text-base">{t('generateCode')}</CardTitle>
         </CardHeader>
         <CardContent>
           <GenerateInviteForm />
@@ -54,16 +56,16 @@ export default async function InviteCodesPage() {
 
       {rows.length === 0 ? (
         <p className="text-sm text-[var(--color-muted-foreground)]">
-          No invite codes yet.
+          {t('inviteEmpty')}
         </p>
       ) : (
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-[var(--color-border)] text-left">
-              <th className="py-2 font-medium">Code</th>
-              <th className="py-2 font-medium">Bonus</th>
-              <th className="py-2 font-medium">Uses</th>
-              <th className="py-2 font-medium">Status</th>
+            <tr className="border-b border-[var(--color-border)] text-start">
+              <th className="py-2 font-medium">{t('colCode')}</th>
+              <th className="py-2 font-medium">{t('colBonus')}</th>
+              <th className="py-2 font-medium">{t('colUses')}</th>
+              <th className="py-2 font-medium">{t('colStatus')}</th>
               <th className="py-2"></th>
             </tr>
           </thead>

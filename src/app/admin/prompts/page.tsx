@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 
 import { Badge } from '@/components/ui/badge'
@@ -27,34 +28,31 @@ export default async function PromptsPage() {
     .returns<PromptRow[]>()
 
   const rows = data ?? []
+  const t = await getTranslations('discoveryAdmin')
 
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">Prompts</h1>
+        <h1 className="text-2xl font-semibold">{t('promptsTitle')}</h1>
         <p className="text-sm text-[var(--color-muted-foreground)]">
-          Markdown in <code>prompts/</code> is the source of truth.{' '}
-          <code>pnpm prompts:sync</code> upserts new versions; the active row
-          here is what edge functions load at call time. Rollback by activating
-          an older version (no redeploy needed).
+          {t('promptsSubtitle')}
         </p>
       </div>
 
       {rows.length === 0 ? (
         <p className="text-sm text-[var(--color-muted-foreground)]">
-          No prompts in the DB yet. Run <code>pnpm prompts:sync</code> from the
-          repo root.
+          {t('promptsEmpty')}
         </p>
       ) : (
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-[var(--color-border)] text-left">
-              <th className="py-2 font-medium">Orchestrator</th>
-              <th className="py-2 font-medium">Type</th>
-              <th className="py-2 font-medium">Vertical</th>
-              <th className="py-2 font-medium">Version</th>
-              <th className="py-2 font-medium">Status</th>
-              <th className="py-2 font-medium">Created</th>
+            <tr className="border-b border-[var(--color-border)] text-start">
+              <th className="py-2 font-medium">{t('colOrchestrator')}</th>
+              <th className="py-2 font-medium">{t('colType')}</th>
+              <th className="py-2 font-medium">{t('colVertical')}</th>
+              <th className="py-2 font-medium">{t('colVersion')}</th>
+              <th className="py-2 font-medium">{t('colStatus')}</th>
+              <th className="py-2 font-medium">{t('colCreated')}</th>
             </tr>
           </thead>
           <tbody>

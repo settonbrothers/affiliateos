@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 
 import { AiRunsTable, type AdminAiRunRow } from '@/components/admin/AiRunsTable'
@@ -28,13 +29,14 @@ export default async function AdminAiRunsPage({
 
   const total = count ?? 0
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const t = await getTranslations('discoveryAdmin')
 
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">AI Runs</h1>
+        <h1 className="text-2xl font-semibold">{t('aiRunsTitle')}</h1>
         <p className="text-sm text-[var(--color-muted-foreground)]">
-          {total} total · page {pageNum} of {totalPages}
+          {t('aiRunsPage', { total, page: pageNum, pages: totalPages })}
         </p>
       </div>
 
@@ -43,12 +45,12 @@ export default async function AdminAiRunsPage({
       <div className="flex gap-4 text-sm">
         {pageNum > 1 && (
           <Link href={`/admin/ai-runs?page=${pageNum - 1}`} className="underline">
-            ← Newer
+            {t('newer')}
           </Link>
         )}
         {pageNum < totalPages && (
           <Link href={`/admin/ai-runs?page=${pageNum + 1}`} className="underline">
-            Older →
+            {t('older')}
           </Link>
         )}
       </div>

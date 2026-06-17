@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server'
+
 import { ReplayButton } from '@/components/admin/ReplayButton'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -18,20 +20,20 @@ export default async function FailedMessagesPage() {
     .order('created_at', { ascending: false })
     .limit(100)
   const rows = data ?? []
+  const t = await getTranslations('discoveryAdmin')
 
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">Failed messages (DLQ)</h1>
+        <h1 className="text-2xl font-semibold">{t('failedTitle')}</h1>
         <p className="text-sm text-[var(--color-muted-foreground)]">
-          Dead-lettered work. Replaying an <code>ai_run</code> re-invokes the
-          orchestrator with its original payload.
+          {t('failedSubtitle')}
         </p>
       </div>
 
       {rows.length === 0 ? (
         <p className="text-sm text-[var(--color-muted-foreground)]">
-          No failed messages. 🎉
+          {t('failedEmpty')}
         </p>
       ) : (
         rows.map((m) => {

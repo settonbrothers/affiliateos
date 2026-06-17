@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server'
+
 import { Badge } from '@/components/ui/badge'
 import {
   Card,
@@ -34,19 +36,20 @@ export default async function CompliancePage() {
     byVertical.set(key, arr)
   }
 
+  const t = await getTranslations('discoveryAdmin')
+
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">Compliance rules</h1>
+        <h1 className="text-2xl font-semibold">{t('complianceTitle')}</h1>
         <p className="text-sm text-[var(--color-muted-foreground)]">
-          Reference rules per vertical. The ComplianceCheckOrchestrator enforces
-          the operative guidance; these are the human-readable policy set.
+          {t('complianceSubtitle')}
         </p>
       </div>
 
       {rows.length === 0 ? (
         <p className="text-sm text-[var(--color-muted-foreground)]">
-          No compliance rules seeded.
+          {t('complianceEmpty')}
         </p>
       ) : (
         [...byVertical.entries()].map(([vertical, rules]) => (
