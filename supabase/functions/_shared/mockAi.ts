@@ -439,6 +439,16 @@ export function mockDiscoveryMine(): Record<string, unknown> {
   }
 }
 
+// Translation mock: echoes each item with a [he] prefix so the cache + display
+// wiring are exercisable without spend.
+export function mockTranslate(
+  items: Array<{ id: string; text: string }>
+): Record<string, unknown> {
+  return {
+    items: items.map((it) => ({ id: it.id, text: `[he] ${it.text}` })),
+  }
+}
+
 export function mockForOrchestrator(orchestratorName: string): Record<string, unknown> {
   switch (orchestratorName) {
     case 'SourceExtractionOrchestrator':
