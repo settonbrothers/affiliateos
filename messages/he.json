@@ -1,0 +1,28 @@
+{
+  "common": {
+    "appName": "AffiliateOS",
+    "loading": "טוען…",
+    "save": "שמירה",
+    "cancel": "ביטול",
+    "delete": "מחיקה",
+    "edit": "עריכה",
+    "back": "חזרה"
+  },
+  "nav": {
+    "offers": "הצעות",
+    "campaigns": "קמפיינים",
+    "admin": "ניהול",
+    "credits": "קרדיטים",
+    "backToApp": "← חזרה לאפליקציה",
+    "adminTitle": "AffiliateOS · ניהול",
+    "language": "EN",
+    "aiRuns": "ריצות AI",
+    "prompts": "פרומפטים",
+    "eval": "הערכה",
+    "discovery": "גילוי",
+    "killSwitches": "מתגי חירום",
+    "compliance": "רגולציה",
+    "inviteCodes": "קודי הזמנה",
+    "failed": "כשלים (DLQ)"
+  }
+}

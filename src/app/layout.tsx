@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import { Heebo } from 'next/font/google'
+import { NextIntlClientProvider } from 'next-intl'
+import { getLocale, getMessages } from 'next-intl/server'
 
 import './globals.css'
 
@@ -14,12 +16,20 @@ export const metadata: Metadata = {
   description: 'Affiliate offer underwriting for media buyers.',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const locale = await getLocale()
+  const messages = await getMessages()
+  const dir = locale === 'he' ? 'rtl' : 'ltr'
+
   return (
-    <html lang="en" className={heebo.variable}>
-      <body className="font-sans antialiased">{children}</body>
+    <html lang={locale} dir={dir} className={heebo.variable}>
+      <body className="font-sans antialiased">
+        <NextIntlClientProvider messages={messages}>
+          {children}
+        </NextIntlClientProvider>
+      </body>
     </html>
   )
 }

@@ -1,6 +1,8 @@
+import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
+import { LanguageToggle } from '@/components/LanguageToggle'
 import { createClient } from '@/lib/supabase/server'
 
 // /admin/* is auth-gated by middleware; this layout adds the admin-role check.
@@ -23,66 +25,42 @@ export default async function AdminLayout({
 
   if (profile?.system_role !== 'admin') redirect('/offers')
 
+  const t = await getTranslations('nav')
+  const links: Array<[string, string]> = [
+    ['/admin/ai-runs', t('aiRuns')],
+    ['/admin/prompts', t('prompts')],
+    ['/admin/eval', t('eval')],
+    ['/admin/discovery', t('discovery')],
+    ['/admin/kill-switches', t('killSwitches')],
+    ['/admin/compliance', t('compliance')],
+    ['/admin/invite-codes', t('inviteCodes')],
+    ['/admin/failed', t('failed')],
+  ]
+
   return (
     <div className="flex min-h-screen">
-      <aside className="w-56 shrink-0 border-r border-[var(--color-border)] p-4">
-        <div className="mb-6 text-lg font-semibold">AffiliateOS · Admin</div>
+      <aside className="flex w-56 shrink-0 flex-col border-e border-[var(--color-border)] p-4">
+        <div className="mb-6 text-lg font-semibold">{t('adminTitle')}</div>
         <nav className="flex flex-col gap-1 text-sm">
-          <Link
-            href="/admin/ai-runs"
-            className="rounded-md px-3 py-2 hover:bg-[var(--color-muted)]"
-          >
-            AI Runs
-          </Link>
-          <Link
-            href="/admin/prompts"
-            className="rounded-md px-3 py-2 hover:bg-[var(--color-muted)]"
-          >
-            Prompts
-          </Link>
-          <Link
-            href="/admin/eval"
-            className="rounded-md px-3 py-2 hover:bg-[var(--color-muted)]"
-          >
-            Eval
-          </Link>
-          <Link
-            href="/admin/discovery"
-            className="rounded-md px-3 py-2 hover:bg-[var(--color-muted)]"
-          >
-            Discovery
-          </Link>
-          <Link
-            href="/admin/kill-switches"
-            className="rounded-md px-3 py-2 hover:bg-[var(--color-muted)]"
-          >
-            Kill Switches
-          </Link>
-          <Link
-            href="/admin/compliance"
-            className="rounded-md px-3 py-2 hover:bg-[var(--color-muted)]"
-          >
-            Compliance
-          </Link>
-          <Link
-            href="/admin/invite-codes"
-            className="rounded-md px-3 py-2 hover:bg-[var(--color-muted)]"
-          >
-            Invite Codes
-          </Link>
-          <Link
-            href="/admin/failed"
-            className="rounded-md px-3 py-2 hover:bg-[var(--color-muted)]"
-          >
-            Failed (DLQ)
-          </Link>
+          {links.map(([href, label]) => (
+            <Link
+              key={href}
+              href={href}
+              className="rounded-md px-3 py-2 hover:bg-[var(--color-muted)]"
+            >
+              {label}
+            </Link>
+          ))}
           <Link
             href="/offers"
             className="rounded-md px-3 py-2 text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]"
           >
-            ← Back to app
+            {t('backToApp')}
           </Link>
         </nav>
+        <div className="mt-auto">
+          <LanguageToggle />
+        </div>
       </aside>
       <main className="flex-1 p-6">{children}</main>
     </div>

@@ -1,0 +1,28 @@
+{
+  "common": {
+    "appName": "AffiliateOS",
+    "loading": "Loading…",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back"
+  },
+  "nav": {
+    "offers": "Offers",
+    "campaigns": "Campaigns",
+    "admin": "Admin",
+    "credits": "Credits",
+    "backToApp": "← Back to app",
+    "adminTitle": "AffiliateOS · Admin",
+    "language": "עברית",
+    "aiRuns": "AI Runs",
+    "prompts": "Prompts",
+    "eval": "Eval",
+    "discovery": "Discovery",
+    "killSwitches": "Kill Switches",
+    "compliance": "Compliance",
+    "inviteCodes": "Invite Codes",
+    "failed": "Failed (DLQ)"
+  }
+}
