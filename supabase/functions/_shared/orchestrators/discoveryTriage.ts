@@ -23,7 +23,8 @@ export type OrchestratorResult = {
 
 export async function runDiscoveryTriage(
   candidates: TriageCandidateInput[],
-  verticalSlug?: string
+  verticalSlug?: string,
+  opts?: { mined?: boolean }
 ): Promise<OrchestratorResult> {
   await assertNotPaused('DiscoveryTriageOrchestrator')
 
@@ -38,6 +39,9 @@ export async function runDiscoveryTriage(
   const userMessage = JSON.stringify(
     {
       vertical: verticalSlug ?? null,
+      note: opts?.mined
+        ? 'These candidates were EXTRACTED from curated affiliate-program lists — each is meant to be one product/company. Classify a recognizable single product/company as "offer" and score it by promise; only "reject" a generic category, the directory/site name itself, or obvious junk. Do NOT classify a bare product name as "container".'
+        : undefined,
       candidates: candidates.map((c, i) => ({
         index: i,
         name: c.name,

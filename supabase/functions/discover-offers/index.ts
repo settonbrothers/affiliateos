@@ -395,7 +395,8 @@ async function processDiscovery(args: {
               url: c.url,
               snippet: c.raw_snippet ?? '',
             })),
-            verticalSlug
+            verticalSlug,
+            { mined: true }
           )
           totalCost += t2.usage?.cost_usd ?? 0
           await recordRunSuccess(t2RunId, {
