@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 
 import { CandidateRow } from '@/components/discovery/CandidateRow'
@@ -45,11 +46,12 @@ export default async function DiscoveryRunPage({
   const strong = reached.filter(isStrong)
   const weak = reached.filter((c) => !isStrong(c))
   const dropped = candidates.filter((c) => !rankedIds.has(c.id))
+  const t = await getTranslations('discoveryAdmin')
 
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">Discovery run</h1>
+        <h1 className="text-2xl font-semibold">{t('runTitle')}</h1>
         <p className="text-sm text-[var(--color-muted-foreground)]">
           {run.status}
           {run.total_cost_usd != null && ` · $${run.total_cost_usd.toFixed(2)}`}
@@ -61,16 +63,14 @@ export default async function DiscoveryRunPage({
 
       <section>
         <h2 className="mb-2 text-lg font-medium">
-          Top candidates ({strong.length})
+          {t('topCandidates')} ({strong.length})
         </h2>
         {strong.map((c) => (
           <CandidateRow key={c.id} candidate={c} />
         ))}
         {strong.length === 0 && (
           <p className="text-sm text-[var(--color-muted-foreground)]">
-            {run.status === 'completed'
-              ? 'No strong candidates this run.'
-              : 'Scan still running — refresh in a moment.'}
+            {run.status === 'completed' ? t('noStrong') : t('scanRunning')}
           </p>
         )}
       </section>
@@ -78,12 +78,10 @@ export default async function DiscoveryRunPage({
       {weak.length > 0 && (
         <section>
           <h2 className="mb-1 text-lg font-medium">
-            Analyzed — low confidence ({weak.length})
+            {t('lowConfidence')} ({weak.length})
           </h2>
           <p className="mb-2 text-xs text-[var(--color-muted-foreground)]">
-            Reached deep analysis but scored below {RECOMMENDED_MIN_SCORE} —
-            usually directories, listicles, or thin pages. Review before
-            approving.
+            {t('lowConfidenceHint', { min: RECOMMENDED_MIN_SCORE })}
           </p>
           {weak.map((c) => (
             <CandidateRow key={c.id} candidate={c} />
@@ -93,7 +91,7 @@ export default async function DiscoveryRunPage({
 
       <section>
         <h2 className="mb-2 text-lg font-medium">
-          Dropped earlier ({dropped.length})
+          {t('droppedEarlier')} ({dropped.length})
         </h2>
         {dropped.map((c) => (
           <CandidateRow key={c.id} candidate={c} />

@@ -1,11 +1,12 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 
 import { Badge } from '@/components/ui/badge'
 import { approveCandidate, rejectCandidate } from '@/lib/actions/discovery'
-import { STAGE_BADGE_CLASS, STAGE_LABELS } from '@/lib/discovery/funnel'
+import { STAGE_BADGE_CLASS } from '@/lib/discovery/funnel'
 import type { CandidateStage } from '@/lib/discovery/funnel'
 import { hostnameOf } from '@/lib/facts/display'
 import type { DiscoveryCandidate } from '@/lib/queries/discovery'
@@ -40,10 +41,10 @@ type DeepView = {
 }
 
 const HARD_FILTER_LABELS: Array<[keyof NonNullable<DeepView['hard_filters']>, string]> = [
-  ['economics', 'Economics / EPC'],
-  ['paid_traffic', 'Paid traffic'],
-  ['monetization_integrity', 'Payment integrity'],
-  ['scale_ceiling', 'Scale ceiling'],
+  ['economics', 'hfEconomics'],
+  ['paid_traffic', 'hfPaidTraffic'],
+  ['monetization_integrity', 'hfPaymentIntegrity'],
+  ['scale_ceiling', 'hfScaleCeiling'],
 ]
 
 const FILTER_STATUS_CLASS: Record<string, string> = {
@@ -53,11 +54,20 @@ const FILTER_STATUS_CLASS: Record<string, string> = {
 }
 
 const SIGNAL_LABELS: Array<[keyof NonNullable<DeepView['signals']>, string]> = [
-  ['best_payout_route', 'Best payout'],
-  ['demand_trend', 'Demand'],
-  ['scale_proxy', 'At scale'],
-  ['momentum', 'Momentum'],
+  ['best_payout_route', 'sigBestPayout'],
+  ['demand_trend', 'sigDemand'],
+  ['scale_proxy', 'sigAtScale'],
+  ['momentum', 'sigMomentum'],
 ]
+
+const STAGE_LABEL_KEYS: Record<CandidateStage, string> = {
+  discovered: 'funnelDiscovered',
+  triaged: 'funnelPassedTriage',
+  analyzed: 'funnelDeepAnalyzed',
+  approved: 'funnelApproved',
+  rejected: 'stageRejected',
+  promoted: 'stagePromoted',
+}
 
 const SIGNAL_CONFIDENCE_CLASS: Record<string, string> = {
   high: 'bg-green-100 text-green-800',
@@ -67,6 +77,7 @@ const SIGNAL_CONFIDENCE_CLASS: Record<string, string> = {
 }
 
 export function CandidateRow({ candidate }: { candidate: DiscoveryCandidate }) {
+  const t = useTranslations('discoveryAdmin')
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -86,7 +97,9 @@ export function CandidateRow({ candidate }: { candidate: DiscoveryCandidate }) {
   return (
     <div className="flex flex-col gap-1 border-b border-[var(--color-border)] py-3">
       <div className="flex items-center gap-2">
-        <Badge className={STAGE_BADGE_CLASS[stage]}>{STAGE_LABELS[stage]}</Badge>
+        <Badge className={STAGE_BADGE_CLASS[stage]}>
+          {t(STAGE_LABEL_KEYS[stage])}
+        </Badge>
         <span className="font-medium">{candidate.name}</span>
         {candidate.url && (
           <a
@@ -100,12 +113,12 @@ export function CandidateRow({ candidate }: { candidate: DiscoveryCandidate }) {
         )}
         {candidate.deep_score != null && (
           <span className="text-xs text-[var(--color-muted-foreground)]">
-            score {candidate.deep_score}
+            {t('score', { n: candidate.deep_score })}
           </span>
         )}
         {deep?.recommended === false && (
           <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800">
-            not recommended
+            {t('notRecommended')}
           </span>
         )}
       </div>
@@ -113,7 +126,7 @@ export function CandidateRow({ candidate }: { candidate: DiscoveryCandidate }) {
       {deep?.summary && <p className="text-sm">{deep.summary}</p>}
       {deep?.estimated_commission && (
         <p className="text-xs text-[var(--color-muted-foreground)]">
-          Commission: {deep.estimated_commission}
+          {t('commission')} {deep.estimated_commission}
         </p>
       )}
 
@@ -121,13 +134,13 @@ export function CandidateRow({ candidate }: { candidate: DiscoveryCandidate }) {
         <p className="text-xs text-[var(--color-muted-foreground)]">
           {deep?.estimated_epc_band && <span>{deep.estimated_epc_band}</span>}
           {deep?.estimated_epc_band && deep?.network && <span> · </span>}
-          {deep?.network && <span>network: {deep.network}</span>}
+          {deep?.network && <span>{t('network', { name: deep.network })}</span>}
         </p>
       )}
 
       {deep?.hard_filters && (
         <div className="mt-1 flex flex-col gap-1">
-          {HARD_FILTER_LABELS.map(([key, label]) => {
+          {HARD_FILTER_LABELS.map(([key, labelKey]) => {
             const hf = deep.hard_filters?.[key]
             if (!hf?.status) return null
             return (
@@ -135,9 +148,9 @@ export function CandidateRow({ candidate }: { candidate: DiscoveryCandidate }) {
                 <span
                   className={`rounded px-1.5 py-0.5 ${FILTER_STATUS_CLASS[hf.status] ?? ''}`}
                 >
-                  {hf.status === 'unknown_verify' ? 'verify' : hf.status}
+                  {hf.status === 'unknown_verify' ? t('verify') : hf.status}
                 </span>
-                <span className="font-medium">{label}</span>
+                <span className="font-medium">{t(labelKey)}</span>
                 {hf.evidence && (
                   <span className="text-[var(--color-muted-foreground)]">
                     — {hf.evidence}
@@ -153,7 +166,7 @@ export function CandidateRow({ candidate }: { candidate: DiscoveryCandidate }) {
         deep.must_verify_before_budget.length > 0 && (
           <div className="mt-1 text-xs">
             <span className="font-medium text-amber-800">
-              Verify before budget:
+              {t('verifyBeforeBudget')}
             </span>{' '}
             {deep.must_verify_before_budget.join('; ')}
           </div>
@@ -161,12 +174,12 @@ export function CandidateRow({ candidate }: { candidate: DiscoveryCandidate }) {
 
       {deep?.signals && (
         <div className="mt-1 flex flex-col gap-1">
-          {SIGNAL_LABELS.map(([key, label]) => {
+          {SIGNAL_LABELS.map(([key, labelKey]) => {
             const sig = deep.signals?.[key]
             if (!sig?.value) return null
             return (
               <div key={key} className="flex items-baseline gap-2 text-xs">
-                <span className="w-24 shrink-0 font-medium">{label}</span>
+                <span className="w-24 shrink-0 font-medium">{t(labelKey)}</span>
                 <span>{sig.value}</span>
                 {sig.confidence && (
                   <span
@@ -182,7 +195,8 @@ export function CandidateRow({ candidate }: { candidate: DiscoveryCandidate }) {
       )}
       {candidate.rejection_reason && (
         <p className="text-xs text-red-700">
-          Rejected at {candidate.rejection_stage}: {candidate.rejection_reason}
+          {t('rejectedAt', { stage: candidate.rejection_stage ?? '' })}{' '}
+          {candidate.rejection_reason}
         </p>
       )}
       {!deep?.summary && candidate.triage_reason && (
@@ -198,14 +212,14 @@ export function CandidateRow({ candidate }: { candidate: DiscoveryCandidate }) {
             onClick={() => act(() => approveCandidate(candidate.id))}
             className="rounded-md bg-[var(--color-foreground)] px-3 py-1 text-xs text-[var(--color-background)] disabled:opacity-50"
           >
-            Approve → create offer
+            {t('approveCreateOffer')}
           </button>
           <button
             disabled={isPending}
             onClick={() => act(() => rejectCandidate(candidate.id))}
             className="rounded-md border border-[var(--color-border)] px-3 py-1 text-xs disabled:opacity-50"
           >
-            Reject
+            {t('reject')}
           </button>
           {error && <span className="text-xs text-red-600">{error}</span>}
         </div>
@@ -216,7 +230,7 @@ export function CandidateRow({ candidate }: { candidate: DiscoveryCandidate }) {
           href={`/offers/${candidate.promoted_offer_id}`}
           className="text-xs underline"
         >
-          View created offer →
+          {t('viewCreatedOffer')}
         </a>
       )}
     </div>

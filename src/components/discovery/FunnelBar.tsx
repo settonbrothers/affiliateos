@@ -1,11 +1,14 @@
+import { useTranslations } from 'next-intl'
+
 import type { FunnelCounts } from '@/lib/discovery/funnel'
 
 export function FunnelBar({ counts }: { counts: FunnelCounts }) {
+  const t = useTranslations('discoveryAdmin')
   const stages: Array<[string, number]> = [
-    ['Discovered', counts.discovered],
-    ['Passed triage', counts.triaged],
-    ['Deep-analyzed', counts.analyzed],
-    ['Approved', counts.approved],
+    [t('funnelDiscovered'), counts.discovered],
+    [t('funnelPassedTriage'), counts.triaged],
+    [t('funnelDeepAnalyzed'), counts.analyzed],
+    [t('funnelApproved'), counts.approved],
   ]
   return (
     <div className="flex flex-wrap gap-3">

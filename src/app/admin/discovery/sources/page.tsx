@@ -1,8 +1,11 @@
+import { getTranslations } from 'next-intl/server'
+
 import { setSourceEnabled } from '@/lib/actions/discovery'
 import { listDiscoverySources } from '@/lib/queries/discovery'
 
 export default async function DiscoverySourcesPage() {
   const sources = await listDiscoverySources()
+  const t = await getTranslations('discoveryAdmin')
 
   async function toggle(formData: FormData) {
     'use server'
@@ -13,18 +16,18 @@ export default async function DiscoverySourcesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Discovery sources</h1>
+      <h1 className="text-2xl font-semibold">{t('sourcesTitle')}</h1>
       <p className="text-sm text-[var(--color-muted-foreground)]">
-        Enabled web-search sources are queried on every scan for their vertical.
+        {t('sourcesSubtitle')}
       </p>
 
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-[var(--color-border)] text-left">
-            <th className="py-2 font-medium">Name</th>
-            <th className="py-2 font-medium">Kind</th>
-            <th className="py-2 font-medium">Queries</th>
-            <th className="py-2 font-medium">Enabled</th>
+          <tr className="border-b border-[var(--color-border)] text-start">
+            <th className="py-2 font-medium">{t('colSourceName')}</th>
+            <th className="py-2 font-medium">{t('colKind')}</th>
+            <th className="py-2 font-medium">{t('colQueries')}</th>
+            <th className="py-2 font-medium">{t('colEnabled')}</th>
           </tr>
         </thead>
         <tbody>
@@ -49,7 +52,7 @@ export default async function DiscoverySourcesPage() {
                     type="submit"
                     className="rounded-md border border-[var(--color-border)] px-2 py-1 text-xs"
                   >
-                    {s.enabled ? 'Disable' : 'Enable'}
+                    {s.enabled ? t('disable') : t('enable')}
                   </button>
                 </form>
               </td>
@@ -61,8 +64,7 @@ export default async function DiscoverySourcesPage() {
                 colSpan={4}
                 className="py-3 text-[var(--color-muted-foreground)]"
               >
-                No sources yet. Migration 0030 seeds one web-search source per
-                vertical.
+                {t('noSources')}
               </td>
             </tr>
           )}

@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 
@@ -9,6 +10,7 @@ import { SCAN_BREADTHS } from '@/lib/validations/discovery'
 type VerticalOption = { id: string; name: string }
 
 export function StartScanForm({ verticals }: { verticals: VerticalOption[] }) {
+  const t = useTranslations('discoveryAdmin')
   const router = useRouter()
   const [verticalId, setVerticalId] = useState(verticals[0]?.id ?? '')
   const [breadth, setBreadth] = useState<string>('standard')
@@ -18,7 +20,9 @@ export function StartScanForm({ verticals }: { verticals: VerticalOption[] }) {
   return (
     <div className="flex flex-wrap items-end gap-3 rounded-md border border-[var(--color-border)] p-4">
       <label className="flex flex-col gap-1 text-sm">
-        <span className="text-[var(--color-muted-foreground)]">Vertical</span>
+        <span className="text-[var(--color-muted-foreground)]">
+          {t('vertical')}
+        </span>
         <select
           value={verticalId}
           onChange={(e) => setVerticalId(e.target.value)}
@@ -32,7 +36,9 @@ export function StartScanForm({ verticals }: { verticals: VerticalOption[] }) {
         </select>
       </label>
       <label className="flex flex-col gap-1 text-sm">
-        <span className="text-[var(--color-muted-foreground)]">Breadth</span>
+        <span className="text-[var(--color-muted-foreground)]">
+          {t('breadth')}
+        </span>
         <select
           value={breadth}
           onChange={(e) => setBreadth(e.target.value)}
@@ -60,7 +66,7 @@ export function StartScanForm({ verticals }: { verticals: VerticalOption[] }) {
         }
         className="rounded-md bg-[var(--color-foreground)] px-4 py-2 text-sm text-[var(--color-background)] disabled:opacity-50"
       >
-        {isPending ? 'Starting…' : 'Start scan'}
+        {isPending ? t('starting') : t('startScan')}
       </button>
       {error && <span className="text-xs text-red-600">{error}</span>}
     </div>
