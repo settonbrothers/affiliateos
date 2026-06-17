@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
@@ -18,6 +19,7 @@ export function AnalyzeButton({
   initialStatus: AiRunStatus | null
 }) {
   const router = useRouter()
+  const t = useTranslations('offers')
   const [status, setStatus] = useState<AiRunStatus | 'idle'>(
     initialStatus ?? 'idle'
   )
@@ -73,7 +75,7 @@ export function AnalyzeButton({
   return (
     <div className="flex flex-col items-end gap-1">
       <Button onClick={onAnalyze} disabled={isRunning}>
-        {isRunning ? 'Analyzing…' : 'Analyze'}
+        {isRunning ? t('analyzing') : t('analyze')}
       </Button>
       {error && <p className="text-sm text-red-600">{error}</p>}
     </div>

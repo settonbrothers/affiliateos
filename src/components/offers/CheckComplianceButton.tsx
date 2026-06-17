@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
@@ -18,6 +19,7 @@ export function CheckComplianceButton({
   hasReport: boolean
 }) {
   const router = useRouter()
+  const t = useTranslations('offers')
   const [status, setStatus] = useState<AiRunStatus | 'idle'>('idle')
   const [runId, setRunId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -67,10 +69,10 @@ export function CheckComplianceButton({
     <div className="flex flex-col items-start gap-1">
       <Button onClick={onClick} disabled={isRunning}>
         {isRunning
-          ? 'Checking…'
+          ? t('checking')
           : hasReport
-            ? 'Re-check compliance'
-            : 'Check compliance'}
+            ? t('recheckCompliance')
+            : t('checkCompliance')}
       </Button>
       {error && <p className="text-sm text-red-600">{error}</p>}
     </div>

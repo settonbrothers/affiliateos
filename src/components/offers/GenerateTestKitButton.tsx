@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
@@ -22,6 +23,7 @@ export function GenerateTestKitButton({
   hasKit: boolean
 }) {
   const router = useRouter()
+  const t = useTranslations('offers')
   const [status, setStatus] = useState<AiRunStatus | 'idle'>(
     initialStatus ?? 'idle'
   )
@@ -72,7 +74,7 @@ export function GenerateTestKitButton({
   if (!hasVerdict) {
     return (
       <p className="text-sm text-[var(--color-muted-foreground)]">
-        Run an analysis first — the test kit is built from the verdict.
+        {t('testKitNeedsVerdict')}
       </p>
     )
   }
@@ -81,10 +83,10 @@ export function GenerateTestKitButton({
     <div className="flex flex-col items-start gap-1">
       <Button onClick={onGenerate} disabled={isRunning}>
         {isRunning
-          ? 'Generating…'
+          ? t('generating')
           : hasKit
-            ? 'Regenerate test kit'
-            : 'Generate test kit'}
+            ? t('regenerateTestKit')
+            : t('generateTestKit')}
       </Button>
       {error && <p className="text-sm text-red-600">{error}</p>}
     </div>

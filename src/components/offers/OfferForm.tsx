@@ -1,6 +1,7 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useTranslations } from 'next-intl'
 import { useState, useTransition } from 'react'
 import { useForm } from 'react-hook-form'
 
@@ -31,6 +32,7 @@ const NOTES_PLACEHOLDER = `Anything you know that an extractor wouldn't pick up 
 - compliance context (non-profit, regulated, etc.)`
 
 export function OfferForm({ verticals, mode, initial }: Props) {
+  const t = useTranslations('offers')
   const [isPending, startTransition] = useTransition()
   const [serverError, setServerError] = useState<string | null>(null)
 
@@ -60,13 +62,14 @@ export function OfferForm({ verticals, mode, initial }: Props) {
     })
   }
 
-  const submitLabel = mode.kind === 'create' ? 'Create offer' : 'Save changes'
-  const pendingLabel = mode.kind === 'create' ? 'Creating…' : 'Saving…'
+  const submitLabel =
+    mode.kind === 'create' ? t('createOffer') : t('saveChanges')
+  const pendingLabel = mode.kind === 'create' ? t('creating') : t('saving')
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="name">Name</Label>
+        <Label htmlFor="name">{t('name')}</Label>
         <Input id="name" {...register('name')} />
         {errors.name && (
           <p className="text-sm text-red-600">{errors.name.message}</p>
@@ -74,13 +77,13 @@ export function OfferForm({ verticals, mode, initial }: Props) {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="vertical_id">Vertical</Label>
+        <Label htmlFor="vertical_id">{t('vertical')}</Label>
         <select
           id="vertical_id"
           className="flex h-10 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-background)] px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
           {...register('vertical_id')}
         >
-          <option value="">Select a vertical…</option>
+          <option value="">{t('selectVertical')}</option>
           {verticals.map((vertical) => (
             <option key={vertical.id} value={vertical.id}>
               {vertical.name}
@@ -93,7 +96,7 @@ export function OfferForm({ verticals, mode, initial }: Props) {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="website_url">Website URL</Label>
+        <Label htmlFor="website_url">{t('websiteUrl')}</Label>
         <Input id="website_url" type="url" {...register('website_url')} />
         {errors.website_url && (
           <p className="text-sm text-red-600">{errors.website_url.message}</p>
@@ -101,7 +104,9 @@ export function OfferForm({ verticals, mode, initial }: Props) {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="affiliate_program_url">Affiliate program URL</Label>
+        <Label htmlFor="affiliate_program_url">
+          {t('affiliateProgramUrl')}
+        </Label>
         <Input
           id="affiliate_program_url"
           type="url"
@@ -115,10 +120,9 @@ export function OfferForm({ verticals, mode, initial }: Props) {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="operator_notes">Operator notes</Label>
+        <Label htmlFor="operator_notes">{t('operatorNotes')}</Label>
         <p className="text-xs text-[var(--color-muted-foreground)]">
-          What you know as a media buyer that isn&apos;t on any web page. The
-          analyzer treats this as verified facts.
+          {t('operatorNotesHint')}
         </p>
         <Textarea
           id="operator_notes"
