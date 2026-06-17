@@ -63,14 +63,14 @@ export async function getCampaignResults(
 
 export async function getLatestDiagnosis(
   campaignId: string
-): Promise<{ payload: unknown; created_at: string } | null> {
+): Promise<{ id: string; payload: unknown; created_at: string } | null> {
   const supabase = await createClient()
   const { data } = await supabase
     .from('result_diagnoses')
-    .select('payload, created_at')
+    .select('id, payload, created_at')
     .eq('campaign_id', campaignId)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
-  return (data as { payload: unknown; created_at: string }) ?? null
+  return (data as { id: string; payload: unknown; created_at: string }) ?? null
 }

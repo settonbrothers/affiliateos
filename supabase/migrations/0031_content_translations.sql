@@ -5,7 +5,9 @@
 -- computed once on first view. Keeps the eval/judge/golden set on English.
 
 create table content_translations (
-  source_table text not null,   -- 'ai_runs' | 'discovery_candidates'
+  -- 'ai_runs' | 'discovery_candidates' | 'test_kits' |
+  -- 'offer_compliance_warnings' | 'result_diagnoses'
+  source_table text not null,
   source_id uuid not null,
   locale text not null,         -- e.g. 'he'
   payload jsonb not null,       -- translated free-text fields, keyed by path

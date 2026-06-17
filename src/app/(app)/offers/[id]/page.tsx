@@ -1,4 +1,4 @@
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
@@ -12,6 +12,7 @@ import { OfferScorecard } from '@/components/offers/OfferScorecard'
 import { OfferVerdict } from '@/components/offers/OfferVerdict'
 import { TestKitView } from '@/components/offers/TestKitView'
 import { isCurrentUserAdmin } from '@/lib/auth/role'
+import { getTranslatedPayload } from '@/lib/i18n/translatedPayload'
 import {
   getLatestCompliance,
   getLatestRunByOrchestrator,
@@ -21,6 +22,7 @@ import {
   hasSuccessfulUnderwriting,
 } from '@/lib/queries/offers'
 import { cn } from '@/lib/utils'
+import type { UnderwritingResponse } from '@/types/agents/underwriting'
 
 const TAB_KEYS = [
   'overview',
@@ -46,8 +48,19 @@ export default async function OfferDetailPage({
   // Scorecard/verdict need the latest UNDERWRITING run specifically — not the
   // latest run of any orchestrator (test-kit/diagnosis/compliance payloads have
   // no `scores`, which would crash the scorecard).
+  const locale = await getLocale()
   const run = await getLatestRunByOrchestrator(id, 'UnderwritingOrchestrator')
-  const evaluation = run?.output_payload ?? offer.evaluation
+  // Show the verdict/scorecard prose in the viewer's locale (English payload
+  // untouched). Only the underwriting run carries a translatable id; the
+  // offer.evaluation fallback (legacy inline payload) stays as-is.
+  const evaluation = run
+    ? ((await getTranslatedPayload(
+        'ai_runs',
+        run.id,
+        locale,
+        run.output_payload
+      )) as UnderwritingResponse | null)
+    : offer.evaluation
   const activeTab =
     tab === 'scorecard' ||
     tab === 'verdict' ||
@@ -73,6 +86,14 @@ export default async function OfferDetailPage({
     activeTab === 'compliance' || activeTab === 'verdict'
       ? await getLatestCompliance(id)
       : null
+  const compliancePayload = compliance
+    ? await getTranslatedPayload(
+        'offer_compliance_warnings',
+        compliance.id,
+        locale,
+        compliance.payload
+      )
+    : null
 
   // Test-kit tab needs its own data — only fetch when that tab is active.
   const testKit =
@@ -83,6 +104,9 @@ export default async function OfferDetailPage({
       : null
   const hasVerdict =
     activeTab === 'test-kit' ? await hasSuccessfulUnderwriting(id) : false
+  const testKitPayload = testKit
+    ? await getTranslatedPayload('test_kits', testKit.id, locale, testKit.payload)
+    : null
 
   return (
     <div className="flex flex-col gap-6">
@@ -159,7 +183,7 @@ export default async function OfferDetailPage({
           {testKit ? (
             <>
               <CreateCampaignButton offerId={offer.id} testKitId={testKit.id} />
-              <TestKitView payload={testKit.payload} />
+              <TestKitView payload={testKitPayload} />
             </>
           ) : (
             hasVerdict && (
@@ -175,7 +199,7 @@ export default async function OfferDetailPage({
           <CheckComplianceButton offerId={offer.id} hasReport={!!compliance} />
           {compliance ? (
             <ComplianceView
-              payload={compliance.payload}
+              payload={compliancePayload}
               suggestedVerdictCap={compliance.suggested_verdict_cap}
             />
           ) : (

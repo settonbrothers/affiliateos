@@ -1,4 +1,4 @@
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 
 import { CandidateRow } from '@/components/discovery/CandidateRow'
@@ -8,6 +8,7 @@ import {
   rankAnalyzed,
   type CandidateLike,
 } from '@/lib/discovery/funnel'
+import { getTranslatedPayload } from '@/lib/i18n/translatedPayload'
 import { getDiscoveryRun, listCandidates } from '@/lib/queries/discovery'
 
 export default async function DiscoveryRunPage({
@@ -40,9 +41,25 @@ export default async function DiscoveryRunPage({
   const rankedIds = new Set(
     rankAnalyzed(candidates.map(asLike)).map((c) => c.id)
   )
-  const reached = candidates
+  const reachedRaw = candidates
     .filter((c) => rankedIds.has(c.id))
     .sort((a, b) => (b.deep_score ?? 0) - (a.deep_score ?? 0))
+  // Show the deep-analysis prose in the viewer's locale (English payload kept
+  // as the canonical source). Only the analyzed candidates carry deep_analysis;
+  // translate them in parallel, first view fills the cache. deep_score/stage
+  // are columns, so isStrong still works on the translated copies.
+  const locale = await getLocale()
+  const reached = await Promise.all(
+    reachedRaw.map(async (c) => ({
+      ...c,
+      deep_analysis: await getTranslatedPayload(
+        'discovery_candidates',
+        c.id,
+        locale,
+        c.deep_analysis
+      ),
+    }))
+  )
   const strong = reached.filter(isStrong)
   const weak = reached.filter((c) => !isStrong(c))
   const dropped = candidates.filter((c) => !rankedIds.has(c.id))

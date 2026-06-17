@@ -11,6 +11,9 @@ import { TranslateResponseSchema } from '../_shared/types/translate.ts'
 const SOURCE_PAYLOAD_COLUMN: Record<string, string> = {
   ai_runs: 'output_payload',
   discovery_candidates: 'deep_analysis',
+  test_kits: 'payload',
+  offer_compliance_warnings: 'payload',
+  result_diagnoses: 'payload',
 }
 
 // Translation never expands the input, but cap defensively so one giant payload

@@ -1,4 +1,4 @@
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
@@ -6,6 +6,7 @@ import { CampaignResultsForm } from '@/components/campaigns/CampaignResultsForm'
 import { DiagnoseButton } from '@/components/campaigns/DiagnoseButton'
 import { DiagnosisView } from '@/components/campaigns/DiagnosisView'
 import { Badge } from '@/components/ui/badge'
+import { getTranslatedPayload } from '@/lib/i18n/translatedPayload'
 import {
   getCampaign,
   getCampaignResults,
@@ -23,6 +24,15 @@ export default async function CampaignDetailPage({
 
   const results = await getCampaignResults(id)
   const diagnosis = await getLatestDiagnosis(id)
+  const locale = await getLocale()
+  const diagnosisPayload = diagnosis
+    ? await getTranslatedPayload(
+        'result_diagnoses',
+        diagnosis.id,
+        locale,
+        diagnosis.payload
+      )
+    : null
   const t = await getTranslations('campaigns')
 
   return (
@@ -61,7 +71,7 @@ export default async function CampaignDetailPage({
           hasDiagnosis={!!diagnosis}
         />
         {diagnosis ? (
-          <DiagnosisView payload={diagnosis.payload} />
+          <DiagnosisView payload={diagnosisPayload} />
         ) : (
           <p className="text-sm text-[var(--color-muted-foreground)]">
             {t('diagnosisEmpty')}

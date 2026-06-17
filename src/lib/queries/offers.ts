@@ -76,6 +76,7 @@ export async function getLatestTestKit(offerId: string): Promise<LatestTestKit> 
 }
 
 export type LatestCompliance = {
+  id: string
   overall_risk_level: string
   compliance_score: number | null
   suggested_verdict_cap: string | null
@@ -90,7 +91,7 @@ export async function getLatestCompliance(
   const { data } = await supabase
     .from('offer_compliance_warnings')
     .select(
-      'overall_risk_level, compliance_score, suggested_verdict_cap, payload, created_at'
+      'id, overall_risk_level, compliance_score, suggested_verdict_cap, payload, created_at'
     )
     .eq('offer_id', offerId)
     .order('created_at', { ascending: false })
