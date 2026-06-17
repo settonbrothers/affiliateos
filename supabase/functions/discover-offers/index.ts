@@ -19,6 +19,7 @@ const DEEP_ANALYSIS_CAP = 20
 const CONTAINER_MINE_CAP = 25 // max container pages to mine per run
 const MINED_OFFERS_CAP = 20 // max offers to take from one container
 const MINED_TOTAL_CAP = 150 // overall cap on mined candidates (bounds 2nd triage)
+const TRIAGE_BATCH_SIZE = 25 // candidates per triage call (a big batch fails)
 
 // Deno mirror of src/lib/discovery/queries.ts expandQueries (unit-tested there).
 const QUERY_MODIFIERS = [
@@ -217,32 +218,8 @@ async function processDiscovery(args: {
       raw_snippet: string | null
     }>
 
-    // 2) TRIAGE — one cheap Haiku batch call.
+    // 2) TRIAGE (batched — a large candidate set can't go in one Haiku call).
     await admin.from('discovery_runs').update({ status: 'triaging' }).eq('id', args.runId)
-    const triageRunId = await recordRunStart({
-      orchestratorName: 'DiscoveryTriageOrchestrator',
-      agentVersion: Deno.env.get('ANTHROPIC_API_KEY') ? 'real-v1' : 'mock-v1',
-      model: Deno.env.get('ANTHROPIC_API_KEY') ? 'claude-haiku-4-5-20251001' : 'mock',
-      inputPayload: { run_id: args.runId, candidate_count: candidates.length },
-      userId: args.userId,
-    })
-    let triage
-    try {
-      triage = await runDiscoveryTriage(
-        candidates.map((c) => ({ name: c.name, url: c.url, snippet: c.raw_snippet ?? '' })),
-        verticalSlug
-      )
-      totalCost += triage.usage?.cost_usd ?? 0
-      await recordRunSuccess(triageRunId, {
-        outputPayload: triage.output,
-        estimatedCost: triage.usage?.cost_usd ?? 0,
-        tokensInput: triage.usage?.input_tokens,
-        tokensOutput: triage.usage?.output_tokens,
-      })
-    } catch (err) {
-      await recordRunError(triageRunId, err instanceof Error ? err.message : String(err))
-      throw err
-    }
 
     type TriageResult = {
       index: number
@@ -250,8 +227,49 @@ async function processDiscovery(args: {
       score: number
       reason: string
     }
-    const results = (triage.output as { results: TriageResult[] }).results
-    const byIndex = new Map(results.map((r) => [r.index, r]))
+
+    // Triage candidates in batches; returns candidateId → result. A failed batch
+    // is logged and skipped (its candidates fall through as 'reject') — one bad
+    // batch never strands the whole set (the bug that left 150 mined offers at
+    // 'discovered' when they all went in one oversized call).
+    const triageInBatches = async (
+      cands: Array<{ id: string; name: string; url: string | null; snippet: string }>,
+      mined: boolean
+    ): Promise<Map<string, TriageResult>> => {
+      const byId = new Map<string, TriageResult>()
+      for (let off = 0; off < cands.length; off += TRIAGE_BATCH_SIZE) {
+        const chunk = cands.slice(off, off + TRIAGE_BATCH_SIZE)
+        const batchRunId = await recordRunStart({
+          orchestratorName: 'DiscoveryTriageOrchestrator',
+          agentVersion: Deno.env.get('ANTHROPIC_API_KEY') ? 'real-v1' : 'mock-v1',
+          model: Deno.env.get('ANTHROPIC_API_KEY') ? 'claude-haiku-4-5-20251001' : 'mock',
+          inputPayload: { run_id: args.runId, batch_size: chunk.length, mined },
+          userId: args.userId,
+        })
+        try {
+          const res = await runDiscoveryTriage(
+            chunk.map((c) => ({ name: c.name, url: c.url, snippet: c.snippet })),
+            verticalSlug,
+            mined ? { mined: true } : undefined
+          )
+          totalCost += res.usage?.cost_usd ?? 0
+          await recordRunSuccess(batchRunId, {
+            outputPayload: res.output,
+            estimatedCost: res.usage?.cost_usd ?? 0,
+            tokensInput: res.usage?.input_tokens,
+            tokensOutput: res.usage?.output_tokens,
+          })
+          const rs = (res.output as { results: TriageResult[] }).results
+          for (const r of rs) {
+            const c = chunk[r.index]
+            if (c) byId.set(c.id, r)
+          }
+        } catch (err) {
+          await recordRunError(batchRunId, err instanceof Error ? err.message : String(err))
+        }
+      }
+      return byId
+    }
 
     const survivors: Array<{ id: string; name: string; url: string | null; score: number }> = []
     const containers: Array<{ url: string }> = []
@@ -296,8 +314,18 @@ async function processDiscovery(args: {
       }
     }
 
-    for (let i = 0; i < candidates.length; i++) {
-      await applyTriage(candidates[i], byIndex.get(i), true)
+    // Pass 1: web-search results.
+    const triaged1 = await triageInBatches(
+      candidates.map((c) => ({
+        id: c.id,
+        name: c.name,
+        url: c.url,
+        snippet: c.raw_snippet ?? '',
+      })),
+      false
+    )
+    for (const c of candidates) {
+      await applyTriage({ id: c.id, name: c.name, url: c.url }, triaged1.get(c.id), true)
     }
 
     // MINE containers → extract the individual offers inside them, insert as new
@@ -381,39 +409,21 @@ async function processDiscovery(args: {
       minedTotal = minedCandidates.length
 
       if (minedCandidates.length > 0) {
-        const t2RunId = await recordRunStart({
-          orchestratorName: 'DiscoveryTriageOrchestrator',
-          agentVersion: Deno.env.get('ANTHROPIC_API_KEY') ? 'real-v1' : 'mock-v1',
-          model: Deno.env.get('ANTHROPIC_API_KEY') ? 'claude-haiku-4-5-20251001' : 'mock',
-          inputPayload: { run_id: args.runId, mined_count: minedCandidates.length },
-          userId: args.userId,
-        })
-        try {
-          const t2 = await runDiscoveryTriage(
-            minedCandidates.map((c) => ({
-              name: c.name,
-              url: c.url,
-              snippet: c.raw_snippet ?? '',
-            })),
-            verticalSlug,
-            { mined: true }
-          )
-          totalCost += t2.usage?.cost_usd ?? 0
-          await recordRunSuccess(t2RunId, {
-            outputPayload: t2.output,
-            estimatedCost: t2.usage?.cost_usd ?? 0,
-            tokensInput: t2.usage?.input_tokens,
-            tokensOutput: t2.usage?.output_tokens,
-          })
-          const r2 = (t2.output as { results: TriageResult[] }).results
-          const r2byIndex = new Map(r2.map((r) => [r.index, r]))
-          for (let i = 0; i < minedCandidates.length; i++) {
-            // allowContainer=false: a mined item that's itself a container is
-            // just rejected (no recursive mining in Phase A).
-            await applyTriage(minedCandidates[i], r2byIndex.get(i), false)
-          }
-        } catch (err) {
-          await recordRunError(t2RunId, err instanceof Error ? err.message : String(err))
+        // Pass 2: triage the mined offers (batched + lenient — they're already
+        // extracted concrete offers; the score just ranks them for the deep cap).
+        const triaged2 = await triageInBatches(
+          minedCandidates.map((c) => ({
+            id: c.id,
+            name: c.name,
+            url: c.url,
+            snippet: c.raw_snippet ?? '',
+          })),
+          true
+        )
+        for (const c of minedCandidates) {
+          // allowContainer=false: a mined item that's itself a container is just
+          // rejected (no recursive mining in Phase A).
+          await applyTriage({ id: c.id, name: c.name, url: c.url }, triaged2.get(c.id), false)
         }
       }
     }
