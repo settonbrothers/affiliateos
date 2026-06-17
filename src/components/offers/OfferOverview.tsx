@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 
 import { DeleteOfferButton } from '@/components/offers/DeleteOfferButton'
@@ -20,10 +21,12 @@ type Props = {
 }
 
 export function OfferOverview({ offer, operatorNotes, isAdmin, facts }: Props) {
+  const t = useTranslations('offers')
+  const tc = useTranslations('common')
   const rows: Array<[string, string | null]> = [
-    ['Website', offer.website_url],
-    ['Affiliate program', offer.affiliate_program_url],
-    ['Description', offer.short_description],
+    [t('website'), offer.website_url],
+    [t('affiliateProgram'), offer.affiliate_program_url],
+    [t('description'), offer.short_description],
   ]
 
   return (
@@ -31,7 +34,7 @@ export function OfferOverview({ offer, operatorNotes, isAdmin, facts }: Props) {
       <dl className="flex flex-col gap-3">
         <div className="flex items-center gap-4">
           <dt className="w-40 text-sm text-[var(--color-muted-foreground)]">
-            Status
+            {t('status')}
           </dt>
           <dd className="text-sm">
             {isAdmin ? (
@@ -53,7 +56,7 @@ export function OfferOverview({ offer, operatorNotes, isAdmin, facts }: Props) {
         ))}
         <div className="flex gap-4">
           <dt className="w-40 text-sm text-[var(--color-muted-foreground)]">
-            Operator notes
+            {t('operatorNotes')}
           </dt>
           <dd className="text-sm whitespace-pre-wrap">
             {operatorNotes ?? (
@@ -65,19 +68,19 @@ export function OfferOverview({ offer, operatorNotes, isAdmin, facts }: Props) {
 
       <div className="border-t border-[var(--color-border)] pt-4">
         <h3 className="mb-2 text-sm font-medium">
-          Verified facts ({facts.length})
+          {t('verifiedFacts')} ({facts.length})
         </h3>
         <OfferFactsList facts={facts} />
       </div>
 
       <div className="flex items-center gap-3 border-t border-[var(--color-border)] pt-4">
         <Button asChild size="sm" variant="outline">
-          <Link href={`/offers/${offer.id}/edit`}>Edit</Link>
+          <Link href={`/offers/${offer.id}/edit`}>{tc('edit')}</Link>
         </Button>
         {isAdmin && (
           <Button asChild size="sm" variant="ghost">
             <Link href={`/admin/offers/${offer.id}/sources`}>
-              Manage sources
+              {t('manageSources')}
             </Link>
           </Button>
         )}
