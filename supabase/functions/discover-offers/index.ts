@@ -16,8 +16,9 @@ const MAX_HTML_BYTES = 500_000
 const MAX_RAW_TEXT_LEN = 120_000
 const TRIAGE_KEEP_MIN_SCORE = 55
 const DEEP_ANALYSIS_CAP = 20
-const CONTAINER_MINE_CAP = 10 // max container pages to mine per run
-const MINED_OFFERS_CAP = 30 // max offers to take from one container
+const CONTAINER_MINE_CAP = 25 // max container pages to mine per run
+const MINED_OFFERS_CAP = 20 // max offers to take from one container
+const MINED_TOTAL_CAP = 150 // overall cap on mined candidates (bounds 2nd triage)
 
 // Deno mirror of src/lib/discovery/queries.ts expandQueries (unit-tested there).
 const QUERY_MODIFIERS = [
@@ -303,9 +304,14 @@ async function processDiscovery(args: {
     // candidates, and triage those (one pass; mined containers are not mined
     // again — bounded). dedup reuses the `known` domain set from discovery.
     let minedTotal = 0
-    type MinedRaw = { name: string; url: string; domain: string; parent: string }
+    type MinedRaw = { name: string; url: string | null; domain: string | null; parent: string }
     const minedRaw: MinedRaw[] = []
+    // Dedup mined offers by domain when present, else by normalized name (many
+    // listicles give an offer's name but no clean URL — those are still valid
+    // candidates; deep analysis researches them by name).
+    const knownNames = new Set<string>()
     for (const ct of containers.slice(0, CONTAINER_MINE_CAP)) {
+      if (minedRaw.length >= MINED_TOTAL_CAP) break
       let pageText = ''
       try {
         const html = await fetchWithTimeout(ct.url, FETCH_TIMEOUT_MS)
@@ -332,10 +338,19 @@ async function processDiscovery(args: {
         const offers = (mined.output as { offers: Array<{ name: string; url: string | null }> })
           .offers
         for (const o of offers.slice(0, MINED_OFFERS_CAP)) {
+          if (minedRaw.length >= MINED_TOTAL_CAP) break
+          const name = (o.name ?? '').trim()
+          if (!name) continue
           const domain = domainOf(o.url)
-          if (!domain || known.has(domain)) continue
-          known.add(domain)
-          minedRaw.push({ name: o.name, url: o.url as string, domain, parent: ct.url })
+          if (domain) {
+            if (known.has(domain)) continue
+            known.add(domain)
+          } else {
+            const nameKey = name.toLowerCase()
+            if (knownNames.has(nameKey)) continue
+            knownNames.add(nameKey)
+          }
+          minedRaw.push({ name, url: o.url, domain, parent: ct.url })
         }
       } catch (err) {
         await recordRunError(mineRunId, err instanceof Error ? err.message : String(err))
