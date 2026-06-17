@@ -1,6 +1,7 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useForm } from 'react-hook-form'
@@ -14,6 +15,7 @@ import { SignupSchema, type SignupInput } from '@/lib/validations/auth'
 type ServerMessage = { type: 'error' | 'info'; text: string }
 
 export function SignupForm() {
+  const t = useTranslations('auth')
   const [isPending, startTransition] = useTransition()
   const [serverMessage, setServerMessage] = useState<ServerMessage | null>(null)
 
@@ -41,7 +43,7 @@ export function SignupForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">{t('email')}</Label>
         <Input
           id="email"
           type="email"
@@ -54,7 +56,7 @@ export function SignupForm() {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">{t('password')}</Label>
         <Input
           id="password"
           type="password"
@@ -67,7 +69,7 @@ export function SignupForm() {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="invite_code">Invite code</Label>
+        <Label htmlFor="invite_code">{t('inviteCode')}</Label>
         <Input id="invite_code" autoComplete="off" {...register('invite_code')} />
         {errors.invite_code && (
           <p className="text-sm text-red-600">{errors.invite_code.message}</p>
@@ -87,13 +89,13 @@ export function SignupForm() {
       )}
 
       <Button type="submit" disabled={isPending}>
-        {isPending ? 'Creating account…' : 'Create account'}
+        {isPending ? t('creatingAccount') : t('createAccountBtn')}
       </Button>
 
       <p className="text-center text-sm text-[var(--color-muted-foreground)]">
-        Already have an account?{' '}
+        {t('haveAccount')}{' '}
         <Link href="/login" className="underline">
-          Sign in
+          {t('signInLink')}
         </Link>
       </p>
     </form>

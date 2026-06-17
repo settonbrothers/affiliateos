@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import { redirect } from 'next/navigation'
 
 import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard'
@@ -16,14 +17,14 @@ export default async function OnboardingPage() {
   if (await isOnboarded()) redirect('/offers')
 
   const verticals = await listVerticals()
+  const t = await getTranslations('onboarding')
 
   return (
     <div className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-6 p-6">
       <div>
-        <h1 className="text-2xl font-semibold">Welcome to AffiliateOS</h1>
+        <h1 className="text-2xl font-semibold">{t('welcomeTitle')}</h1>
         <p className="text-sm text-[var(--color-muted-foreground)]">
-          A few quick questions so the analyzer can judge offers for how you
-          operate. You can skip and edit later.
+          {t('welcomeSubtitle')}
         </p>
       </div>
       <OnboardingWizard verticals={verticals} />

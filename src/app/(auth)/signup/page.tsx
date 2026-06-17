@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server'
+
 import { SignupForm } from '@/components/auth/SignupForm'
 import {
   Card,
@@ -7,13 +9,14 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 
-export default function SignupPage() {
+export default async function SignupPage() {
+  const t = await getTranslations('auth')
   return (
     <main className="flex min-h-screen items-center justify-center p-6">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Create your account</CardTitle>
-          <CardDescription>Start underwriting offers with AffiliateOS.</CardDescription>
+          <CardTitle>{t('signupTitle')}</CardTitle>
+          <CardDescription>{t('signupSubtitle')}</CardDescription>
         </CardHeader>
         <CardContent>
           <SignupForm />

@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useState, useTransition } from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -14,8 +15,6 @@ import {
 import { TRAFFIC_CHANNELS } from '@/types/agents/testKit'
 import type { Vertical } from '@/types/db'
 import { cn } from '@/lib/utils'
-
-const STEPS = ['Who you are', 'How you buy', 'Your focus', 'Ready'] as const
 
 function Choice({
   active,
@@ -43,6 +42,13 @@ function Choice({
 }
 
 export function OnboardingWizard({ verticals }: { verticals: Vertical[] }) {
+  const t = useTranslations('onboarding')
+  const steps = [
+    t('stepWhoYouAre'),
+    t('stepHowYouBuy'),
+    t('stepYourFocus'),
+    t('stepReady'),
+  ]
   const [step, setStep] = useState(0)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -79,7 +85,7 @@ export function OnboardingWizard({ verticals }: { verticals: Vertical[] }) {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex gap-2 text-xs">
-        {STEPS.map((s, i) => (
+        {steps.map((s, i) => (
           <span
             key={s}
             className={cn(
@@ -97,7 +103,7 @@ export function OnboardingWizard({ verticals }: { verticals: Vertical[] }) {
       {step === 0 && (
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <Label>Your experience level</Label>
+            <Label>{t('experienceLabel')}</Label>
             <div className="flex flex-wrap gap-2">
               {EXPERIENCE_LEVELS.map((e) => (
                 <Choice key={e} active={experience === e} onClick={() => setExperience(e)}>
@@ -107,7 +113,7 @@ export function OnboardingWizard({ verticals }: { verticals: Vertical[] }) {
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <Label>Cashflow tolerance</Label>
+            <Label>{t('cashflowLabel')}</Label>
             <div className="flex flex-wrap gap-2">
               {CASHFLOW_TOLERANCES.map((c) => (
                 <Choice key={c} active={cashflow === c} onClick={() => setCashflow(c)}>
@@ -122,7 +128,7 @@ export function OnboardingWizard({ verticals }: { verticals: Vertical[] }) {
       {step === 1 && (
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <Label>Primary traffic channels</Label>
+            <Label>{t('channelsLabel')}</Label>
             <div className="flex flex-wrap gap-2">
               {TRAFFIC_CHANNELS.map((c) => (
                 <Choice key={c} active={channels.includes(c)} onClick={() => toggleChannel(c)}>
@@ -133,7 +139,7 @@ export function OnboardingWizard({ verticals }: { verticals: Vertical[] }) {
           </div>
           <div className="flex gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="bmin">Typical budget min ($)</Label>
+              <Label htmlFor="bmin">{t('budgetMinLabel')}</Label>
               <Input
                 id="bmin"
                 type="number"
@@ -143,7 +149,7 @@ export function OnboardingWizard({ verticals }: { verticals: Vertical[] }) {
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="bmax">max ($)</Label>
+              <Label htmlFor="bmax">{t('budgetMaxLabel')}</Label>
               <Input
                 id="bmax"
                 type="number"
@@ -158,14 +164,14 @@ export function OnboardingWizard({ verticals }: { verticals: Vertical[] }) {
 
       {step === 2 && (
         <div className="flex flex-col gap-2">
-          <Label htmlFor="vertical">Vertical you focus on</Label>
+          <Label htmlFor="vertical">{t('verticalLabel')}</Label>
           <select
             id="vertical"
             className="flex h-10 w-full max-w-sm rounded-md border border-[var(--color-border)] bg-[var(--color-background)] px-3 text-sm"
             value={verticalId}
             onChange={(e) => setVerticalId(e.target.value)}
           >
-            <option value="">No preference</option>
+            <option value="">{t('noPreference')}</option>
             {verticals.map((v) => (
               <option key={v.id} value={v.id}>
                 {v.name}
@@ -177,7 +183,7 @@ export function OnboardingWizard({ verticals }: { verticals: Vertical[] }) {
 
       {step === 3 && (
         <div className="flex flex-col gap-2 text-sm">
-          <p>You&apos;re set. The analyzer uses this context to judge operator-fit.</p>
+          <p>{t('readyLine')}</p>
           <p className="text-[var(--color-muted-foreground)]">
             {experience || '—'} · {cashflow || '—'} cashflow ·{' '}
             {channels.length ? channels.join(', ') : 'no channels'} ·{' '}
@@ -195,7 +201,7 @@ export function OnboardingWizard({ verticals }: { verticals: Vertical[] }) {
           disabled={step === 0 || isPending}
           onClick={() => setStep((s) => Math.max(0, s - 1))}
         >
-          Back
+          {t('back')}
         </Button>
         <div className="flex gap-2">
           <Button
@@ -204,15 +210,15 @@ export function OnboardingWizard({ verticals }: { verticals: Vertical[] }) {
             disabled={isPending}
             onClick={finish}
           >
-            Skip
+            {t('skip')}
           </Button>
-          {step < STEPS.length - 1 ? (
+          {step < steps.length - 1 ? (
             <Button type="button" onClick={() => setStep((s) => s + 1)}>
-              Next
+              {t('next')}
             </Button>
           ) : (
             <Button type="button" disabled={isPending} onClick={finish}>
-              {isPending ? 'Saving…' : 'Finish'}
+              {isPending ? t('saving') : t('finish')}
             </Button>
           )}
         </div>

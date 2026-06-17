@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server'
+
 import { LoginForm } from '@/components/auth/LoginForm'
 import {
   Card,
@@ -7,13 +9,14 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const t = await getTranslations('auth')
   return (
     <main className="flex min-h-screen items-center justify-center p-6">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Sign in</CardTitle>
-          <CardDescription>Welcome back to AffiliateOS.</CardDescription>
+          <CardTitle>{t('signInTitle')}</CardTitle>
+          <CardDescription>{t('signInSubtitle')}</CardDescription>
         </CardHeader>
         <CardContent>
           <LoginForm />

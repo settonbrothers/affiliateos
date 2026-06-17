@@ -1,6 +1,7 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useForm } from 'react-hook-form'
@@ -14,6 +15,7 @@ import { LoginSchema, type LoginInput } from '@/lib/validations/auth'
 type ServerMessage = { type: 'error' | 'info'; text: string }
 
 export function LoginForm() {
+  const t = useTranslations('auth')
   const [isPending, startTransition] = useTransition()
   const [serverMessage, setServerMessage] = useState<ServerMessage | null>(null)
 
@@ -52,7 +54,7 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">{t('email')}</Label>
         <Input
           id="email"
           type="email"
@@ -65,7 +67,7 @@ export function LoginForm() {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">{t('password')}</Label>
         <Input
           id="password"
           type="password"
@@ -90,7 +92,7 @@ export function LoginForm() {
       )}
 
       <Button type="submit" disabled={isPending}>
-        {isPending ? 'Signing in…' : 'Sign in'}
+        {isPending ? t('signingIn') : t('signInBtn')}
       </Button>
       <Button
         type="button"
@@ -98,13 +100,13 @@ export function LoginForm() {
         onClick={onMagicLink}
         disabled={isPending}
       >
-        Send magic link
+        {t('sendMagicLink')}
       </Button>
 
       <p className="text-center text-sm text-[var(--color-muted-foreground)]">
-        No account?{' '}
+        {t('noAccount')}{' '}
         <Link href="/signup" className="underline">
-          Sign up
+          {t('signUpLink')}
         </Link>
       </p>
     </form>
