@@ -24,14 +24,17 @@ export type OrchestratorResult = {
   mode: 'real' | 'mock'
 }
 
-// Fixed gap-filling queries — these target the hard filters a landing page
-// usually can't confirm on its own: real terms/commission, payment reputation
-// (shaving / does-it-pay), and paid-traffic policy.
+// Fixed gap-filling queries. The first three target the hard filters a landing
+// page can't confirm alone (terms/commission, payment reputation, paid-traffic
+// policy); the last two feed the enrichment signals (funding momentum, and
+// which network pays the most for this product).
 function researchQueries(name: string): string[] {
   return [
     `${name} affiliate program commission payout terms`,
     `${name} affiliate program review does it pay shaving`,
     `${name} affiliate paid traffic brand bidding policy`,
+    `${name} funding round raised acquisition news`,
+    `${name} affiliate program highest commission which network`,
   ]
 }
 

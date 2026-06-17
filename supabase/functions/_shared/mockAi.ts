@@ -404,6 +404,28 @@ export function mockDiscoveryDeep(): Record<string, unknown> {
         source_url: null,
       },
     },
+    signals: {
+      demand_trend: {
+        value: 'rising (scaling stage)',
+        confidence: 'medium',
+        evidence: 'Mock: search interest trending up over 12 months',
+      },
+      scale_proxy: {
+        value: 'widely promoted by affiliates',
+        confidence: 'low',
+        evidence: 'Mock: appears across multiple affiliate roundups',
+      },
+      momentum: {
+        value: 'Series B raised 2026',
+        confidence: 'medium',
+        evidence: 'Mock: funding news',
+      },
+      best_payout_route: {
+        value: 'in-house — 20% lifetime recurring',
+        confidence: 'medium',
+        evidence: 'Mock: own affiliate page',
+      },
+    },
   }
 }
 
