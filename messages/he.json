@@ -110,9 +110,44 @@
   },
   "campaigns": {
     "title": "קמפיינים",
-    "empty": "אין קמפיינים עדיין."
+    "subtitle": "קמפיינים אמיתיים שהרצת מול ערכת בדיקה. הזן תוצאות, ואז קבל אבחון.",
+    "empty": "אין קמפיינים עדיין. פתח הצעה ← טאב ערכת בדיקה ← צור ערכה ← צור קמפיין מהערכה.",
+    "colCampaign": "קמפיין",
+    "colOffer": "הצעה",
+    "colChannel": "ערוץ",
+    "colStatus": "סטטוס",
+    "backToCampaigns": "← קמפיינים",
+    "resultsHeading": "תוצאות",
+    "diagnosisHeading": "אבחון",
+    "diagnosisEmpty": "אין אבחון עדיין. שמור תוצאות, ואז לחץ ניתוח.",
+    "saved": "נשמר. כעת הרץ את האבחון למטה.",
+    "saveResults": "שמירת תוצאות",
+    "saving": "שומר…",
+    "analyzing": "מנתח…",
+    "rerunDiagnosis": "הרצת אבחון מחדש",
+    "analyzeResults": "ניתוח תוצאות",
+    "saveResultsFirst": "שמור קודם את תוצאות הקמפיין.",
+    "fieldSpend": "הוצאה (USD)",
+    "fieldRevenue": "הכנסה (USD)",
+    "fieldImpressions": "חשיפות",
+    "fieldClicks": "קליקים",
+    "fieldLandingViews": "צפיות בדף נחיתה",
+    "fieldConversions": "המרות",
+    "fieldDaysRunning": "ימי ריצה"
   },
   "billing": {
-    "title": "חיוב"
+    "title": "חיוב וקרדיטים",
+    "subtitle": "כל פעולת AI צורכת קרדיטים. ריצות שנכשלו מזוכות אוטומטית.",
+    "currentBalance": "יתרה נוכחית",
+    "plan": "תוכנית",
+    "noSubscription": "אין מנוי פעיל.",
+    "renews": "מתחדש ב-{date}",
+    "pricing": "תמחור",
+    "history": "היסטוריה",
+    "noActivity": "אין פעילות קרדיטים עדיין.",
+    "colWhen": "מתי",
+    "colType": "סוג",
+    "colDetail": "פירוט",
+    "colAmount": "סכום"
   }
 }

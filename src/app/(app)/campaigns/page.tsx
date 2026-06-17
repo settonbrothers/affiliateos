@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 
 import { Badge } from '@/components/ui/badge'
@@ -5,30 +6,29 @@ import { listCampaigns } from '@/lib/queries/campaigns'
 
 export default async function CampaignsPage() {
   const campaigns = await listCampaigns()
+  const t = await getTranslations('campaigns')
 
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">Campaigns</h1>
+        <h1 className="text-2xl font-semibold">{t('title')}</h1>
         <p className="text-sm text-[var(--color-muted-foreground)]">
-          Real campaigns you ran against a test kit. Enter results, then get a
-          diagnosis.
+          {t('subtitle')}
         </p>
       </div>
 
       {campaigns.length === 0 ? (
         <p className="text-sm text-[var(--color-muted-foreground)]">
-          No campaigns yet. Open an offer → Test Kit tab → generate a kit →{' '}
-          <strong>Create campaign from this kit</strong>.
+          {t('empty')}
         </p>
       ) : (
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-[var(--color-border)] text-left">
-              <th className="py-2 font-medium">Campaign</th>
-              <th className="py-2 font-medium">Offer</th>
-              <th className="py-2 font-medium">Channel</th>
-              <th className="py-2 font-medium">Status</th>
+            <tr className="border-b border-[var(--color-border)] text-start">
+              <th className="py-2 font-medium">{t('colCampaign')}</th>
+              <th className="py-2 font-medium">{t('colOffer')}</th>
+              <th className="py-2 font-medium">{t('colChannel')}</th>
+              <th className="py-2 font-medium">{t('colStatus')}</th>
             </tr>
           </thead>
           <tbody>

@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
@@ -22,6 +23,7 @@ export default async function CampaignDetailPage({
 
   const results = await getCampaignResults(id)
   const diagnosis = await getLatestDiagnosis(id)
+  const t = await getTranslations('campaigns')
 
   return (
     <div className="flex flex-col gap-8">
@@ -30,7 +32,7 @@ export default async function CampaignDetailPage({
           href="/campaigns"
           className="text-sm text-[var(--color-muted-foreground)] underline"
         >
-          ← Campaigns
+          {t('backToCampaigns')}
         </Link>
         <div className="mt-1 flex items-center gap-3">
           <h1 className="text-2xl font-semibold">{campaign.name}</h1>
@@ -44,7 +46,7 @@ export default async function CampaignDetailPage({
       </div>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-medium">Results</h2>
+        <h2 className="text-lg font-medium">{t('resultsHeading')}</h2>
         <CampaignResultsForm
           campaignId={campaign.id}
           initial={results ?? undefined}
@@ -52,7 +54,7 @@ export default async function CampaignDetailPage({
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-medium">Diagnosis</h2>
+        <h2 className="text-lg font-medium">{t('diagnosisHeading')}</h2>
         <DiagnoseButton
           campaignId={campaign.id}
           hasResults={!!results}
@@ -62,7 +64,7 @@ export default async function CampaignDetailPage({
           <DiagnosisView payload={diagnosis.payload} />
         ) : (
           <p className="text-sm text-[var(--color-muted-foreground)]">
-            No diagnosis yet. Save results, then click Analyze.
+            {t('diagnosisEmpty')}
           </p>
         )}
       </section>

@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
@@ -20,6 +21,7 @@ export function DiagnoseButton({
   hasDiagnosis: boolean
 }) {
   const router = useRouter()
+  const t = useTranslations('campaigns')
   const [status, setStatus] = useState<AiRunStatus | 'idle'>('idle')
   const [runId, setRunId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -69,14 +71,14 @@ export function DiagnoseButton({
     <div className="flex flex-col items-start gap-1">
       <Button onClick={onClick} disabled={isRunning || !hasResults}>
         {isRunning
-          ? 'Analyzing…'
+          ? t('analyzing')
           : hasDiagnosis
-            ? 'Re-run diagnosis'
-            : 'Analyze results'}
+            ? t('rerunDiagnosis')
+            : t('analyzeResults')}
       </Button>
       {!hasResults && (
         <p className="text-sm text-[var(--color-muted-foreground)]">
-          Save campaign results first.
+          {t('saveResultsFirst')}
         </p>
       )}
       {error && <p className="text-sm text-red-600">{error}</p>}

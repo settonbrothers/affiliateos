@@ -1,6 +1,7 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useTranslations } from 'next-intl'
 import { useState, useTransition } from 'react'
 import { useForm } from 'react-hook-form'
 
@@ -13,14 +14,14 @@ import {
   type CampaignResultsInput,
 } from '@/lib/validations/campaign'
 
-const FIELDS: Array<{ key: keyof CampaignResultsInput; label: string }> = [
-  { key: 'spend_usd', label: 'Spend (USD)' },
-  { key: 'revenue_usd', label: 'Revenue (USD)' },
-  { key: 'impressions', label: 'Impressions' },
-  { key: 'clicks', label: 'Clicks' },
-  { key: 'landing_views', label: 'Landing views' },
-  { key: 'conversions', label: 'Conversions' },
-  { key: 'days_running', label: 'Days running' },
+const FIELDS: Array<{ key: keyof CampaignResultsInput; labelKey: string }> = [
+  { key: 'spend_usd', labelKey: 'fieldSpend' },
+  { key: 'revenue_usd', labelKey: 'fieldRevenue' },
+  { key: 'impressions', labelKey: 'fieldImpressions' },
+  { key: 'clicks', labelKey: 'fieldClicks' },
+  { key: 'landing_views', labelKey: 'fieldLandingViews' },
+  { key: 'conversions', labelKey: 'fieldConversions' },
+  { key: 'days_running', labelKey: 'fieldDaysRunning' },
 ]
 
 export function CampaignResultsForm({
@@ -30,6 +31,7 @@ export function CampaignResultsForm({
   campaignId: string
   initial?: Partial<Record<keyof CampaignResultsInput, number | string>>
 }) {
+  const t = useTranslations('campaigns')
   const [isPending, startTransition] = useTransition()
   const [serverError, setServerError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
@@ -66,7 +68,7 @@ export function CampaignResultsForm({
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         {FIELDS.map((f) => (
           <div key={f.key} className="flex flex-col gap-1.5">
-            <Label htmlFor={f.key}>{f.label}</Label>
+            <Label htmlFor={f.key}>{t(f.labelKey)}</Label>
             <Input
               id={f.key}
               type="number"
@@ -80,12 +82,10 @@ export function CampaignResultsForm({
         ))}
       </div>
       {serverError && <p className="text-sm text-red-600">{serverError}</p>}
-      {saved && (
-        <p className="text-sm text-green-700">Saved. Now run the diagnosis below.</p>
-      )}
+      {saved && <p className="text-sm text-green-700">{t('saved')}</p>}
       <div>
         <Button type="submit" disabled={isPending}>
-          {isPending ? 'Saving…' : 'Save results'}
+          {isPending ? t('saving') : t('saveResults')}
         </Button>
       </div>
     </form>

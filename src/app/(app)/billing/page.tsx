@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server'
+
 import { BillingActions } from '@/components/billing/BillingActions'
 import { GrantCreditsButton } from '@/components/billing/GrantCreditsButton'
 import { Badge } from '@/components/ui/badge'
@@ -44,19 +46,21 @@ export default async function BillingPage() {
         .maybeSingle()
     : { data: null }
 
+  const t = await getTranslations('billing')
+
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">Billing & credits</h1>
+        <h1 className="text-2xl font-semibold">{t('title')}</h1>
         <p className="text-sm text-[var(--color-muted-foreground)]">
-          Each AI action spends credits. Failed runs are automatically refunded.
+          {t('subtitle')}
         </p>
       </div>
 
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm text-[var(--color-muted-foreground)]">
-            Current balance
+            {t('currentBalance')}
           </CardTitle>
         </CardHeader>
         <CardContent className="flex items-end justify-between gap-4">
@@ -67,7 +71,7 @@ export default async function BillingPage() {
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Plan</CardTitle>
+          <CardTitle className="text-base">{t('plan')}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           {subscription ? (
@@ -76,13 +80,13 @@ export default async function BillingPage() {
               <span className="text-[var(--color-muted-foreground)]">
                 {subscription.plan}
                 {subscription.current_period_end
-                  ? ` · renews ${new Date(subscription.current_period_end).toLocaleDateString()}`
+                  ? ` · ${t('renews', { date: new Date(subscription.current_period_end).toLocaleDateString() })}`
                   : ''}
               </span>
             </p>
           ) : (
             <p className="text-sm text-[var(--color-muted-foreground)]">
-              No active subscription.
+              {t('noSubscription')}
             </p>
           )}
           <BillingActions
@@ -94,7 +98,7 @@ export default async function BillingPage() {
 
       <div>
         <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-muted-foreground)]">
-          Pricing
+          {t('pricing')}
         </h2>
         <div className="flex flex-wrap gap-2 text-sm">
           {pricing.map((p) => (
@@ -107,20 +111,20 @@ export default async function BillingPage() {
 
       <div>
         <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-muted-foreground)]">
-          History
+          {t('history')}
         </h2>
         {ledger.length === 0 ? (
           <p className="text-sm text-[var(--color-muted-foreground)]">
-            No credit activity yet.
+            {t('noActivity')}
           </p>
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[var(--color-border)] text-left">
-                <th className="py-2 font-medium">When</th>
-                <th className="py-2 font-medium">Type</th>
-                <th className="py-2 font-medium">Detail</th>
-                <th className="py-2 text-right font-medium">Amount</th>
+              <tr className="border-b border-[var(--color-border)] text-start">
+                <th className="py-2 font-medium">{t('colWhen')}</th>
+                <th className="py-2 font-medium">{t('colType')}</th>
+                <th className="py-2 font-medium">{t('colDetail')}</th>
+                <th className="py-2 text-end font-medium">{t('colAmount')}</th>
               </tr>
             </thead>
             <tbody>

@@ -110,9 +110,44 @@
   },
   "campaigns": {
     "title": "Campaigns",
-    "empty": "No campaigns yet."
+    "subtitle": "Real campaigns you ran against a test kit. Enter results, then get a diagnosis.",
+    "empty": "No campaigns yet. Open an offer → Test Kit tab → generate a kit → Create campaign from this kit.",
+    "colCampaign": "Campaign",
+    "colOffer": "Offer",
+    "colChannel": "Channel",
+    "colStatus": "Status",
+    "backToCampaigns": "← Campaigns",
+    "resultsHeading": "Results",
+    "diagnosisHeading": "Diagnosis",
+    "diagnosisEmpty": "No diagnosis yet. Save results, then click Analyze.",
+    "saved": "Saved. Now run the diagnosis below.",
+    "saveResults": "Save results",
+    "saving": "Saving…",
+    "analyzing": "Analyzing…",
+    "rerunDiagnosis": "Re-run diagnosis",
+    "analyzeResults": "Analyze results",
+    "saveResultsFirst": "Save campaign results first.",
+    "fieldSpend": "Spend (USD)",
+    "fieldRevenue": "Revenue (USD)",
+    "fieldImpressions": "Impressions",
+    "fieldClicks": "Clicks",
+    "fieldLandingViews": "Landing views",
+    "fieldConversions": "Conversions",
+    "fieldDaysRunning": "Days running"
   },
   "billing": {
-    "title": "Billing"
+    "title": "Billing & credits",
+    "subtitle": "Each AI action spends credits. Failed runs are automatically refunded.",
+    "currentBalance": "Current balance",
+    "plan": "Plan",
+    "noSubscription": "No active subscription.",
+    "renews": "renews {date}",
+    "pricing": "Pricing",
+    "history": "History",
+    "noActivity": "No credit activity yet.",
+    "colWhen": "When",
+    "colType": "Type",
+    "colDetail": "Detail",
+    "colAmount": "Amount"
   }
 }
