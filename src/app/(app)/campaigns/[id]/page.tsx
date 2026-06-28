@@ -5,8 +5,12 @@ import { notFound } from 'next/navigation'
 import { CampaignResultsForm } from '@/components/campaigns/CampaignResultsForm'
 import { DiagnoseButton } from '@/components/campaigns/DiagnoseButton'
 import { DiagnosisView } from '@/components/campaigns/DiagnosisView'
+import { TranslationFiller } from '@/components/i18n/TranslationFiller'
 import { Badge } from '@/components/ui/badge'
-import { getTranslatedPayload } from '@/lib/i18n/translatedPayload'
+import {
+  getTranslatedPayload,
+  shouldTranslate,
+} from '@/lib/i18n/translatedPayload'
 import {
   getCampaign,
   getCampaignResults,
@@ -71,7 +75,16 @@ export default async function CampaignDetailPage({
           hasDiagnosis={!!diagnosis}
         />
         {diagnosis ? (
-          <DiagnosisView payload={diagnosisPayload} />
+          <>
+            <DiagnosisView payload={diagnosisPayload} />
+            {shouldTranslate(locale, diagnosis.payload) && (
+              <TranslationFiller
+                sourceTable="result_diagnoses"
+                sourceId={diagnosis.id}
+                locale={locale}
+              />
+            )}
+          </>
         ) : (
           <p className="text-sm text-[var(--color-muted-foreground)]">
             {t('diagnosisEmpty')}

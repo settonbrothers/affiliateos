@@ -11,8 +11,12 @@ import { OfferOverview } from '@/components/offers/OfferOverview'
 import { OfferScorecard } from '@/components/offers/OfferScorecard'
 import { OfferVerdict } from '@/components/offers/OfferVerdict'
 import { TestKitView } from '@/components/offers/TestKitView'
+import { TranslationFiller } from '@/components/i18n/TranslationFiller'
 import { isCurrentUserAdmin } from '@/lib/auth/role'
-import { getTranslatedPayload } from '@/lib/i18n/translatedPayload'
+import {
+  getTranslatedPayload,
+  shouldTranslate,
+} from '@/lib/i18n/translatedPayload'
 import {
   getLatestCompliance,
   getLatestRunByOrchestrator,
@@ -157,7 +161,18 @@ export default async function OfferDetailPage({
           facts={facts}
         />
       )}
-      {activeTab === 'scorecard' && <OfferScorecard evaluation={evaluation} />}
+      {activeTab === 'scorecard' && (
+        <>
+          <OfferScorecard evaluation={evaluation} />
+          {run && shouldTranslate(locale, run.output_payload) && (
+            <TranslationFiller
+              sourceTable="ai_runs"
+              sourceId={run.id}
+              locale={locale}
+            />
+          )}
+        </>
+      )}
       {activeTab === 'verdict' && (
         <div className="flex flex-col gap-4">
           {compliance?.suggested_verdict_cap && (
@@ -170,6 +185,13 @@ export default async function OfferDetailPage({
             </div>
           )}
           <OfferVerdict evaluation={evaluation} />
+          {run && shouldTranslate(locale, run.output_payload) && (
+            <TranslationFiller
+              sourceTable="ai_runs"
+              sourceId={run.id}
+              locale={locale}
+            />
+          )}
         </div>
       )}
       {activeTab === 'test-kit' && (
@@ -184,6 +206,13 @@ export default async function OfferDetailPage({
             <>
               <CreateCampaignButton offerId={offer.id} testKitId={testKit.id} />
               <TestKitView payload={testKitPayload} />
+              {shouldTranslate(locale, testKit.payload) && (
+                <TranslationFiller
+                  sourceTable="test_kits"
+                  sourceId={testKit.id}
+                  locale={locale}
+                />
+              )}
             </>
           ) : (
             hasVerdict && (
@@ -198,10 +227,19 @@ export default async function OfferDetailPage({
         <div className="flex flex-col gap-6">
           <CheckComplianceButton offerId={offer.id} hasReport={!!compliance} />
           {compliance ? (
-            <ComplianceView
-              payload={compliancePayload}
-              suggestedVerdictCap={compliance.suggested_verdict_cap}
-            />
+            <>
+              <ComplianceView
+                payload={compliancePayload}
+                suggestedVerdictCap={compliance.suggested_verdict_cap}
+              />
+              {shouldTranslate(locale, compliance.payload) && (
+                <TranslationFiller
+                  sourceTable="offer_compliance_warnings"
+                  sourceId={compliance.id}
+                  locale={locale}
+                />
+              )}
+            </>
           ) : (
             <p className="text-sm text-[var(--color-muted-foreground)]">
               No compliance check yet. Run one to surface claim risks and safe

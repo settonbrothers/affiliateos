@@ -3,21 +3,26 @@ import 'server-only'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { DEFAULT_LOCALE } from '@/i18n/locale'
-import { applyTranslations } from '@/lib/i18n/translatable'
+import {
+  applyTranslations,
+  collectStrings,
+  type TranslatableSource,
+} from '@/lib/i18n/translatable'
 import { createClient } from '@/lib/supabase/server'
+
+export type { TranslatableSource }
 
 // content_translations isn't in the generated database.ts until regen on main.
 // Bridge to an untyped client for that table only; drop after regen.
 type UntypedClient = SupabaseClient
 
-// Tables whose displayed jsonb payload can be shown translated. Mirrors the
-// edge function's SOURCE_PAYLOAD_COLUMN allow-list.
-export type TranslatableSource =
-  | 'ai_runs'
-  | 'discovery_candidates'
-  | 'test_kits'
-  | 'offer_compliance_warnings'
-  | 'result_diagnoses'
+// Whether a payload has any prose worth translating — used to decide if a page
+// should mount a TranslationFiller for it (locale === 'he' only).
+export function shouldTranslate(locale: string, englishPayload: unknown): boolean {
+  if (locale === DEFAULT_LOCALE) return false
+  if (englishPayload == null || typeof englishPayload !== 'object') return false
+  return collectStrings(englishPayload).length > 0
+}
 
 // Return the AI payload with its free-text fields shown in `locale`, falling
 // back to the canonical English payload whenever no translation is cached yet.

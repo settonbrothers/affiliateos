@@ -6,6 +6,17 @@
 
 export type TranslatableString = { path: string; text: string }
 
+// Tables whose displayed jsonb payload can be shown translated. Mirrors the
+// translate-content edge function's SOURCE_PAYLOAD_COLUMN allow-list. Lives
+// here (not in the server-only translatedPayload module) so client components
+// can import the type too.
+export type TranslatableSource =
+  | 'ai_runs'
+  | 'discovery_candidates'
+  | 'test_kits'
+  | 'offer_compliance_warnings'
+  | 'result_diagnoses'
+
 function isProse(s: string): boolean {
   const t = s.trim()
   return t.length >= 12 && /\s/.test(t) && !/^https?:\/\//i.test(t)
