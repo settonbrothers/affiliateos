@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -39,6 +39,145 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_copy_edits: {
+        Row: {
+          created_at: string
+          edited_by_user_id: string | null
+          edited_text: string
+          generation_id: string
+          id: string
+          original_text: string
+          rating: string
+          reason: string | null
+          variant_index: number
+          variant_lang: string
+          workspace_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          edited_by_user_id?: string | null
+          edited_text: string
+          generation_id: string
+          id?: string
+          original_text: string
+          rating: string
+          reason?: string | null
+          variant_index: number
+          variant_lang: string
+          workspace_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          edited_by_user_id?: string | null
+          edited_text?: string
+          generation_id?: string
+          id?: string
+          original_text?: string
+          rating?: string
+          reason?: string | null
+          variant_index?: number
+          variant_lang?: string
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_copy_edits_edited_by_user_id_fkey"
+            columns: ["edited_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_copy_edits_generation_id_fkey"
+            columns: ["generation_id"]
+            isOneToOne: false
+            referencedRelation: "ad_copy_generations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_copy_edits_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_copy_generations: {
+        Row: {
+          ai_run_id: string | null
+          created_at: string
+          created_by_user_id: string | null
+          id: string
+          offer_id: string
+          payload: Json
+          source_underwriting_run_id: string | null
+          status: string
+          updated_at: string
+          workspace_id: string | null
+        }
+        Insert: {
+          ai_run_id?: string | null
+          created_at?: string
+          created_by_user_id?: string | null
+          id?: string
+          offer_id: string
+          payload: Json
+          source_underwriting_run_id?: string | null
+          status?: string
+          updated_at?: string
+          workspace_id?: string | null
+        }
+        Update: {
+          ai_run_id?: string | null
+          created_at?: string
+          created_by_user_id?: string | null
+          id?: string
+          offer_id?: string
+          payload?: Json
+          source_underwriting_run_id?: string | null
+          status?: string
+          updated_at?: string
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_copy_generations_ai_run_id_fkey"
+            columns: ["ai_run_id"]
+            isOneToOne: false
+            referencedRelation: "ai_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_copy_generations_created_by_user_id_fkey"
+            columns: ["created_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_copy_generations_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_copy_generations_source_underwriting_run_id_fkey"
+            columns: ["source_underwriting_run_id"]
+            isOneToOne: false
+            referencedRelation: "ai_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_copy_generations_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_kill_switches: {
         Row: {
           is_paused: boolean
@@ -386,6 +525,117 @@ export type Database = {
           },
         ]
       }
+      content_translations: {
+        Row: {
+          created_at: string
+          locale: string
+          payload: Json
+          source_id: string
+          source_table: string
+        }
+        Insert: {
+          created_at?: string
+          locale: string
+          payload: Json
+          source_id: string
+          source_table: string
+        }
+        Update: {
+          created_at?: string
+          locale?: string
+          payload?: Json
+          source_id?: string
+          source_table?: string
+        }
+        Relationships: []
+      }
+      copy_taste_examples: {
+        Row: {
+          created_at: string
+          created_by_user_id: string | null
+          id: string
+          improved_text: string | null
+          kind: string
+          label: string
+          lang: string
+          offer_id: string | null
+          reason: string | null
+          source: string
+          source_edit_id: string | null
+          text: string
+          vertical_id: string | null
+          workspace_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by_user_id?: string | null
+          id?: string
+          improved_text?: string | null
+          kind: string
+          label: string
+          lang: string
+          offer_id?: string | null
+          reason?: string | null
+          source?: string
+          source_edit_id?: string | null
+          text: string
+          vertical_id?: string | null
+          workspace_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by_user_id?: string | null
+          id?: string
+          improved_text?: string | null
+          kind?: string
+          label?: string
+          lang?: string
+          offer_id?: string | null
+          reason?: string | null
+          source?: string
+          source_edit_id?: string | null
+          text?: string
+          vertical_id?: string | null
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "copy_taste_examples_created_by_user_id_fkey"
+            columns: ["created_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "copy_taste_examples_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "copy_taste_examples_source_edit_id_fkey"
+            columns: ["source_edit_id"]
+            isOneToOne: false
+            referencedRelation: "ad_copy_edits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "copy_taste_examples_vertical_id_fkey"
+            columns: ["vertical_id"]
+            isOneToOne: false
+            referencedRelation: "verticals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "copy_taste_examples_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_ledger: {
         Row: {
           action: string | null
@@ -440,6 +690,206 @@ export type Database = {
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discovery_candidates: {
+        Row: {
+          created_at: string
+          deep_analysis: Json | null
+          deep_score: number | null
+          domain: string | null
+          id: string
+          name: string
+          promoted_offer_id: string | null
+          raw_snippet: string | null
+          rejection_reason: string | null
+          rejection_stage:
+            | Database["public"]["Enums"]["discovery_candidate_stage"]
+            | null
+          run_id: string
+          source_id: string | null
+          stage: Database["public"]["Enums"]["discovery_candidate_stage"]
+          triage_reason: string | null
+          triage_score: number | null
+          url: string | null
+          vertical_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          deep_analysis?: Json | null
+          deep_score?: number | null
+          domain?: string | null
+          id?: string
+          name: string
+          promoted_offer_id?: string | null
+          raw_snippet?: string | null
+          rejection_reason?: string | null
+          rejection_stage?:
+            | Database["public"]["Enums"]["discovery_candidate_stage"]
+            | null
+          run_id: string
+          source_id?: string | null
+          stage?: Database["public"]["Enums"]["discovery_candidate_stage"]
+          triage_reason?: string | null
+          triage_score?: number | null
+          url?: string | null
+          vertical_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          deep_analysis?: Json | null
+          deep_score?: number | null
+          domain?: string | null
+          id?: string
+          name?: string
+          promoted_offer_id?: string | null
+          raw_snippet?: string | null
+          rejection_reason?: string | null
+          rejection_stage?:
+            | Database["public"]["Enums"]["discovery_candidate_stage"]
+            | null
+          run_id?: string
+          source_id?: string | null
+          stage?: Database["public"]["Enums"]["discovery_candidate_stage"]
+          triage_reason?: string | null
+          triage_score?: number | null
+          url?: string | null
+          vertical_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discovery_candidates_promoted_offer_id_fkey"
+            columns: ["promoted_offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discovery_candidates_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "discovery_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discovery_candidates_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "discovery_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discovery_candidates_vertical_id_fkey"
+            columns: ["vertical_id"]
+            isOneToOne: false
+            referencedRelation: "verticals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discovery_runs: {
+        Row: {
+          completed_at: string | null
+          config: Json
+          counts: Json
+          created_at: string
+          error_message: string | null
+          id: string
+          started_at: string | null
+          status: Database["public"]["Enums"]["discovery_run_status"]
+          total_cost_usd: number
+          triggered_by: string | null
+          vertical_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          config?: Json
+          counts?: Json
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["discovery_run_status"]
+          total_cost_usd?: number
+          triggered_by?: string | null
+          vertical_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          config?: Json
+          counts?: Json
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["discovery_run_status"]
+          total_cost_usd?: number
+          triggered_by?: string | null
+          vertical_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discovery_runs_triggered_by_fkey"
+            columns: ["triggered_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discovery_runs_vertical_id_fkey"
+            columns: ["vertical_id"]
+            isOneToOne: false
+            referencedRelation: "verticals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discovery_sources: {
+        Row: {
+          config: Json
+          created_at: string
+          created_by: string | null
+          enabled: boolean
+          id: string
+          kind: Database["public"]["Enums"]["discovery_source_kind"]
+          name: string
+          vertical_id: string | null
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          id?: string
+          kind?: Database["public"]["Enums"]["discovery_source_kind"]
+          name: string
+          vertical_id?: string | null
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          id?: string
+          kind?: Database["public"]["Enums"]["discovery_source_kind"]
+          name?: string
+          vertical_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discovery_sources_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discovery_sources_vertical_id_fkey"
+            columns: ["vertical_id"]
+            isOneToOne: false
+            referencedRelation: "verticals"
             referencedColumns: ["id"]
           },
         ]
@@ -1431,138 +1881,6 @@ export type Database = {
           },
         ]
       }
-      ad_copy_generations: {
-        Row: {
-          ai_run_id: string | null
-          created_at: string
-          created_by_user_id: string | null
-          id: string
-          offer_id: string
-          payload: Json
-          source_underwriting_run_id: string | null
-          status: string
-          updated_at: string
-          workspace_id: string | null
-        }
-        Insert: {
-          ai_run_id?: string | null
-          created_at?: string
-          created_by_user_id?: string | null
-          id?: string
-          offer_id: string
-          payload: Json
-          source_underwriting_run_id?: string | null
-          status?: string
-          updated_at?: string
-          workspace_id?: string | null
-        }
-        Update: {
-          ai_run_id?: string | null
-          created_at?: string
-          created_by_user_id?: string | null
-          id?: string
-          offer_id?: string
-          payload?: Json
-          source_underwriting_run_id?: string | null
-          status?: string
-          updated_at?: string
-          workspace_id?: string | null
-        }
-        Relationships: []
-      }
-      ad_copy_edits: {
-        Row: {
-          created_at: string
-          edited_by_user_id: string | null
-          edited_text: string
-          generation_id: string
-          id: string
-          original_text: string
-          rating: string
-          reason: string | null
-          variant_index: number
-          variant_lang: string
-          workspace_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          edited_by_user_id?: string | null
-          edited_text: string
-          generation_id: string
-          id?: string
-          original_text: string
-          rating: string
-          reason?: string | null
-          variant_index: number
-          variant_lang: string
-          workspace_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          edited_by_user_id?: string | null
-          edited_text?: string
-          generation_id?: string
-          id?: string
-          original_text?: string
-          rating?: string
-          reason?: string | null
-          variant_index?: number
-          variant_lang?: string
-          workspace_id?: string | null
-        }
-        Relationships: []
-      }
-      copy_taste_examples: {
-        Row: {
-          created_at: string
-          created_by_user_id: string | null
-          id: string
-          improved_text: string | null
-          kind: string
-          label: string
-          lang: string
-          offer_id: string | null
-          reason: string | null
-          source: string
-          source_edit_id: string | null
-          text: string
-          vertical_id: string | null
-          workspace_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          created_by_user_id?: string | null
-          id?: string
-          improved_text?: string | null
-          kind: string
-          label: string
-          lang: string
-          offer_id?: string | null
-          reason?: string | null
-          source?: string
-          source_edit_id?: string | null
-          text: string
-          vertical_id?: string | null
-          workspace_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          created_by_user_id?: string | null
-          id?: string
-          improved_text?: string | null
-          kind?: string
-          label?: string
-          lang?: string
-          offer_id?: string | null
-          reason?: string | null
-          source?: string
-          source_edit_id?: string | null
-          text?: string
-          vertical_id?: string | null
-          workspace_id?: string | null
-        }
-        Relationships: []
-      }
       test_kits: {
         Row: {
           ai_run_id: string | null
@@ -1852,6 +2170,21 @@ export type Database = {
         | "purchased"
         | "expired"
         | "adjusted"
+      discovery_candidate_stage:
+        | "discovered"
+        | "triaged"
+        | "analyzed"
+        | "rejected"
+        | "approved"
+        | "promoted"
+      discovery_run_status:
+        | "queued"
+        | "discovering"
+        | "triaging"
+        | "analyzing"
+        | "completed"
+        | "failed"
+      discovery_source_kind: "web_search" | "directory" | "network"
       error_severity: "debug" | "info" | "warning" | "error" | "critical"
       eval_run_trigger: "manual" | "cron" | "pre_publish"
       fact_status: "proposed" | "verified" | "rejected"
@@ -2082,6 +2415,23 @@ export const Constants = {
         "expired",
         "adjusted",
       ],
+      discovery_candidate_stage: [
+        "discovered",
+        "triaged",
+        "analyzed",
+        "rejected",
+        "approved",
+        "promoted",
+      ],
+      discovery_run_status: [
+        "queued",
+        "discovering",
+        "triaging",
+        "analyzing",
+        "completed",
+        "failed",
+      ],
+      discovery_source_kind: ["web_search", "directory", "network"],
       error_severity: ["debug", "info", "warning", "error", "critical"],
       eval_run_trigger: ["manual", "cron", "pre_publish"],
       fact_status: ["proposed", "verified", "rejected"],
