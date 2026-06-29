@@ -60,12 +60,17 @@ Pipeline (per offer):
    structured dossier (7 sections + `ad_examples`), each claim with `evidence` +
    `source_url`. Dual Zod contract (Node `src/types/agents/offerResearch.ts` +
    Deno `_shared/types/offerResearch.ts`).
-5. **Persist findings as facts** — write the dossier's evidenced claims to
-   `extracted_facts` (status `verified`, with `source_quote` + source doc), so
-   they feed underwriting and render as citations on Overview.
-6. **Verdict refresh** — re-run the existing underwriting orchestrator with the
-   enriched facts; updates the verdict/scorecard and advances status to
-   `ai_analyzed` (`.in()`-guarded, never demotes).
+5. **Verdict refresh** — re-run the existing underwriting orchestrator with the
+   offer's real verified facts PLUS the dossier's evidenced claims passed as
+   **in-memory** research facts (`fact_type 'other'`, `fact_value` = claim,
+   `source_quote` = evidence). Updates the verdict/scorecard and advances status
+   to `ai_analyzed` (`.in()`-guarded, never demotes).
+
+   **Quality guard:** research findings are NOT written to `extracted_facts`.
+   The verified-fact base stays pristine (only real source-ingested facts), so a
+   scraped third-party claim never silently becomes a "verified fact" or
+   pollutes future runs. The dossier (Research tab) is the citation surface for
+   research evidence — each finding shows its evidence + source link there.
 
 ## Storage
 
