@@ -89,6 +89,17 @@ Deno.serve(async (req: Request) => {
       .eq('status', 'verified')
     const facts = factsRows ?? []
 
+    // Latest consumer-facing test kit (angles, hooks, target_audience) — prior
+    // work the copy builds on rather than regenerating from scratch.
+    const { data: testKitRow } = await admin
+      .from('test_kits')
+      .select('payload')
+      .eq('offer_id', offerId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    const testKit = testKitRow?.payload ?? null
+
     // Taste Corpus: human-labelled examples (Edit-Loop + any seed), scoped to the
     // workspace plus global admin examples. Drives few-shot + (later) calibration.
     let corpusQuery = admin
@@ -146,6 +157,7 @@ Deno.serve(async (req: Request) => {
               description: offer.operator_notes ?? null,
             },
             productContext: { verified_facts: facts },
+            testKit,
             corpus,
             verticalSlug,
           }
