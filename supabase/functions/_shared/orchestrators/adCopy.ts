@@ -56,6 +56,9 @@ export type AdCopyInput = {
   }
   // Grounding context from upstream (underwriting verdict, scorecard, facts).
   productContext?: Record<string, unknown>
+  // The latest consumer-facing test kit (angles, hooks, target_audience) — prior
+  // work the copy should build on, NOT regenerate from scratch.
+  testKit?: unknown
   // The human Taste Corpus (few-shot + the standard the judge calibrates to).
   corpus?: TasteExample[]
   verticalSlug?: string
@@ -122,7 +125,7 @@ export async function runAdCopy(input: AdCopyInput): Promise<OrchestratorResult>
     'submit_product_excavation',
     'Submit the product excavation. Call exactly once.',
     ProductExcavationSchema,
-    { offer, product_context: input.productContext ?? null },
+    { offer, product_context: input.productContext ?? null, test_kit: input.testKit ?? null },
     GENERATION_MODEL,
     vertical
   )
@@ -155,7 +158,12 @@ export async function runAdCopy(input: AdCopyInput): Promise<OrchestratorResult>
     'submit_angles',
     'Submit 2–5 distinct angles. Call exactly once.',
     AnglesToolSchema,
-    { product_excavation: product.data, avatar_excavation: avatar.data, offer },
+    {
+      product_excavation: product.data,
+      avatar_excavation: avatar.data,
+      offer,
+      test_kit: input.testKit ?? null,
+    },
     GENERATION_MODEL,
     vertical
   )
