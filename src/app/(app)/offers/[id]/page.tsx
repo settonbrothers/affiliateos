@@ -3,9 +3,11 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { CreateCampaignButton } from '@/components/campaigns/CreateCampaignButton'
+import { AdCopyView } from '@/components/offers/AdCopyView'
 import { AnalyzeButton } from '@/components/offers/AnalyzeButton'
 import { CheckComplianceButton } from '@/components/offers/CheckComplianceButton'
 import { ComplianceView } from '@/components/offers/ComplianceView'
+import { ExecuteCopyButton } from '@/components/offers/ExecuteCopyButton'
 import { GenerateTestKitButton } from '@/components/offers/GenerateTestKitButton'
 import { OfferOverview } from '@/components/offers/OfferOverview'
 import { OfferScorecard } from '@/components/offers/OfferScorecard'
@@ -14,6 +16,7 @@ import { TestKitView } from '@/components/offers/TestKitView'
 import { isCurrentUserAdmin } from '@/lib/auth/role'
 import { getTranslatedPayload } from '@/lib/i18n/translatedPayload'
 import {
+  getLatestAdCopy,
   getLatestCompliance,
   getLatestRunByOrchestrator,
   getLatestTestKit,
@@ -29,6 +32,7 @@ const TAB_KEYS = [
   'scorecard',
   'verdict',
   'test-kit',
+  'copy',
   'compliance',
 ] as const
 
@@ -65,6 +69,7 @@ export default async function OfferDetailPage({
     tab === 'scorecard' ||
     tab === 'verdict' ||
     tab === 'test-kit' ||
+    tab === 'copy' ||
     tab === 'compliance'
       ? tab
       : 'overview'
@@ -75,6 +80,7 @@ export default async function OfferDetailPage({
     scorecard: t('tabScorecard'),
     verdict: t('tabVerdict'),
     'test-kit': t('tabTestKit'),
+    copy: t('tabCopy'),
     compliance: t('tabCompliance'),
   }
 
@@ -107,6 +113,16 @@ export default async function OfferDetailPage({
   const testKitPayload = testKit
     ? await getTranslatedPayload('test_kits', testKit.id, locale, testKit.payload)
     : null
+
+  // Copy tab — its own data; only fetch when active. Copy is bilingual-native
+  // (he + en in one payload), so no per-locale translation pass is needed.
+  const adCopy = activeTab === 'copy' ? await getLatestAdCopy(id) : null
+  const adCopyRun =
+    activeTab === 'copy'
+      ? await getLatestRunByOrchestrator(id, 'AdCopyOrchestrator')
+      : null
+  const copyHasVerdict =
+    activeTab === 'copy' ? await hasSuccessfulUnderwriting(id) : false
 
   return (
     <div className="flex flex-col gap-6">
@@ -189,6 +205,25 @@ export default async function OfferDetailPage({
             hasVerdict && (
               <p className="text-sm text-[var(--color-muted-foreground)]">
                 No test kit yet. Generate one from the current verdict.
+              </p>
+            )
+          )}
+        </div>
+      )}
+      {activeTab === 'copy' && (
+        <div className="flex flex-col gap-6">
+          <ExecuteCopyButton
+            offerId={offer.id}
+            initialStatus={adCopyRun?.status ?? null}
+            hasVerdict={copyHasVerdict}
+            hasCopy={!!adCopy}
+          />
+          {adCopy ? (
+            <AdCopyView payload={adCopy.payload} generationId={adCopy.id} />
+          ) : (
+            copyHasVerdict && (
+              <p className="text-sm text-[var(--color-muted-foreground)]">
+                {t('copyEmpty')}
               </p>
             )
           )}
