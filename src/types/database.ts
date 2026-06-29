@@ -1431,6 +1431,138 @@ export type Database = {
           },
         ]
       }
+      ad_copy_generations: {
+        Row: {
+          ai_run_id: string | null
+          created_at: string
+          created_by_user_id: string | null
+          id: string
+          offer_id: string
+          payload: Json
+          source_underwriting_run_id: string | null
+          status: string
+          updated_at: string
+          workspace_id: string | null
+        }
+        Insert: {
+          ai_run_id?: string | null
+          created_at?: string
+          created_by_user_id?: string | null
+          id?: string
+          offer_id: string
+          payload: Json
+          source_underwriting_run_id?: string | null
+          status?: string
+          updated_at?: string
+          workspace_id?: string | null
+        }
+        Update: {
+          ai_run_id?: string | null
+          created_at?: string
+          created_by_user_id?: string | null
+          id?: string
+          offer_id?: string
+          payload?: Json
+          source_underwriting_run_id?: string | null
+          status?: string
+          updated_at?: string
+          workspace_id?: string | null
+        }
+        Relationships: []
+      }
+      ad_copy_edits: {
+        Row: {
+          created_at: string
+          edited_by_user_id: string | null
+          edited_text: string
+          generation_id: string
+          id: string
+          original_text: string
+          rating: string
+          reason: string | null
+          variant_index: number
+          variant_lang: string
+          workspace_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          edited_by_user_id?: string | null
+          edited_text: string
+          generation_id: string
+          id?: string
+          original_text: string
+          rating: string
+          reason?: string | null
+          variant_index: number
+          variant_lang: string
+          workspace_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          edited_by_user_id?: string | null
+          edited_text?: string
+          generation_id?: string
+          id?: string
+          original_text?: string
+          rating?: string
+          reason?: string | null
+          variant_index?: number
+          variant_lang?: string
+          workspace_id?: string | null
+        }
+        Relationships: []
+      }
+      copy_taste_examples: {
+        Row: {
+          created_at: string
+          created_by_user_id: string | null
+          id: string
+          improved_text: string | null
+          kind: string
+          label: string
+          lang: string
+          offer_id: string | null
+          reason: string | null
+          source: string
+          source_edit_id: string | null
+          text: string
+          vertical_id: string | null
+          workspace_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by_user_id?: string | null
+          id?: string
+          improved_text?: string | null
+          kind: string
+          label: string
+          lang: string
+          offer_id?: string | null
+          reason?: string | null
+          source?: string
+          source_edit_id?: string | null
+          text: string
+          vertical_id?: string | null
+          workspace_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by_user_id?: string | null
+          id?: string
+          improved_text?: string | null
+          kind?: string
+          label?: string
+          lang?: string
+          offer_id?: string | null
+          reason?: string | null
+          source?: string
+          source_edit_id?: string | null
+          text?: string
+          vertical_id?: string | null
+          workspace_id?: string | null
+        }
+        Relationships: []
+      }
       test_kits: {
         Row: {
           ai_run_id: string | null

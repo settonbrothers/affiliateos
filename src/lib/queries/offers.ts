@@ -75,6 +75,24 @@ export async function getLatestTestKit(offerId: string): Promise<LatestTestKit> 
   return (data as LatestTestKit) ?? null
 }
 
+export type LatestAdCopy = {
+  id: string
+  payload: unknown
+  created_at: string
+} | null
+
+export async function getLatestAdCopy(offerId: string): Promise<LatestAdCopy> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('ad_copy_generations')
+    .select('id, payload, created_at')
+    .eq('offer_id', offerId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  return (data as LatestAdCopy) ?? null
+}
+
 export type LatestCompliance = {
   id: string
   overall_risk_level: string
