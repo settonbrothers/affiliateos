@@ -20,6 +20,8 @@ import { OfferVerdict } from '@/components/offers/OfferVerdict'
 import { TestKitView } from '@/components/offers/TestKitView'
 import { SpyInputForm } from '@/components/spy-analysis/SpyInputForm'
 import { SpyAnalysisDisplay } from '@/components/spy-analysis/SpyAnalysisDisplay'
+import { GenerateCreativesButton } from '@/components/creative-engine/GenerateCreativesButton'
+import { CreativesDisplay } from '@/components/creative-engine/CreativesDisplay'
 import { TranslationFiller } from '@/components/i18n/TranslationFiller'
 import { isCurrentUserAdmin } from '@/lib/auth/role'
 import {
@@ -52,6 +54,7 @@ const TAB_KEYS = [
   'deep-brief',
   'avatar',
   'spy',
+  'creatives',
   'campaign',
 ] as const
 
@@ -87,6 +90,7 @@ export default async function OfferDetailPage({
     tab === 'deep-brief' ||
     tab === 'avatar' ||
     tab === 'spy' ||
+    tab === 'creatives' ||
     tab === 'campaign'
       ? tab
       : 'overview'
@@ -102,6 +106,7 @@ export default async function OfferDetailPage({
     'deep-brief': 'Deep Brief',
     avatar: 'Avatar',
     spy: 'Spy',
+    creatives: 'Creatives',
     campaign: 'Campaign',
   }
 
@@ -153,6 +158,13 @@ export default async function OfferDetailPage({
       : null
 
   const spyAnalysis = activeTab === 'spy' ? await getLatestSpyAnalysis(id) : null
+
+  // Creatives tab — only fetch when active.
+  const creatives = activeTab === 'creatives' ? await getLatestCreatives(id) : null
+  const creativesRun =
+    activeTab === 'creatives'
+      ? await getLatestRunByOrchestrator(id, 'CreativeEngineOrchestrator')
+      : null
 
   return (
     <div className="flex flex-col gap-6">
@@ -349,6 +361,22 @@ export default async function OfferDetailPage({
           />
           {spyAnalysis && (
             <SpyAnalysisDisplay payload={spyAnalysis.payload} />
+          )}
+        </div>
+      )}
+      {activeTab === 'creatives' && (
+        <div className="flex flex-col gap-6">
+          <GenerateCreativesButton
+            offerId={offer.id}
+            initialStatus={creativesRun?.status ?? null}
+            hasCreatives={!!creatives}
+          />
+          {creatives ? (
+            <CreativesDisplay payload={creatives.payload} />
+          ) : (
+            <p className="text-sm text-[var(--color-muted-foreground)]">
+              No creatives yet. Generate 7 ad image concepts powered by DALL-E 3.
+            </p>
           )}
         </div>
       )}
