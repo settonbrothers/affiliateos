@@ -600,6 +600,48 @@ export type Database = {
         }
         Relationships: []
       }
+      diagnose_creative_inputs: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          id: string
+          input_type: string
+          raw_input: string
+          workspace_id: string | null
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          id?: string
+          input_type?: string
+          raw_input: string
+          workspace_id?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          id?: string
+          input_type?: string
+          raw_input?: string
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnose_creative_inputs_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diagnose_creative_inputs_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       copy_hook_library: {
         Row: {
           created_at: string
@@ -1710,24 +1752,33 @@ export type Database = {
           ai_run_id: string | null
           campaign_id: string
           created_at: string
+          creative_analysis: Json | null
           id: string
           payload: Json
+          winners_added_to_library: boolean | null
+          winning_hooks: Json | null
           workspace_id: string | null
         }
         Insert: {
           ai_run_id?: string | null
           campaign_id: string
           created_at?: string
+          creative_analysis?: Json | null
           id?: string
           payload: Json
+          winners_added_to_library?: boolean | null
+          winning_hooks?: Json | null
           workspace_id?: string | null
         }
         Update: {
           ai_run_id?: string | null
           campaign_id?: string
           created_at?: string
+          creative_analysis?: Json | null
           id?: string
           payload?: Json
+          winners_added_to_library?: boolean | null
+          winning_hooks?: Json | null
           workspace_id?: string | null
         }
         Relationships: [
