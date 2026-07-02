@@ -46,6 +46,8 @@ const TAB_KEYS = [
   'copy',
   'compliance',
   'deep-brief',
+  'avatar',
+  'spy',
 ] as const
 
 export default async function OfferDetailPage({
@@ -77,7 +79,9 @@ export default async function OfferDetailPage({
     tab === 'test-kit' ||
     tab === 'copy' ||
     tab === 'compliance' ||
-    tab === 'deep-brief'
+    tab === 'deep-brief' ||
+    tab === 'avatar' ||
+    tab === 'spy'
       ? tab
       : 'overview'
   const isAdmin = await isCurrentUserAdmin()
@@ -90,6 +94,8 @@ export default async function OfferDetailPage({
     copy: t('tabCopy'),
     compliance: t('tabCompliance'),
     'deep-brief': 'Deep Brief',
+    avatar: 'Avatar',
+    spy: 'Spy',
   }
 
   const facts = activeTab === 'overview' ? await getVerifiedFacts(id) : []
@@ -127,12 +133,19 @@ export default async function OfferDetailPage({
   const copyHasVerdict =
     activeTab === 'copy' ? await hasSuccessfulUnderwriting(id) : false
 
-  // Deep Brief tab — only fetch when active.
   const deepBrief = activeTab === 'deep-brief' ? await getLatestDeepBrief(id) : null
   const deepBriefRun =
     activeTab === 'deep-brief'
       ? await getLatestRunByOrchestrator(id, 'DeepBriefOrchestrator')
       : null
+
+  const avatar = activeTab === 'avatar' ? await getLatestAvatar(id) : null
+  const avatarRun =
+    activeTab === 'avatar'
+      ? await getLatestRunByOrchestrator(id, 'AvatarBuilderOrchestrator')
+      : null
+
+  const spyAnalysis = activeTab === 'spy' ? await getLatestSpyAnalysis(id) : null
 
   return (
     <div className="flex flex-col gap-6">
@@ -200,8 +213,8 @@ export default async function OfferDetailPage({
           {compliance?.suggested_verdict_cap && (
             <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm dark:bg-red-950/40">
               <span className="font-medium">
-                Compliance cap: verdict limited to &quot;
-                {compliance.suggested_verdict_cap}&quot;.
+                Compliance cap: verdict limited to "
+                {compliance.suggested_verdict_cap}".
               </span>{' '}
               See the Compliance tab.
             </div>
@@ -302,6 +315,33 @@ export default async function OfferDetailPage({
             <p className="text-sm text-[var(--color-muted-foreground)]">
               No deep brief yet. Generate one to get a full marketing brief for this offer.
             </p>
+          )}
+        </div>
+      )}
+      {activeTab === 'avatar' && (
+        <div className="flex flex-col gap-6">
+          <GenerateAvatarButton
+            offerId={offer.id}
+            initialStatus={avatarRun?.status ?? null}
+            hasAvatar={!!avatar}
+          />
+          {avatar ? (
+            <AvatarDisplay payload={avatar.payload} />
+          ) : (
+            <p className="text-sm text-[var(--color-muted-foreground)]">
+              No avatar yet. Generate one to build a detailed buyer portrait for this offer.
+            </p>
+          )}
+        </div>
+      )}
+      {activeTab === 'spy' && (
+        <div className="flex flex-col gap-6">
+          <SpyInputForm
+            offerId={offer.id}
+            hasExistingAnalysis={!!spyAnalysis}
+          />
+          {spyAnalysis && (
+            <SpyAnalysisDisplay payload={spyAnalysis.payload} />
           )}
         </div>
       )}
