@@ -5,6 +5,8 @@ import { runWebSearch } from '../_shared/adapters/webSearch.ts'
 import { runDiscoveryMine } from '../_shared/orchestrators/discoveryMine.ts'
 import { runDiscoveryTriage } from '../_shared/orchestrators/discoveryTriage.ts'
 import { runDiscoveryDeep } from '../_shared/orchestrators/discoveryDeep.ts'
+import { runDiscoveryNetwork } from '../_shared/orchestrators/discoveryNetwork.ts'
+import type { NetworkComparison } from '../_shared/types/discoverNetwork.ts'
 import { recordRunError, recordRunStart, recordRunSuccess } from '../_shared/recordAiRun.ts'
 import { getAdminClient } from '../_shared/supabaseAdmin.ts'
 import { truncate } from '../_shared/truncate.ts'
@@ -21,6 +23,8 @@ const CONTAINER_MINE_CAP = 25 // max container pages to mine per run
 const MINED_OFFERS_CAP = 20 // max offers to take from one container
 const MINED_TOTAL_CAP = 150 // overall cap on mined candidates (bounds 2nd triage)
 const TRIAGE_BATCH_SIZE = 25 // candidates per triage call (a big batch fails)
+const NETWORK_ENRICH_MIN_SCORE = 7  // deep_score threshold for network enrichment (0–10 scale is 70+/10)
+const NETWORK_ENRICH_CONCURRENCY = 3 // parallel network enrichment calls
 
 // Deno mirror of src/lib/discovery/queries.ts expandQueries (unit-tested there).
 const QUERY_MODIFIERS = [
@@ -492,6 +496,71 @@ async function processDiscovery(args: {
         totalCost += r.cost
         if (r.analyzed) analyzedCount++
       }
+    }
+
+    // 4) NETWORK ENRICHMENT — additive secondary pass on high-scoring survivors.
+    // For each top candidate (deep_score >= 70), look up which affiliate networks
+    // carry this offer and capture trending signals. If a candidate has already
+    // been promoted to an offer row, write the results there too.
+    // A failure here must never surface as a run failure.
+    try {
+      const { data: topCands } = await admin
+        .from('discovery_candidates')
+        .select('id, name, url, deep_score, promoted_offer_id')
+        .eq('run_id', args.runId)
+        .eq('stage', 'analyzed')
+        .gte('deep_score', 70)
+
+      const networkEnrichOne = async (cand: {
+        id: string
+        name: string
+        url: string | null
+        deep_score: number | null
+        promoted_offer_id: string | null
+      }): Promise<void> => {
+        try {
+          const networkResult = await runDiscoveryNetwork({
+            offer: { id: cand.promoted_offer_id ?? undefined, name: cand.name, url: cand.url },
+          })
+          const nc = networkResult.output as NetworkComparison
+          totalCost += networkResult.usage?.cost_usd ?? 0
+
+          // If this candidate has a promoted offer row, update trending signals + write network data.
+          if (cand.promoted_offer_id) {
+            const trendingSignal = nc.trending_signal ?? null
+            const trendingScore = trendingSignal === 'rising' ? 2 : trendingSignal === 'stable' ? 1 : trendingSignal === 'declining' ? -1 : 0
+
+            await admin
+              .from('offers')
+              .update({ trending_signal: trendingSignal, trending_score: trendingScore })
+              .eq('id', cand.promoted_offer_id)
+
+            if (nc.networks_found.length > 0) {
+              const rows = nc.networks_found.map((n, i) => ({
+                offer_id: cand.promoted_offer_id as string,
+                network_name: n.network_name,
+                epc_usd: n.estimated_epc_usd ?? null,
+                commission_type: n.estimated_commission_type ?? null,
+                is_recommended: nc.recommended_network === n.network_name,
+                notes: `confidence: ${n.confidence}${i === 0 && nc.recommended_reason ? ` — ${nc.recommended_reason}` : ''}`,
+              }))
+              // upsert so re-runs don't duplicate
+              await admin
+                .from('offer_network_data')
+                .upsert(rows, { onConflict: 'offer_id,network_name', ignoreDuplicates: false })
+            }
+          }
+        } catch {
+          // individual enrichment failure is non-fatal
+        }
+      }
+
+      for (let off = 0; off < (topCands ?? []).length; off += NETWORK_ENRICH_CONCURRENCY) {
+        const wave = (topCands ?? []).slice(off, off + NETWORK_ENRICH_CONCURRENCY)
+        await Promise.all(wave.map(networkEnrichOne))
+      }
+    } catch {
+      // enrichment block failure must never fail the run
     }
 
     await admin
