@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { CreateCampaignButton } from '@/components/campaigns/CreateCampaignButton'
+import { AvatarDisplay } from '@/components/avatar-builder/AvatarDisplay'
+import { GenerateAvatarButton } from '@/components/avatar-builder/GenerateAvatarButton'
 import { DeepBriefDisplay } from '@/components/deep-brief/DeepBriefDisplay'
 import { GenerateDeepBriefButton } from '@/components/deep-brief/GenerateDeepBriefButton'
 import { AdCopyView } from '@/components/offers/AdCopyView'
@@ -23,6 +25,7 @@ import {
 } from '@/lib/i18n/translatedPayload'
 import {
   getLatestAdCopy,
+  getLatestAvatar,
   getLatestCompliance,
   getLatestDeepBrief,
   getLatestRunByOrchestrator,
@@ -42,6 +45,7 @@ const TAB_KEYS = [
   'copy',
   'compliance',
   'deep-brief',
+  'avatar',
 ] as const
 
 export default async function OfferDetailPage({
@@ -79,7 +83,8 @@ export default async function OfferDetailPage({
     tab === 'test-kit' ||
     tab === 'copy' ||
     tab === 'compliance' ||
-    tab === 'deep-brief'
+    tab === 'deep-brief' ||
+    tab === 'avatar'
       ? tab
       : 'overview'
   const isAdmin = await isCurrentUserAdmin()
@@ -92,6 +97,7 @@ export default async function OfferDetailPage({
     copy: t('tabCopy'),
     compliance: t('tabCompliance'),
     'deep-brief': 'Deep Brief',
+    avatar: 'Avatar',
   }
 
   // Verified facts feed the Overview's evidence section.
@@ -139,6 +145,13 @@ export default async function OfferDetailPage({
   const deepBriefRun =
     activeTab === 'deep-brief'
       ? await getLatestRunByOrchestrator(id, 'DeepBriefOrchestrator')
+      : null
+
+  // Avatar tab — only fetch when active.
+  const avatar = activeTab === 'avatar' ? await getLatestAvatar(id) : null
+  const avatarRun =
+    activeTab === 'avatar'
+      ? await getLatestRunByOrchestrator(id, 'AvatarBuilderOrchestrator')
       : null
 
   return (
@@ -308,6 +321,22 @@ export default async function OfferDetailPage({
           ) : (
             <p className="text-sm text-[var(--color-muted-foreground)]">
               No deep brief yet. Generate one to get a full marketing brief for this offer.
+            </p>
+          )}
+        </div>
+      )}
+      {activeTab === 'avatar' && (
+        <div className="flex flex-col gap-6">
+          <GenerateAvatarButton
+            offerId={offer.id}
+            initialStatus={avatarRun?.status ?? null}
+            hasAvatar={!!avatar}
+          />
+          {avatar ? (
+            <AvatarDisplay payload={avatar.payload} />
+          ) : (
+            <p className="text-sm text-[var(--color-muted-foreground)]">
+              No avatar yet. Generate one to build a detailed buyer portrait for this offer.
             </p>
           )}
         </div>
