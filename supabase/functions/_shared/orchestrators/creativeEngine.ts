@@ -106,8 +106,10 @@ export async function runCreativeEngine(
 
   const { briefs } = briefsResult.data
 
-  // Step 2 — Call DALL-E 3 for each prompt (sequential to avoid rate limits)
+  // Step 2 — Call gpt-image-1 for each prompt (sequential to avoid rate limits)
   const openaiKey = Deno.env.get('OPENAI_API_KEY')
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
   const creatives: Array<{
     type: string
@@ -137,26 +139,53 @@ export async function runCreativeEngine(
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'dall-e-3',
+          model: 'gpt-image-1',
           prompt: brief.dalle_prompt,
           n: 1,
           size: '1024x1024',
-          quality: 'standard',
         }),
       })
 
-      const data = await response.json() as { data?: Array<{ url: string }>; error?: { message: string } }
+      const data = await response.json() as {
+        data?: Array<{ b64_json?: string; url?: string }>
+        error?: { message: string }
+      }
 
-      if (!response.ok || !data.data?.[0]?.url) {
-        // Fall back to placeholder on API error
+      if (!response.ok || !data.data?.[0]) {
         creatives.push({
           ...brief,
           image_url: `https://placehold.co/1024x1024?text=Creative+${i + 1}`,
         })
       } else {
+        const imageData = data.data[0]
+        let imageUrl = imageData.url ?? null
+
+        // gpt-image-1 returns b64_json — upload to Supabase Storage for a permanent URL
+        if (!imageUrl && imageData.b64_json) {
+          const fileName = `${input.offer.id}/${Date.now()}-creative-${i + 1}.png`
+          const binary = Uint8Array.from(atob(imageData.b64_json), c => c.charCodeAt(0))
+
+          const uploadRes = await fetch(
+            `${supabaseUrl}/storage/v1/object/creatives/${fileName}`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${supabaseServiceKey}`,
+                'Content-Type': 'image/png',
+                'x-upsert': 'true',
+              },
+              body: binary,
+            }
+          )
+
+          if (uploadRes.ok) {
+            imageUrl = `${supabaseUrl}/storage/v1/object/public/creatives/${fileName}`
+          }
+        }
+
         creatives.push({
           ...brief,
-          image_url: data.data[0].url,
+          image_url: imageUrl ?? `https://placehold.co/1024x1024?text=Creative+${i + 1}`,
         })
       }
     } catch {
