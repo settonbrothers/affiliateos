@@ -182,7 +182,7 @@ export default async function OfferDetailPage({
               {t('manageSources')}
             </Link>
           )}
-          <AnalyzeButton offerId={offer.id} initialStatus={run?.status ?? null} />
+          <AnalyzeButton offerId={offer.id} initialStatus={run?.status ?? null} initialRunId={run?.id ?? null} />
         </div>
       </div>
 
@@ -249,6 +249,7 @@ export default async function OfferDetailPage({
           <GenerateTestKitButton
             offerId={offer.id}
             initialStatus={testKitRun?.status ?? null}
+            initialRunId={testKitRun?.id ?? null}
             hasVerdict={hasVerdict}
             hasKit={!!testKit}
           />
@@ -278,6 +279,7 @@ export default async function OfferDetailPage({
           <ExecuteCopyButton
             offerId={offer.id}
             initialStatus={adCopyRun?.status ?? null}
+            initialRunId={adCopyRun?.id ?? null}
             hasVerdict={copyHasVerdict}
             hasCopy={!!adCopy}
           />
@@ -322,6 +324,7 @@ export default async function OfferDetailPage({
           <GenerateDeepBriefButton
             offerId={offer.id}
             initialStatus={deepBriefRun?.status ?? null}
+            initialRunId={deepBriefRun?.id ?? null}
             hasBrief={!!deepBrief}
           />
           {deepBrief ? (
@@ -338,6 +341,7 @@ export default async function OfferDetailPage({
           <GenerateAvatarButton
             offerId={offer.id}
             initialStatus={avatarRun?.status ?? null}
+            initialRunId={avatarRun?.id ?? null}
             hasAvatar={!!avatar}
           />
           {avatar ? (
@@ -365,6 +369,7 @@ export default async function OfferDetailPage({
           <GenerateCreativesButton
             offerId={offer.id}
             initialStatus={creativesRun?.status ?? null}
+            initialRunId={creativesRun?.id ?? null}
             hasCreatives={!!creatives}
           />
           {creatives ? (

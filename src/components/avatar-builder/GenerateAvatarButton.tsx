@@ -1,59 +1,23 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
-
 import { Button } from '@/components/ui/button'
+import { useAiRunStatus } from '@/hooks/useAiRunStatus'
 import { triggerGenerateAvatar } from '@/lib/actions/avatarBuilder'
-import { createClient } from '@/lib/supabase/client'
 import type { AiRunStatus } from '@/types/db'
-
-const TERMINAL: AiRunStatus[] = ['success', 'failed', 'partial']
 
 export function GenerateAvatarButton({
   offerId,
   initialStatus,
+  initialRunId,
   hasAvatar,
 }: {
   offerId: string
   initialStatus: AiRunStatus | null
+  initialRunId?: string | null
   hasAvatar: boolean
 }) {
-  const router = useRouter()
-  const [status, setStatus] = useState<AiRunStatus | 'idle'>(
-    initialStatus ?? 'idle'
-  )
-  const [runId, setRunId] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  const isRunning = status === 'pending' || status === 'running'
-
-  useEffect(() => {
-    if (!runId || !isRunning) return
-    const supabase = createClient()
-    const channel = supabase
-      .channel(`avatar_run:${runId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'ai_runs',
-          filter: `id=eq.${runId}`,
-        },
-        (payload) => {
-          const next = (payload.new as { status: AiRunStatus }).status
-          if (TERMINAL.includes(next)) {
-            setStatus(next)
-            router.refresh()
-          }
-        }
-      )
-      .subscribe()
-    return () => {
-      void supabase.removeChannel(channel)
-    }
-  }, [runId, isRunning, router])
+  const { setStatus, isRunning, setRunId, error, setError } =
+    useAiRunStatus(initialStatus, initialRunId)
 
   async function onGenerate() {
     setError(null)

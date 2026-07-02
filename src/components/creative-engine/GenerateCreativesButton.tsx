@@ -1,59 +1,22 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
-
 import { Button } from '@/components/ui/button'
+import { useAiRunStatus } from '@/hooks/useAiRunStatus'
 import { triggerGenerateCreatives } from '@/lib/actions/creativeEngine'
-import { createClient } from '@/lib/supabase/client'
-import type { AiRunStatus } from '@/types/db'
-
-const TERMINAL: AiRunStatus[] = ['success', 'failed', 'partial']
 
 export function GenerateCreativesButton({
   offerId,
   initialStatus,
+  initialRunId,
   hasCreatives,
 }: {
   offerId: string
-  initialStatus: AiRunStatus | null
+  initialStatus: import('@/types/db').AiRunStatus | null
+  initialRunId?: string | null
   hasCreatives: boolean
 }) {
-  const router = useRouter()
-  const [status, setStatus] = useState<AiRunStatus | 'idle'>(
-    initialStatus ?? 'idle'
-  )
-  const [runId, setRunId] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  const isRunning = status === 'pending' || status === 'running'
-
-  useEffect(() => {
-    if (!runId || !isRunning) return
-    const supabase = createClient()
-    const channel = supabase
-      .channel(`creative_run:${runId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'ai_runs',
-          filter: `id=eq.${runId}`,
-        },
-        (payload) => {
-          const next = (payload.new as { status: AiRunStatus }).status
-          if (TERMINAL.includes(next)) {
-            setStatus(next)
-            router.refresh()
-          }
-        }
-      )
-      .subscribe()
-    return () => {
-      void supabase.removeChannel(channel)
-    }
-  }, [runId, isRunning, router])
+  const { status, setStatus, isRunning, setRunId, error, setError } =
+    useAiRunStatus(initialStatus, initialRunId)
 
   async function onGenerate() {
     setError(null)

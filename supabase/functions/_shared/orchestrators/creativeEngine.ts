@@ -107,7 +107,8 @@ export async function runCreativeEngine(
 
   const { briefs } = briefsResult.data
 
-  // Step 2 — Call gpt-image-1 for all 7 prompts in parallel to stay within Edge Function time limits
+  // Step 2 — Call gpt-image-1 sequentially so a single slow/failing image doesn't block the others
+  // and to avoid hitting the 150-second waitUntil wall-clock limit with 7 parallel calls.
   const openaiKey = Deno.env.get('OPENAI_API_KEY')
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
   const adminClient = getAdminClient()
@@ -172,7 +173,10 @@ export async function runCreativeEngine(
     }
   }
 
-  const creatives = await Promise.all(briefs.map((brief, i) => generateOne(brief, i)))
+  const creatives: Awaited<ReturnType<typeof generateOne>>[] = []
+  for (let i = 0; i < briefs.length; i++) {
+    creatives.push(await generateOne(briefs[i], i))
+  }
 
   const output = CreativeEngineResponseSchema.parse({ creatives })
 

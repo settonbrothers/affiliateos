@@ -1,15 +1,12 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { useAiRunStatus } from '@/hooks/useAiRunStatus'
 import { triggerGenerateAdCopy } from '@/lib/actions/adCopy'
-import { createClient } from '@/lib/supabase/client'
 import type { AiRunStatus } from '@/types/db'
-
-const TERMINAL: AiRunStatus[] = ['success', 'failed', 'partial']
 
 const COPY_TEMPLATES = [
   { value: 'AIDA', label: 'AIDA' },
@@ -26,51 +23,20 @@ const COPY_TEMPLATES = [
 export function ExecuteCopyButton({
   offerId,
   initialStatus,
+  initialRunId,
   hasVerdict,
   hasCopy,
 }: {
   offerId: string
   initialStatus: AiRunStatus | null
+  initialRunId?: string | null
   hasVerdict: boolean
   hasCopy: boolean
 }) {
-  const router = useRouter()
   const t = useTranslations('offers')
-  const [status, setStatus] = useState<AiRunStatus | 'idle'>(
-    initialStatus ?? 'idle'
-  )
-  const [runId, setRunId] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const { setStatus, isRunning, setRunId, error, setError } =
+    useAiRunStatus(initialStatus, initialRunId)
   const [template, setTemplate] = useState<string>('PAS')
-
-  const isRunning = status === 'pending' || status === 'running'
-
-  useEffect(() => {
-    if (!runId || !isRunning) return
-    const supabase = createClient()
-    const channel = supabase
-      .channel(`adcopy_run:${runId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'ai_runs',
-          filter: `id=eq.${runId}`,
-        },
-        (payload) => {
-          const next = (payload.new as { status: AiRunStatus }).status
-          if (TERMINAL.includes(next)) {
-            setStatus(next)
-            router.refresh()
-          }
-        }
-      )
-      .subscribe()
-    return () => {
-      void supabase.removeChannel(channel)
-    }
-  }, [runId, isRunning, router])
 
   async function onGenerate() {
     setError(null)
