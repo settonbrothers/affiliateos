@@ -2191,6 +2191,15 @@ export type Database = {
           },
         ]
       }
+      offer_avatars: {
+        Row: { id: string; offer_id: string; workspace_id: string; ai_run_id: string | null; payload: Json; status: string; created_at: string; updated_at: string }
+        Insert: { id?: string; offer_id: string; workspace_id: string; ai_run_id?: string | null; payload: Json; status?: string; created_at?: string; updated_at?: string }
+        Update: { id?: string; offer_id?: string; workspace_id?: string; ai_run_id?: string | null; payload?: Json; status?: string; created_at?: string; updated_at?: string }
+        Relationships: [
+          { foreignKeyName: 'offer_avatars_offer_id_fkey'; columns: ['offer_id']; isOneToOne: false; referencedRelation: 'offers'; referencedColumns: ['id'] },
+          { foreignKeyName: 'offer_avatars_workspace_id_fkey'; columns: ['workspace_id']; isOneToOne: false; referencedRelation: 'workspaces'; referencedColumns: ['id'] }
+        ]
+      }
       offer_creatives: {
         Row: { id: string; offer_id: string; workspace_id: string; ai_run_id: string | null; payload: Json; status: string; created_at: string; updated_at: string }
         Insert: { id?: string; offer_id: string; workspace_id: string; ai_run_id?: string | null; payload: Json; status?: string; created_at?: string; updated_at?: string }
@@ -2198,6 +2207,23 @@ export type Database = {
         Relationships: [
           { foreignKeyName: 'offer_creatives_offer_id_fkey'; columns: ['offer_id']; isOneToOne: false; referencedRelation: 'offers'; referencedColumns: ['id'] },
           { foreignKeyName: 'offer_creatives_workspace_id_fkey'; columns: ['workspace_id']; isOneToOne: false; referencedRelation: 'workspaces'; referencedColumns: ['id'] }
+        ]
+      }
+      offer_network_data: {
+        Row: { id: string; offer_id: string; network_name: string; epc_usd: number | null; commission_rate: number | null; commission_type: string | null; payout_usd: number | null; network_url: string | null; is_recommended: boolean; notes: string | null; created_at: string; updated_at: string }
+        Insert: { id?: string; offer_id: string; network_name: string; epc_usd?: number | null; commission_rate?: number | null; commission_type?: string | null; payout_usd?: number | null; network_url?: string | null; is_recommended?: boolean; notes?: string | null; created_at?: string; updated_at?: string }
+        Update: { id?: string; offer_id?: string; network_name?: string; epc_usd?: number | null; commission_rate?: number | null; commission_type?: string | null; payout_usd?: number | null; network_url?: string | null; is_recommended?: boolean; notes?: string | null; created_at?: string; updated_at?: string }
+        Relationships: [
+          { foreignKeyName: 'offer_network_data_offer_id_fkey'; columns: ['offer_id']; isOneToOne: false; referencedRelation: 'offers'; referencedColumns: ['id'] }
+        ]
+      }
+      diagnose_creative_inputs: {
+        Row: { id: string; campaign_id: string; workspace_id: string | null; raw_input: string; input_type: string; created_at: string }
+        Insert: { id?: string; campaign_id: string; workspace_id?: string | null; raw_input: string; input_type?: string; created_at?: string }
+        Update: { id?: string; campaign_id?: string; workspace_id?: string | null; raw_input?: string; input_type?: string; created_at?: string }
+        Relationships: [
+          { foreignKeyName: 'diagnose_creative_inputs_campaign_id_fkey'; columns: ['campaign_id']; isOneToOne: false; referencedRelation: 'campaigns'; referencedColumns: ['id'] },
+          { foreignKeyName: 'diagnose_creative_inputs_workspace_id_fkey'; columns: ['workspace_id']; isOneToOne: false; referencedRelation: 'workspaces'; referencedColumns: ['id'] }
         ]
       }
       spy_analyses: {

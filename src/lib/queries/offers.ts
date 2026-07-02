@@ -218,6 +218,32 @@ export async function getLatestCreatives(offerId: string): Promise<LatestCreativ
   return (data as LatestCreatives) ?? null
 }
 
+export type OfferNetworkData = {
+  id: string
+  offer_id: string
+  network_name: string
+  epc_usd: number | null
+  commission_rate: number | null
+  commission_type: string | null
+  payout_usd: number | null
+  network_url: string | null
+  is_recommended: boolean
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export async function getOfferNetworkData(offerId: string): Promise<OfferNetworkData[]> {
+  const supabase = await createClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase as any)
+    .from('offer_network_data')
+    .select('*')
+    .eq('offer_id', offerId)
+    .order('is_recommended', { ascending: false })
+  return (data ?? []) as OfferNetworkData[]
+}
+
 // Does this offer have a usable verdict (a successful underwriting run)?
 export async function hasSuccessfulUnderwriting(
   offerId: string

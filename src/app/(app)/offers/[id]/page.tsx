@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { CreateCampaignButton } from '@/components/campaigns/CreateCampaignButton'
+import { AvatarDisplay } from '@/components/avatar-builder/AvatarDisplay'
+import { GenerateAvatarButton } from '@/components/avatar-builder/GenerateAvatarButton'
 import { DeepBriefDisplay } from '@/components/deep-brief/DeepBriefDisplay'
 import { GenerateDeepBriefButton } from '@/components/deep-brief/GenerateDeepBriefButton'
 import { AdCopyView } from '@/components/offers/AdCopyView'
