@@ -144,6 +144,24 @@ export async function getVerifiedFacts(
   return (data ?? []) as VerifiedFact[]
 }
 
+export type LatestDeepBrief = {
+  id: string
+  payload: unknown
+  created_at: string
+} | null
+
+export async function getLatestDeepBrief(offerId: string): Promise<LatestDeepBrief> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('offer_deep_briefs')
+    .select('id, payload, created_at')
+    .eq('offer_id', offerId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  return (data as LatestDeepBrief) ?? null
+}
+
 // Does this offer have a usable verdict (a successful underwriting run)?
 export async function hasSuccessfulUnderwriting(
   offerId: string
