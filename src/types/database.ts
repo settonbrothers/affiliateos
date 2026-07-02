@@ -2182,6 +2182,24 @@ export type Database = {
           },
         ]
       }
+      offer_creatives: {
+        Row: { id: string; offer_id: string; workspace_id: string; ai_run_id: string | null; payload: Json; status: string; created_at: string; updated_at: string }
+        Insert: { id?: string; offer_id: string; workspace_id: string; ai_run_id?: string | null; payload: Json; status?: string; created_at?: string; updated_at?: string }
+        Update: { id?: string; offer_id?: string; workspace_id?: string; ai_run_id?: string | null; payload?: Json; status?: string; created_at?: string; updated_at?: string }
+        Relationships: [
+          { foreignKeyName: 'offer_creatives_offer_id_fkey'; columns: ['offer_id']; isOneToOne: false; referencedRelation: 'offers'; referencedColumns: ['id'] },
+          { foreignKeyName: 'offer_creatives_workspace_id_fkey'; columns: ['workspace_id']; isOneToOne: false; referencedRelation: 'workspaces'; referencedColumns: ['id'] }
+        ]
+      }
+      spy_analyses: {
+        Row: { id: string; offer_id: string; workspace_id: string; ai_run_id: string | null; input_type: string; raw_input: string; payload: Json; status: string; created_at: string; updated_at: string }
+        Insert: { id?: string; offer_id: string; workspace_id: string; ai_run_id?: string | null; input_type: string; raw_input: string; payload: Json; status?: string; created_at?: string; updated_at?: string }
+        Update: { id?: string; offer_id?: string; workspace_id?: string; ai_run_id?: string | null; input_type?: string; raw_input?: string; payload?: Json; status?: string; created_at?: string; updated_at?: string }
+        Relationships: [
+          { foreignKeyName: 'spy_analyses_offer_id_fkey'; columns: ['offer_id']; isOneToOne: false; referencedRelation: 'offers'; referencedColumns: ['id'] },
+          { foreignKeyName: 'spy_analyses_workspace_id_fkey'; columns: ['workspace_id']; isOneToOne: false; referencedRelation: 'workspaces'; referencedColumns: ['id'] }
+        ]
+      }
       workspaces: {
         Row: {
           created_at: string

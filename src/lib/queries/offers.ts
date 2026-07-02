@@ -162,6 +162,44 @@ export async function getLatestDeepBrief(offerId: string): Promise<LatestDeepBri
   return (data as LatestDeepBrief) ?? null
 }
 
+export type LatestAvatar = {
+  id: string
+  payload: unknown
+  created_at: string
+} | null
+
+export async function getLatestAvatar(offerId: string): Promise<LatestAvatar> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('offer_avatars')
+    .select('id, payload, created_at')
+    .eq('offer_id', offerId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  return (data as LatestAvatar) ?? null
+}
+
+export type LatestSpyAnalysis = {
+  id: string
+  payload: unknown
+  input_type: string
+  raw_input: string
+  created_at: string
+} | null
+
+export async function getLatestSpyAnalysis(offerId: string): Promise<LatestSpyAnalysis> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('spy_analyses')
+    .select('id, payload, input_type, raw_input, created_at')
+    .eq('offer_id', offerId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  return (data as LatestSpyAnalysis) ?? null
+}
+
 // Does this offer have a usable verdict (a successful underwriting run)?
 export async function hasSuccessfulUnderwriting(
   offerId: string
