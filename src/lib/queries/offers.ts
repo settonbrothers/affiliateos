@@ -200,6 +200,24 @@ export async function getLatestSpyAnalysis(offerId: string): Promise<LatestSpyAn
   return (data as LatestSpyAnalysis) ?? null
 }
 
+export type LatestCreatives = {
+  id: string
+  payload: unknown
+  created_at: string
+} | null
+
+export async function getLatestCreatives(offerId: string): Promise<LatestCreatives> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('offer_creatives')
+    .select('id, payload, created_at')
+    .eq('offer_id', offerId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  return (data as LatestCreatives) ?? null
+}
+
 // Does this offer have a usable verdict (a successful underwriting run)?
 export async function hasSuccessfulUnderwriting(
   offerId: string
