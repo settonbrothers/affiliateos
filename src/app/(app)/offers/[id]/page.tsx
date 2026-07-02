@@ -232,8 +232,8 @@ export default async function OfferDetailPage({
           {compliance?.suggested_verdict_cap && (
             <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm dark:bg-red-950/40">
               <span className="font-medium">
-                Compliance cap: verdict limited to "
-                {compliance.suggested_verdict_cap}".
+                Compliance cap: verdict limited to &quot;
+                {compliance.suggested_verdict_cap}&quot;.
               </span>{' '}
               See the Compliance tab.
             </div>
