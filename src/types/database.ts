@@ -161,6 +161,7 @@ export type Database = {
           payload: Json
           source_underwriting_run_id: string | null
           status: string
+          template: string | null
           updated_at: string
           workspace_id: string | null
         }
@@ -173,6 +174,7 @@ export type Database = {
           payload: Json
           source_underwriting_run_id?: string | null
           status?: string
+          template?: string | null
           updated_at?: string
           workspace_id?: string | null
         }
@@ -185,6 +187,7 @@ export type Database = {
           payload?: Json
           source_underwriting_run_id?: string | null
           status?: string
+          template?: string | null
           updated_at?: string
           workspace_id?: string | null
         }
@@ -594,6 +597,36 @@ export type Database = {
           payload?: Json
           source_id?: string
           source_table?: string
+        }
+        Relationships: []
+      }
+      copy_hook_library: {
+        Row: {
+          created_at: string
+          hook_type: string
+          id: string
+          label: string
+          lang: string
+          text: string
+          vertical: string | null
+        }
+        Insert: {
+          created_at?: string
+          hook_type: string
+          id?: string
+          label?: string
+          lang: string
+          text: string
+          vertical?: string | null
+        }
+        Update: {
+          created_at?: string
+          hook_type?: string
+          id?: string
+          label?: string
+          lang?: string
+          text?: string
+          vertical?: string | null
         }
         Relationships: []
       }

@@ -35,9 +35,10 @@ Deno.serve(async (req: Request) => {
   try {
     const user = await requireUser(req)
 
-    const body = (await req.json().catch(() => ({}))) as { offer_id?: string }
+    const body = (await req.json().catch(() => ({}))) as { offer_id?: string; template?: string }
     const offerId = body.offer_id
     if (!offerId) return jsonResponse({ error: 'offer_id is required' }, 400)
+    const template = body.template ?? undefined
 
     const admin = getAdminClient()
     const { data: offer, error: offerErr } = await admin
@@ -121,6 +122,18 @@ Deno.serve(async (req: Request) => {
       reason: (r.reason as string | null) ?? null,
     }))
 
+    // Hook library: admin-curated examples injected as few-shot into the hook stage.
+    const { data: hookLibraryRows } = await admin
+      .from('copy_hook_library')
+      .select('text, lang, hook_type, label')
+      .order('created_at', { ascending: false })
+    const hookLibrary = (hookLibraryRows ?? []).map((r) => ({
+      text: r.text as string,
+      lang: r.lang as string,
+      hook_type: r.hook_type as string,
+      label: r.label as string,
+    }))
+
     const willCallReal = !!Deno.env.get('ANTHROPIC_API_KEY')
     const model = willCallReal ? Deno.env.get('AD_COPY_MODEL') ?? 'claude-sonnet-4-6' : 'mock'
 
@@ -160,6 +173,8 @@ Deno.serve(async (req: Request) => {
             testKit,
             corpus,
             verticalSlug,
+            template,
+            hookLibrary,
           }
 
           const result = await runAdCopy(input)
@@ -189,6 +204,7 @@ Deno.serve(async (req: Request) => {
             ai_run_id: runId,
             payload: result.output,
             status: 'generated',
+            template: template ?? null,
           })
 
           await recordRunSuccess(runId, {

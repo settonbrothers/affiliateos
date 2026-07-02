@@ -62,6 +62,11 @@ export type AdCopyInput = {
   // The human Taste Corpus (few-shot + the standard the judge calibrates to).
   corpus?: TasteExample[]
   verticalSlug?: string
+  // Copy Engine v2 additions — both optional; additive, do not break v1 behavior.
+  // One of the 9 template values; injected into the copy_write stage system prompt.
+  template?: string
+  // Admin-curated hook examples; injected as {{HOOK_LIBRARY_FEWSHOT}} in copy_hook.
+  hookLibrary?: Array<{ text: string; lang: string; hook_type: string; label: string }>
 }
 
 export type OrchestratorResult = {
@@ -72,7 +77,7 @@ export type OrchestratorResult = {
 
 // Tool wrappers for stages whose output is an array (tool input must be an object).
 const AnglesToolSchema = z.object({ angles: z.array(AdCopyAngleSchema).min(2).max(5) })
-const HooksToolSchema = z.object({ hooks: z.array(AdCopyHookSchema).min(4) })
+const HooksToolSchema = z.object({ hooks: z.array(AdCopyHookSchema).min(10) })
 const VariantsToolSchema = z.object({ variants: z.array(FacebookAdVariantSchema).min(2) })
 
 async function runStage<T extends z.ZodTypeAny>(
@@ -82,9 +87,16 @@ async function runStage<T extends z.ZodTypeAny>(
   responseSchema: T,
   payload: Record<string, unknown>,
   model: string,
-  verticalSlug?: string
+  verticalSlug?: string,
+  // Optional key→value substitutions applied to the loaded system prompt.
+  promptSubstitutions?: Record<string, string>
 ): Promise<{ data: z.infer<T>; costUsd: number }> {
-  const systemPrompt = await loadActivePrompt(orchestratorName, verticalSlug)
+  let systemPrompt = await loadActivePrompt(orchestratorName, verticalSlug)
+  if (promptSubstitutions) {
+    for (const [key, value] of Object.entries(promptSubstitutions)) {
+      systemPrompt = systemPrompt.split(key).join(value)
+    }
+  }
   const result = await callAnthropicWithTool({
     model,
     systemPrompt,
@@ -170,11 +182,21 @@ export async function runAdCopy(input: AdCopyInput): Promise<OrchestratorResult>
   spend(angles.costUsd)
   guard()
 
+  // Build the hook library few-shot block for {{HOOK_LIBRARY_FEWSHOT}} substitution.
+  const hookLibraryFewshot = input.hookLibrary && input.hookLibrary.length > 0
+    ? input.hookLibrary
+        .map(
+          (h) =>
+            `[${h.label.toUpperCase()} | ${h.lang} | ${h.hook_type}] ${h.text}`
+        )
+        .join('\n')
+    : '(No admin hook library examples yet.)'
+
   // Stage 3: hooks.
   const hooks = await runStage(
     'CopyHookOrchestrator',
     'submit_hooks',
-    'Submit at least 4 hooks across the angles, both languages. Call exactly once.',
+    'Submit at least 10 hooks across the angles, both languages. Call exactly once.',
     HooksToolSchema,
     {
       angles: angles.data.angles,
@@ -185,7 +207,8 @@ export async function runAdCopy(input: AdCopyInput): Promise<OrchestratorResult>
       ],
     },
     GENERATION_MODEL,
-    vertical
+    vertical,
+    { '{{HOOK_LIBRARY_FEWSHOT}}': hookLibraryFewshot }
   )
   spend(hooks.costUsd)
   guard()
@@ -203,6 +226,9 @@ export async function runAdCopy(input: AdCopyInput): Promise<OrchestratorResult>
     previous_judgment: judgeNote ?? null,
   })
 
+  // Build the template substitution for {{COPY_TEMPLATE}} in the write prompt.
+  const copyTemplateSubstitution = { '{{COPY_TEMPLATE}}': input.template ?? 'PAS' }
+
   let variants = await runStage(
     'CopyWriteOrchestrator',
     'submit_ad_copy',
@@ -210,7 +236,8 @@ export async function runAdCopy(input: AdCopyInput): Promise<OrchestratorResult>
     VariantsToolSchema,
     writePayload(),
     GENERATION_MODEL,
-    vertical
+    vertical,
+    copyTemplateSubstitution
   )
   spend(variants.costUsd)
   guard()
@@ -244,7 +271,8 @@ export async function runAdCopy(input: AdCopyInput): Promise<OrchestratorResult>
       VariantsToolSchema,
       writePayload(judge.data),
       GENERATION_MODEL,
-      vertical
+      vertical,
+      copyTemplateSubstitution
     )
     spend(variants.costUsd)
     if (isOverCostCap(accumUsd, MAX_USD_PER_GENERATION)) break

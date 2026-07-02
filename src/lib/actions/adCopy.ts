@@ -5,11 +5,12 @@ import { createClient } from '@/lib/supabase/server'
 export type TriggerGenerateAdCopyResult = { run_id: string } | { error: string }
 
 export async function triggerGenerateAdCopy(
-  offerId: string
+  offerId: string,
+  template?: string
 ): Promise<TriggerGenerateAdCopyResult> {
   const supabase = await createClient()
   const { data, error } = await supabase.functions.invoke('generate-ad-copy', {
-    body: { offer_id: offerId },
+    body: { offer_id: offerId, ...(template ? { template } : {}) },
   })
   if (error) return { error: error.message }
   return data as { run_id: string }
