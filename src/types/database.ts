@@ -151,15 +151,6 @@ export type Database = {
           },
         ]
       }
-      offer_avatars: {
-        Row: { id: string; offer_id: string; workspace_id: string; ai_run_id: string | null; payload: Json; status: string; created_at: string; updated_at: string }
-        Insert: { id?: string; offer_id: string; workspace_id: string; ai_run_id?: string | null; payload: Json; status?: string; created_at?: string; updated_at?: string }
-        Update: { id?: string; offer_id?: string; workspace_id?: string; ai_run_id?: string | null; payload?: Json; status?: string; created_at?: string; updated_at?: string }
-        Relationships: [
-          { foreignKeyName: 'offer_avatars_offer_id_fkey'; columns: ['offer_id']; isOneToOne: false; referencedRelation: 'offers'; referencedColumns: ['id'] },
-          { foreignKeyName: 'offer_avatars_workspace_id_fkey'; columns: ['workspace_id']; isOneToOne: false; referencedRelation: 'workspaces'; referencedColumns: ['id'] }
-        ]
-      }
       ad_copy_generations: {
         Row: {
           ai_run_id: string | null
