@@ -30,6 +30,7 @@ import {
   getLatestAdCopy,
   getLatestAvatar,
   getLatestCompliance,
+  getLatestCreatives,
   getLatestDeepBrief,
   getLatestRunByOrchestrator,
   getLatestSpyAnalysis,
