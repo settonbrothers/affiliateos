@@ -28,10 +28,16 @@ export const AdCopyAngleSchema = z.object({
   rooted_in: z.string(),
 })
 
+export const HOOK_TYPES = [
+  'curiosity', 'pain', 'social_proof', 'pattern_interrupt', 'data',
+  'story', 'challenge', 'benefit', 'fear', 'authority',
+] as const
+
 export const AdCopyHookSchema = z.object({
   text: z.string(),
   angle_index: z.number().int().min(0),
   lang: z.enum(AD_COPY_LANGS),
+  hook_type: z.enum(HOOK_TYPES).optional(),
 })
 
 export const FacebookAdVariantSchema = z.object({

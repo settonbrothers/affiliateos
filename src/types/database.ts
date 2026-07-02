@@ -151,15 +151,6 @@ export type Database = {
           },
         ]
       }
-      offer_avatars: {
-        Row: { id: string; offer_id: string; workspace_id: string; ai_run_id: string | null; payload: Json; status: string; created_at: string; updated_at: string }
-        Insert: { id?: string; offer_id: string; workspace_id: string; ai_run_id?: string | null; payload: Json; status?: string; created_at?: string; updated_at?: string }
-        Update: { id?: string; offer_id?: string; workspace_id?: string; ai_run_id?: string | null; payload?: Json; status?: string; created_at?: string; updated_at?: string }
-        Relationships: [
-          { foreignKeyName: 'offer_avatars_offer_id_fkey'; columns: ['offer_id']; isOneToOne: false; referencedRelation: 'offers'; referencedColumns: ['id'] },
-          { foreignKeyName: 'offer_avatars_workspace_id_fkey'; columns: ['workspace_id']; isOneToOne: false; referencedRelation: 'workspaces'; referencedColumns: ['id'] }
-        ]
-      }
       ad_copy_generations: {
         Row: {
           ai_run_id: string | null
@@ -170,6 +161,7 @@ export type Database = {
           payload: Json
           source_underwriting_run_id: string | null
           status: string
+          template: string | null
           updated_at: string
           workspace_id: string | null
         }
@@ -182,6 +174,7 @@ export type Database = {
           payload: Json
           source_underwriting_run_id?: string | null
           status?: string
+          template?: string | null
           updated_at?: string
           workspace_id?: string | null
         }
@@ -194,6 +187,7 @@ export type Database = {
           payload?: Json
           source_underwriting_run_id?: string | null
           status?: string
+          template?: string | null
           updated_at?: string
           workspace_id?: string | null
         }
@@ -603,6 +597,36 @@ export type Database = {
           payload?: Json
           source_id?: string
           source_table?: string
+        }
+        Relationships: []
+      }
+      copy_hook_library: {
+        Row: {
+          created_at: string
+          hook_type: string
+          id: string
+          label: string
+          lang: string
+          text: string
+          vertical: string | null
+        }
+        Insert: {
+          created_at?: string
+          hook_type: string
+          id?: string
+          label?: string
+          lang: string
+          text: string
+          vertical?: string | null
+        }
+        Update: {
+          created_at?: string
+          hook_type?: string
+          id?: string
+          label?: string
+          lang?: string
+          text?: string
+          vertical?: string | null
         }
         Relationships: []
       }
@@ -2156,6 +2180,24 @@ export type Database = {
             referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      offer_creatives: {
+        Row: { id: string; offer_id: string; workspace_id: string; ai_run_id: string | null; payload: Json; status: string; created_at: string; updated_at: string }
+        Insert: { id?: string; offer_id: string; workspace_id: string; ai_run_id?: string | null; payload: Json; status?: string; created_at?: string; updated_at?: string }
+        Update: { id?: string; offer_id?: string; workspace_id?: string; ai_run_id?: string | null; payload?: Json; status?: string; created_at?: string; updated_at?: string }
+        Relationships: [
+          { foreignKeyName: 'offer_creatives_offer_id_fkey'; columns: ['offer_id']; isOneToOne: false; referencedRelation: 'offers'; referencedColumns: ['id'] },
+          { foreignKeyName: 'offer_creatives_workspace_id_fkey'; columns: ['workspace_id']; isOneToOne: false; referencedRelation: 'workspaces'; referencedColumns: ['id'] }
+        ]
+      }
+      spy_analyses: {
+        Row: { id: string; offer_id: string; workspace_id: string; ai_run_id: string | null; input_type: string; raw_input: string; payload: Json; status: string; created_at: string; updated_at: string }
+        Insert: { id?: string; offer_id: string; workspace_id: string; ai_run_id?: string | null; input_type: string; raw_input: string; payload: Json; status?: string; created_at?: string; updated_at?: string }
+        Update: { id?: string; offer_id?: string; workspace_id?: string; ai_run_id?: string | null; input_type?: string; raw_input?: string; payload?: Json; status?: string; created_at?: string; updated_at?: string }
+        Relationships: [
+          { foreignKeyName: 'spy_analyses_offer_id_fkey'; columns: ['offer_id']; isOneToOne: false; referencedRelation: 'offers'; referencedColumns: ['id'] },
+          { foreignKeyName: 'spy_analyses_workspace_id_fkey'; columns: ['workspace_id']; isOneToOne: false; referencedRelation: 'workspaces'; referencedColumns: ['id'] }
         ]
       }
       workspaces: {

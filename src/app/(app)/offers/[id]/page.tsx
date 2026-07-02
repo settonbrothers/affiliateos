@@ -3,8 +3,6 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { CreateCampaignButton } from '@/components/campaigns/CreateCampaignButton'
-import { AvatarDisplay } from '@/components/avatar-builder/AvatarDisplay'
-import { GenerateAvatarButton } from '@/components/avatar-builder/GenerateAvatarButton'
 import { DeepBriefDisplay } from '@/components/deep-brief/DeepBriefDisplay'
 import { GenerateDeepBriefButton } from '@/components/deep-brief/GenerateDeepBriefButton'
 import { AdCopyView } from '@/components/offers/AdCopyView'
@@ -17,6 +15,8 @@ import { OfferOverview } from '@/components/offers/OfferOverview'
 import { OfferScorecard } from '@/components/offers/OfferScorecard'
 import { OfferVerdict } from '@/components/offers/OfferVerdict'
 import { TestKitView } from '@/components/offers/TestKitView'
+import { SpyInputForm } from '@/components/spy-analysis/SpyInputForm'
+import { SpyAnalysisDisplay } from '@/components/spy-analysis/SpyAnalysisDisplay'
 import { TranslationFiller } from '@/components/i18n/TranslationFiller'
 import { isCurrentUserAdmin } from '@/lib/auth/role'
 import {
@@ -29,6 +29,7 @@ import {
   getLatestCompliance,
   getLatestDeepBrief,
   getLatestRunByOrchestrator,
+  getLatestSpyAnalysis,
   getLatestTestKit,
   getOfferById,
   getVerifiedFacts,
@@ -46,6 +47,7 @@ const TAB_KEYS = [
   'compliance',
   'deep-brief',
   'avatar',
+  'spy',
 ] as const
 
 export default async function OfferDetailPage({
@@ -61,14 +63,8 @@ export default async function OfferDetailPage({
   const offer = await getOfferById(id)
   if (!offer) notFound()
 
-  // Scorecard/verdict need the latest UNDERWRITING run specifically — not the
-  // latest run of any orchestrator (test-kit/diagnosis/compliance payloads have
-  // no `scores`, which would crash the scorecard).
   const locale = await getLocale()
   const run = await getLatestRunByOrchestrator(id, 'UnderwritingOrchestrator')
-  // Show the verdict/scorecard prose in the viewer's locale (English payload
-  // untouched). Only the underwriting run carries a translatable id; the
-  // offer.evaluation fallback (legacy inline payload) stays as-is.
   const evaluation = run
     ? ((await getTranslatedPayload(
         'ai_runs',
@@ -84,7 +80,8 @@ export default async function OfferDetailPage({
     tab === 'copy' ||
     tab === 'compliance' ||
     tab === 'deep-brief' ||
-    tab === 'avatar'
+    tab === 'avatar' ||
+    tab === 'spy'
       ? tab
       : 'overview'
   const isAdmin = await isCurrentUserAdmin()
@@ -98,12 +95,11 @@ export default async function OfferDetailPage({
     compliance: t('tabCompliance'),
     'deep-brief': 'Deep Brief',
     avatar: 'Avatar',
+    spy: 'Spy',
   }
 
-  // Verified facts feed the Overview's evidence section.
   const facts = activeTab === 'overview' ? await getVerifiedFacts(id) : []
 
-  // Compliance feeds the Compliance tab and the verdict-cap banner on Verdict.
   const compliance =
     activeTab === 'compliance' || activeTab === 'verdict'
       ? await getLatestCompliance(id)
@@ -117,7 +113,6 @@ export default async function OfferDetailPage({
       )
     : null
 
-  // Test-kit tab needs its own data — only fetch when that tab is active.
   const testKit =
     activeTab === 'test-kit' ? await getLatestTestKit(id) : null
   const testKitRun =
@@ -130,8 +125,6 @@ export default async function OfferDetailPage({
     ? await getTranslatedPayload('test_kits', testKit.id, locale, testKit.payload)
     : null
 
-  // Copy tab — its own data; only fetch when active. Copy is bilingual-native
-  // (he + en in one payload), so no per-locale translation pass is needed.
   const adCopy = activeTab === 'copy' ? await getLatestAdCopy(id) : null
   const adCopyRun =
     activeTab === 'copy'
@@ -140,19 +133,19 @@ export default async function OfferDetailPage({
   const copyHasVerdict =
     activeTab === 'copy' ? await hasSuccessfulUnderwriting(id) : false
 
-  // Deep Brief tab — only fetch when active.
   const deepBrief = activeTab === 'deep-brief' ? await getLatestDeepBrief(id) : null
   const deepBriefRun =
     activeTab === 'deep-brief'
       ? await getLatestRunByOrchestrator(id, 'DeepBriefOrchestrator')
       : null
 
-  // Avatar tab — only fetch when active.
   const avatar = activeTab === 'avatar' ? await getLatestAvatar(id) : null
   const avatarRun =
     activeTab === 'avatar'
       ? await getLatestRunByOrchestrator(id, 'AvatarBuilderOrchestrator')
       : null
+
+  const spyAnalysis = activeTab === 'spy' ? await getLatestSpyAnalysis(id) : null
 
   return (
     <div className="flex flex-col gap-6">
@@ -220,8 +213,8 @@ export default async function OfferDetailPage({
           {compliance?.suggested_verdict_cap && (
             <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm dark:bg-red-950/40">
               <span className="font-medium">
-                Compliance cap: verdict limited to “
-                {compliance.suggested_verdict_cap}”.
+                Compliance cap: verdict limited to &quot;
+                {compliance.suggested_verdict_cap}&quot;.
               </span>{' '}
               See the Compliance tab.
             </div>
@@ -338,6 +331,17 @@ export default async function OfferDetailPage({
             <p className="text-sm text-[var(--color-muted-foreground)]">
               No avatar yet. Generate one to build a detailed buyer portrait for this offer.
             </p>
+          )}
+        </div>
+      )}
+      {activeTab === 'spy' && (
+        <div className="flex flex-col gap-6">
+          <SpyInputForm
+            offerId={offer.id}
+            hasExistingAnalysis={!!spyAnalysis}
+          />
+          {spyAnalysis && (
+            <SpyAnalysisDisplay payload={spyAnalysis.payload} />
           )}
         </div>
       )}

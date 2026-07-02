@@ -11,8 +11,7 @@ import {
 import { sendToDlq } from '../_shared/dlq.ts'
 import { assertNotPaused, OrchestratorPausedError } from '../_shared/killSwitch.ts'
 import { createTrace, recordGeneration } from '../_shared/langfuseClient.ts'
-import { runAdCopy, type AdCopyInput } from '../_shared/orchestrators/adCopy.ts'
-import type { TasteExample } from '../_shared/orchestrators/adCopyLogic.ts'
+import { runSpyAnalysis } from '../_shared/orchestrators/spyAnalysis.ts'
 import {
   recordRunError,
   recordRunStart,
@@ -22,11 +21,9 @@ import { getAdminClient } from '../_shared/supabaseAdmin.ts'
 
 declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void }
 
-const MOCK_LATENCY_MS = 8_000
-const ACTION = 'generate-ad-copy'
-const ORCHESTRATOR = 'AdCopyOrchestrator'
-// Cap how many human-labelled examples feed the few-shot context, newest first.
-const CORPUS_LIMIT = 60
+const MOCK_LATENCY_MS = 4_000
+const ACTION = 'analyze-spy'
+const ORCHESTRATOR = 'SpyAnalysisOrchestrator'
 
 Deno.serve(async (req: Request) => {
   const preflight = handleCors(req)
@@ -35,15 +32,26 @@ Deno.serve(async (req: Request) => {
   try {
     const user = await requireUser(req)
 
-    const body = (await req.json().catch(() => ({}))) as { offer_id?: string; template?: string }
+    const body = (await req.json().catch(() => ({}))) as {
+      offer_id?: string
+      input_type?: string
+      raw_input?: string
+    }
     const offerId = body.offer_id
+    const inputType = body.input_type
+    const rawInput = body.raw_input
+
     if (!offerId) return jsonResponse({ error: 'offer_id is required' }, 400)
-    const template = body.template ?? undefined
+    if (!inputType) return jsonResponse({ error: 'input_type is required' }, 400)
+    if (!rawInput) return jsonResponse({ error: 'raw_input is required' }, 400)
+    if (!['text', 'url', 'batch'].includes(inputType)) {
+      return jsonResponse({ error: 'input_type must be one of: text, url, batch' }, 400)
+    }
 
     const admin = getAdminClient()
     const { data: offer, error: offerErr } = await admin
       .from('offers')
-      .select('id, workspace_id, vertical_id, name, operator_notes, verticals(slug)')
+      .select('id, workspace_id, name, vertical')
       .eq('id', offerId)
       .single()
     if (offerErr || !offer) return jsonResponse({ error: 'Offer not found' }, 404)
@@ -77,65 +85,8 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    const verticalSlug =
-      (offer as unknown as { verticals?: { slug: string } | null }).verticals?.slug ??
-      undefined
-
-    // Product grounding: the offer's verified facts (same source the underwriting
-    // verdict is built from) feed product excavation.
-    const { data: factsRows } = await admin
-      .from('extracted_facts')
-      .select('fact_type, fact_value, source_quote, confidence_score')
-      .eq('offer_id', offerId)
-      .eq('status', 'verified')
-    const facts = factsRows ?? []
-
-    // Latest consumer-facing test kit (angles, hooks, target_audience) — prior
-    // work the copy builds on rather than regenerating from scratch.
-    const { data: testKitRow } = await admin
-      .from('test_kits')
-      .select('payload')
-      .eq('offer_id', offerId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-    const testKit = testKitRow?.payload ?? null
-
-    // Taste Corpus: human-labelled examples (Edit-Loop + any seed), scoped to the
-    // workspace plus global admin examples. Drives few-shot + (later) calibration.
-    let corpusQuery = admin
-      .from('copy_taste_examples')
-      .select('kind, lang, text, improved_text, label, reason, workspace_id')
-      .order('created_at', { ascending: false })
-      .limit(CORPUS_LIMIT)
-    // Workspace-scoped examples + global (workspace-null) admin examples.
-    corpusQuery = offer.workspace_id
-      ? corpusQuery.or(`workspace_id.eq.${offer.workspace_id},workspace_id.is.null`)
-      : corpusQuery.is('workspace_id', null)
-    const { data: corpusRows } = await corpusQuery
-    const corpus: TasteExample[] = (corpusRows ?? []).map((r) => ({
-      kind: r.kind as TasteExample['kind'],
-      lang: r.lang as TasteExample['lang'],
-      text: r.text as string,
-      improved_text: (r.improved_text as string | null) ?? null,
-      label: r.label as TasteExample['label'],
-      reason: (r.reason as string | null) ?? null,
-    }))
-
-    // Hook library: admin-curated examples injected as few-shot into the hook stage.
-    const { data: hookLibraryRows } = await admin
-      .from('copy_hook_library')
-      .select('text, lang, hook_type, label')
-      .order('created_at', { ascending: false })
-    const hookLibrary = (hookLibraryRows ?? []).map((r) => ({
-      text: r.text as string,
-      lang: r.lang as string,
-      hook_type: r.hook_type as string,
-      label: r.label as string,
-    }))
-
     const willCallReal = !!Deno.env.get('ANTHROPIC_API_KEY')
-    const model = willCallReal ? Deno.env.get('AD_COPY_MODEL') ?? 'claude-sonnet-4-6' : 'mock'
+    const model = willCallReal ? 'claude-sonnet-4-6' : 'mock'
 
     const runId = await recordRunStart({
       orchestratorName: ORCHESTRATOR,
@@ -143,9 +94,7 @@ Deno.serve(async (req: Request) => {
       model,
       inputPayload: {
         offer_id: offerId,
-        verified_fact_count: facts.length,
-        corpus_example_count: corpus.length,
-        vertical: verticalSlug ?? null,
+        input_type: inputType,
       },
       userId: user.id,
       workspaceId: offer.workspace_id ?? undefined,
@@ -157,37 +106,30 @@ Deno.serve(async (req: Request) => {
       (async () => {
         const startTime = new Date()
         try {
-          // Mock path keeps latency so UI Realtime/polling exercises its loading state.
+          // Mock path keeps latency so the UI Realtime/polling exercises its loading state.
           if (!willCallReal) {
             await new Promise((resolve) => setTimeout(resolve, MOCK_LATENCY_MS))
           }
 
-          const input: AdCopyInput = {
+          const result = await runSpyAnalysis({
             offer: {
               id: offer.id,
               name: offer.name,
-              vertical: verticalSlug ?? null,
-              description: offer.operator_notes ?? null,
+              vertical: (offer as { vertical?: string | null }).vertical ?? null,
             },
-            productContext: { verified_facts: facts },
-            testKit,
-            corpus,
-            verticalSlug,
-            template,
-            hookLibrary,
-          }
-
-          const result = await runAdCopy(input)
+            rawInput,
+            inputType: inputType as 'text' | 'url' | 'batch',
+          })
 
           const traceId = await createTrace({
-            name: `generate-ad-copy:${offerId}`,
+            name: `analyze-spy:${offerId}`,
             userId: user.id,
           })
           await recordGeneration({
             traceId,
             name: `${ORCHESTRATOR} (${result.mode})`,
             model,
-            input: { offer_id: offerId, corpus_example_count: corpus.length },
+            input: { offer_id: offerId, input_type: inputType },
             output: result.output,
             promptTokens: result.usage?.input_tokens ?? 0,
             completionTokens: result.usage?.output_tokens ?? 0,
@@ -196,15 +138,15 @@ Deno.serve(async (req: Request) => {
             endTime: new Date(),
           })
 
-          // Persist the generation (envelope + payload) for the Copy tab + Edit-Loop.
-          await admin.from('ad_copy_generations').insert({
+          // Persist the analysis.
+          await admin.from('spy_analyses').insert({
             offer_id: offerId,
             workspace_id: offer.workspace_id,
-            created_by_user_id: user.id,
             ai_run_id: runId,
+            input_type: inputType,
+            raw_input: rawInput,
             payload: result.output,
             status: 'generated',
-            template: template ?? null,
           })
 
           await recordRunSuccess(runId, {
