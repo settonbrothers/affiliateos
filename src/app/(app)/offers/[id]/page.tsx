@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { CreateCampaignButton } from '@/components/campaigns/CreateCampaignButton'
+import { DeepBriefDisplay } from '@/components/deep-brief/DeepBriefDisplay'
+import { GenerateDeepBriefButton } from '@/components/deep-brief/GenerateDeepBriefButton'
 import { AdCopyView } from '@/components/offers/AdCopyView'
 import { AnalyzeButton } from '@/components/offers/AnalyzeButton'
 import { CheckComplianceButton } from '@/components/offers/CheckComplianceButton'
@@ -22,6 +24,7 @@ import {
 import {
   getLatestAdCopy,
   getLatestCompliance,
+  getLatestDeepBrief,
   getLatestRunByOrchestrator,
   getLatestTestKit,
   getOfferById,
@@ -38,6 +41,7 @@ const TAB_KEYS = [
   'test-kit',
   'copy',
   'compliance',
+  'deep-brief',
 ] as const
 
 export default async function OfferDetailPage({
@@ -74,7 +78,8 @@ export default async function OfferDetailPage({
     tab === 'verdict' ||
     tab === 'test-kit' ||
     tab === 'copy' ||
-    tab === 'compliance'
+    tab === 'compliance' ||
+    tab === 'deep-brief'
       ? tab
       : 'overview'
   const isAdmin = await isCurrentUserAdmin()
@@ -86,6 +91,7 @@ export default async function OfferDetailPage({
     'test-kit': t('tabTestKit'),
     copy: t('tabCopy'),
     compliance: t('tabCompliance'),
+    'deep-brief': 'Deep Brief',
   }
 
   // Verified facts feed the Overview's evidence section.
@@ -127,6 +133,13 @@ export default async function OfferDetailPage({
       : null
   const copyHasVerdict =
     activeTab === 'copy' ? await hasSuccessfulUnderwriting(id) : false
+
+  // Deep Brief tab — only fetch when active.
+  const deepBrief = activeTab === 'deep-brief' ? await getLatestDeepBrief(id) : null
+  const deepBriefRun =
+    activeTab === 'deep-brief'
+      ? await getLatestRunByOrchestrator(id, 'DeepBriefOrchestrator')
+      : null
 
   return (
     <div className="flex flex-col gap-6">
@@ -279,6 +292,22 @@ export default async function OfferDetailPage({
             <p className="text-sm text-[var(--color-muted-foreground)]">
               No compliance check yet. Run one to surface claim risks and safe
               framings.
+            </p>
+          )}
+        </div>
+      )}
+      {activeTab === 'deep-brief' && (
+        <div className="flex flex-col gap-6">
+          <GenerateDeepBriefButton
+            offerId={offer.id}
+            initialStatus={deepBriefRun?.status ?? null}
+            hasBrief={!!deepBrief}
+          />
+          {deepBrief ? (
+            <DeepBriefDisplay payload={deepBrief.payload} />
+          ) : (
+            <p className="text-sm text-[var(--color-muted-foreground)]">
+              No deep brief yet. Generate one to get a full marketing brief for this offer.
             </p>
           )}
         </div>
