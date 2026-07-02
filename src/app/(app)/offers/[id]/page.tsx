@@ -3,6 +3,9 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { CreateCampaignButton } from '@/components/campaigns/CreateCampaignButton'
+import { CampaignView } from '@/components/campaign-view/CampaignView'
+import { AvatarDisplay } from '@/components/avatar-builder/AvatarDisplay'
+import { GenerateAvatarButton } from '@/components/avatar-builder/GenerateAvatarButton'
 import { DeepBriefDisplay } from '@/components/deep-brief/DeepBriefDisplay'
 import { GenerateDeepBriefButton } from '@/components/deep-brief/GenerateDeepBriefButton'
 import { AdCopyView } from '@/components/offers/AdCopyView'
@@ -48,6 +51,7 @@ const TAB_KEYS = [
   'deep-brief',
   'avatar',
   'spy',
+  'campaign',
 ] as const
 
 export default async function OfferDetailPage({
@@ -81,7 +85,8 @@ export default async function OfferDetailPage({
     tab === 'compliance' ||
     tab === 'deep-brief' ||
     tab === 'avatar' ||
-    tab === 'spy'
+    tab === 'spy' ||
+    tab === 'campaign'
       ? tab
       : 'overview'
   const isAdmin = await isCurrentUserAdmin()
@@ -96,6 +101,7 @@ export default async function OfferDetailPage({
     'deep-brief': 'Deep Brief',
     avatar: 'Avatar',
     spy: 'Spy',
+    campaign: 'Campaign',
   }
 
   const facts = activeTab === 'overview' ? await getVerifiedFacts(id) : []
@@ -344,6 +350,9 @@ export default async function OfferDetailPage({
             <SpyAnalysisDisplay payload={spyAnalysis.payload} />
           )}
         </div>
+      )}
+      {activeTab === 'campaign' && (
+        <CampaignView offerId={offer.id} offerName={offer.name} />
       )}
     </div>
   )
