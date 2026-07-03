@@ -19,6 +19,7 @@ export function LoginForm() {
   const t = useTranslations('auth')
   const searchParams = useSearchParams()
   const urlError = searchParams.get('error')
+  const next = searchParams.get('next') ?? undefined
   const [isPending, startTransition] = useTransition()
   const [serverMessage, setServerMessage] = useState<ServerMessage | null>(
     urlError ? { type: 'error', text: urlError } : null
@@ -37,7 +38,7 @@ export function LoginForm() {
   function onSubmit(values: LoginInput) {
     setServerMessage(null)
     startTransition(async () => {
-      const result = await login(values)
+      const result = await login(values, next)
       if (result && 'error' in result) {
         setServerMessage({ type: 'error', text: result.error })
       }

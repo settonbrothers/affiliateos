@@ -25,7 +25,10 @@ async function siteOrigin() {
   return h.get('origin') ?? process.env.NEXT_PUBLIC_SITE_URL ?? ''
 }
 
-export async function login(input: LoginInput): Promise<AuthActionResult> {
+export async function login(
+  input: LoginInput,
+  next?: string
+): Promise<AuthActionResult> {
   const parsed = LoginSchema.safeParse(input)
   if (!parsed.success) return { error: 'Invalid email or password.' }
 
@@ -33,7 +36,12 @@ export async function login(input: LoginInput): Promise<AuthActionResult> {
   const { error } = await supabase.auth.signInWithPassword(parsed.data)
   if (error) return { error: error.message }
 
-  redirect('/offers')
+  // Validate `next`: must start with a single `/` (not `//` which could open-redirect).
+  const destination =
+    next && next.startsWith('/') && !next.startsWith('//')
+      ? next
+      : '/offers'
+  redirect(destination)
 }
 
 export async function signup(input: SignupInput): Promise<AuthActionResult> {
@@ -132,6 +140,7 @@ export async function sendMagicLink(
 
 export async function signOut(): Promise<void> {
   const supabase = await createClient()
-  await supabase.auth.signOut()
+  const { error } = await supabase.auth.signOut()
+  if (error) console.error('[auth] signOut error:', error)
   redirect('/login')
 }

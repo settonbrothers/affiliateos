@@ -1,3 +1,5 @@
+import Anthropic from 'npm:@anthropic-ai/sdk@^0.32.0'
+
 import { callAnthropicWithTool } from '../anthropicJson.ts'
 import { assertNotPaused } from '../killSwitch.ts'
 import { loadActivePrompt } from '../loadActivePrompt.ts'
@@ -12,8 +14,8 @@ const TOOL_DESCRIPTION =
 
 export type SpyAnalysisInput = {
   offer: { id: string; name: string; vertical?: string | null }
-  rawInput: string  // the pasted text or fetched URL content
-  inputType: 'text' | 'url' | 'batch'
+  rawInput: string  // text/url/batch content OR base64 image data for image type
+  inputType: 'text' | 'url' | 'batch' | 'image'
 }
 
 export type OrchestratorResult = {
@@ -70,6 +72,92 @@ export async function runSpyAnalysis(
   }
 
   const systemPrompt = await loadActivePrompt('SpyAnalysisOrchestrator')
+
+  // If inputType is 'image', use the Anthropic vision API with base64 image content.
+  if (input.inputType === 'image') {
+    const apiKey = Deno.env.get('ANTHROPIC_API_KEY')!
+    const anthropic = new Anthropic({ apiKey })
+
+    // Detect media type from the first bytes of the base64 string
+    function detectMediaType(b64: string): 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif' {
+      const prefix = atob(b64.slice(0, 8))
+      if (prefix.startsWith('\x89PNG')) return 'image/png'
+      if (prefix.startsWith('\xFF\xD8')) return 'image/jpeg'
+      if (prefix.startsWith('RIFF')) return 'image/webp'
+      return 'image/png' // fallback
+    }
+
+    const mediaType = detectMediaType(input.rawInput)
+
+    const offerContext = JSON.stringify({
+      offer: { id: input.offer.id, name: input.offer.name, vertical: input.offer.vertical ?? null },
+      input_type: 'image',
+    }, null, 2)
+
+    const { z } = await import('npm:zod@^3.24.0')
+    const { zodToJsonSchema } = await import('npm:zod-to-json-schema@^3.23')
+
+    const inputSchema = zodToJsonSchema(SpyAnalysisResponseSchema, {
+      target: 'jsonSchema7',
+      $refStrategy: 'none',
+    })
+
+    const resp = await anthropic.messages.create({
+      model: MODEL,
+      max_tokens: 3000,
+      tools: [{
+        name: TOOL_NAME,
+        description: TOOL_DESCRIPTION,
+        input_schema: inputSchema as Anthropic.Tool['input_schema'],
+      }],
+      tool_choice: { type: 'tool', name: TOOL_NAME },
+      system: systemPrompt,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: `Analyze this ad screenshot visually. Extract the hook, copy structure, CTA, psychological triggers, and all other fields.\n\nContext:\n${offerContext}`,
+            },
+            {
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: mediaType,
+                data: input.rawInput,
+              },
+            },
+          ],
+        },
+      ],
+    })
+
+    const toolUse = resp.content.find((c) => c.type === 'tool_use')
+    if (!toolUse || toolUse.type !== 'tool_use') {
+      throw new Error('No tool_use block in Anthropic vision response')
+    }
+
+    const parsed = SpyAnalysisResponseSchema.safeParse(toolUse.input)
+    if (!parsed.success) {
+      throw new Error(`Vision response Zod validation failed: ${parsed.error.message}`)
+    }
+
+    const pricing = { input: 3, output: 15 } // claude-sonnet-4-6 per 1M tokens
+    const costUsd =
+      (resp.usage.input_tokens / 1_000_000) * pricing.input +
+      (resp.usage.output_tokens / 1_000_000) * pricing.output
+
+    return {
+      output: parsed.data as unknown as Record<string, unknown>,
+      usage: {
+        input_tokens: resp.usage.input_tokens,
+        output_tokens: resp.usage.output_tokens,
+        cost_usd: costUsd,
+      },
+      mode: 'real',
+    }
+  }
 
   // If inputType is 'url', attempt to fetch the page content and use it instead.
   let contentToAnalyze = input.rawInput

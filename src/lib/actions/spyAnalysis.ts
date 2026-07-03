@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function triggerSpyAnalysis(
   offerId: string,
-  inputType: 'text' | 'url' | 'batch',
+  inputType: 'text' | 'url' | 'batch' | 'image',
   rawInput: string
 ): Promise<{ run_id: string } | { error: string }> {
   const supabase = await createClient()

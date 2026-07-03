@@ -54,6 +54,12 @@ export async function getCampaignViewData(offerId: string): Promise<CampaignView
       .maybeSingle(),
   ])
 
+  if (deepBriefRes.error) console.error('campaignView query error:', deepBriefRes.error)
+  if (avatarRes.error) console.error('campaignView query error:', avatarRes.error)
+  if (spyRes.error) console.error('campaignView query error:', spyRes.error)
+  if (adCopyRes.error) console.error('campaignView query error:', adCopyRes.error)
+  if (creativesRes.error) console.error('campaignView query error:', creativesRes.error)
+
   return {
     deepBrief: (deepBriefRes.data?.payload as Record<string, unknown> | undefined) ?? null,
     avatar: (avatarRes.data?.payload as Record<string, unknown> | undefined) ?? null,

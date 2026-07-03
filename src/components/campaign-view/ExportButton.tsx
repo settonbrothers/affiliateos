@@ -15,11 +15,11 @@ export function ExportButton({ offerId }: { offerId: string }) {
         alert(`Export failed: ${result.error}`)
         return
       }
-      const blob = new Blob([result.data], { type: 'application/json' })
+      const blob = new Blob([result.data], { type: 'text/plain;charset=utf-8' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `campaign-bundle-${offerId}.json`
+      a.download = result.filename
       a.click()
       setTimeout(() => URL.revokeObjectURL(url), 100)
     } finally {
@@ -28,12 +28,15 @@ export function ExportButton({ offerId }: { offerId: string }) {
   }
 
   return (
-    <button
-      onClick={handleExport}
-      disabled={loading}
-      className="rounded-md bg-[var(--color-foreground)] px-4 py-2 text-sm font-medium text-[var(--color-background)] disabled:opacity-50"
-    >
-      {loading ? 'מוריד...' : 'הורד Campaign Bundle'}
-    </button>
+    <div className="flex flex-col items-start gap-1">
+      <button
+        onClick={handleExport}
+        disabled={loading}
+        className="rounded-md bg-[var(--color-foreground)] px-4 py-2 text-sm font-medium text-[var(--color-background)] disabled:opacity-50"
+      >
+        {loading ? 'מוריד...' : 'הורד Campaign Export'}
+      </button>
+      <span className="text-xs text-[var(--color-muted-foreground)]">PDF — coming soon</span>
+    </div>
   )
 }

@@ -25,7 +25,7 @@ export async function createOffer(
   input: OfferCreateInput
 ): Promise<{ error: string } | void> {
   const parsed = OfferCreateSchema.safeParse(input)
-  if (!parsed.success) return { error: 'Invalid offer details.' }
+  if (!parsed.success) return { error: parsed.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('; ') }
 
   const supabase = await createClient()
   const {
@@ -75,7 +75,7 @@ export async function updateOffer(
   input: OfferUpdateInput
 ): Promise<{ error: string } | void> {
   const parsed = OfferUpdateSchema.safeParse(input)
-  if (!parsed.success) return { error: 'Invalid offer details.' }
+  if (!parsed.success) return { error: parsed.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('; ') }
 
   const supabase = await createClient()
   const {

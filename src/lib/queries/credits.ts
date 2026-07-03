@@ -7,12 +7,13 @@ export async function getCurrentWorkspaceId(): Promise<string | null> {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return null
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('workspace_members')
     .select('workspace_id')
     .eq('user_id', user.id)
     .limit(1)
     .maybeSingle()
+  if (error) console.error('[queries/credits] DB error:', error)
   return data?.workspace_id ?? null
 }
 
@@ -60,13 +61,14 @@ export async function getLedger(
   limit = 50
 ): Promise<LedgerEntry[]> {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('credit_ledger')
     .select('id, entry_type, amount, action, reason, created_at')
     .eq('workspace_id', workspaceId)
     .order('created_at', { ascending: false })
     .limit(limit)
     .returns<LedgerEntry[]>()
+  if (error) console.error('[queries/credits] DB error:', error)
   return data ?? []
 }
 
@@ -74,9 +76,10 @@ export async function getPricing(): Promise<
   Array<{ action: string; credits: number }>
 > {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('usage_pricing_rules')
     .select('action, credits')
     .order('action')
+  if (error) console.error('[queries/credits] DB error:', error)
   return data ?? []
 }

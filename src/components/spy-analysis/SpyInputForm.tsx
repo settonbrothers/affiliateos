@@ -10,15 +10,16 @@ import type { AiRunStatus } from '@/types/db'
 
 const TERMINAL: AiRunStatus[] = ['success', 'failed', 'partial']
 
-type InputTab = 'text' | 'url' | 'batch'
+type InputTab = 'text' | 'url' | 'batch' | 'image'
 
 const TAB_LABELS: Record<InputTab, string> = {
   text: 'Paste Text',
   url: 'Enter URL',
   batch: 'Batch (multiple)',
+  image: 'תמונה',
 }
 
-const PLACEHOLDERS: Record<InputTab, string> = {
+const PLACEHOLDERS: Record<Exclude<InputTab, 'image'>, string> = {
   text: 'Paste ad copy or landing page text here…',
   url: 'https://example.com/landing-page',
   batch: 'Paste multiple ads or landing pages here, separated by "---"…',
@@ -36,6 +37,8 @@ export function SpyInputForm({
   const [textInput, setTextInput] = useState('')
   const [urlInput, setUrlInput] = useState('')
   const [batchInput, setBatchInput] = useState('')
+  const [imageBase64, setImageBase64] = useState<string | null>(null)
+  const [imageName, setImageName] = useState<string | null>(null)
   const [status, setStatus] = useState<AiRunStatus | 'idle'>('idle')
   const [runId, setRunId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -86,8 +89,38 @@ export function SpyInputForm({
     }
   }, [runId, isRunning, router])
 
+  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImageName(file.name)
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string
+      // Strip the "data:<mime>;base64," prefix — we only want the raw base64
+      const base64 = dataUrl.split(',')[1] ?? null
+      setImageBase64(base64)
+    }
+    reader.readAsDataURL(file)
+  }
+
   async function onSubmit() {
     setError(null)
+
+    if (activeTab === 'image') {
+      if (!imageBase64) {
+        setError('Please upload an image before submitting.')
+        return
+      }
+      setStatus('running')
+      const result = await triggerSpyAnalysis(offerId, 'image', imageBase64)
+      if ('error' in result) {
+        setError(result.error)
+        setStatus('idle')
+        return
+      }
+      setRunId(result.run_id)
+      return
+    }
 
     const rawInput =
       activeTab === 'text'
@@ -145,6 +178,30 @@ export function SpyInputForm({
           disabled={isRunning}
           className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm placeholder:text-[var(--color-muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)] disabled:opacity-50"
         />
+      ) : activeTab === 'image' ? (
+        <div className="flex flex-col gap-2">
+          <label className="flex cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-[var(--color-border)] p-6 text-sm text-[var(--color-muted-foreground)] hover:border-[var(--color-foreground)] transition-colors">
+            <span className="mb-1 font-medium">
+              {imageName ? imageName : 'לחץ להעלאת צילום מסך של מודעה'}
+            </span>
+            <span className="text-xs">PNG, JPG, WEBP</span>
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              disabled={isRunning}
+              onChange={handleImageChange}
+              className="sr-only"
+            />
+          </label>
+          {imageBase64 && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={`data:image/png;base64,${imageBase64}`}
+              alt="preview"
+              className="max-h-48 rounded-md object-contain border border-[var(--color-border)]"
+            />
+          )}
+        </div>
       ) : (
         <textarea
           value={activeTab === 'text' ? textInput : batchInput}

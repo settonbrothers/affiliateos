@@ -15,7 +15,7 @@ export async function saveOnboarding(
   input: OnboardingInput
 ): Promise<{ error: string } | void> {
   const parsed = OnboardingSchema.safeParse(input)
-  if (!parsed.success) return { error: 'Some answers were invalid.' }
+  if (!parsed.success) return { error: parsed.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('; ') }
 
   const supabase = await createClient()
   const {

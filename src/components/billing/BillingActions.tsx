@@ -7,6 +7,7 @@ import {
   createCheckoutSession,
   createPortalSession,
 } from '@/lib/actions/stripe'
+import { CREDIT_PACK, PRO_PLAN } from '@/lib/stripe/products'
 
 export function BillingActions({
   configured,
@@ -43,14 +44,14 @@ export function BillingActions({
           disabled={isPending}
           onClick={() => go(() => createCheckoutSession('subscription'))}
         >
-          Subscribe — Pro ($50/mo, 50 credits)
+          Subscribe — {PRO_PLAN.name} (${PRO_PLAN.amount_cents / 100}/{PRO_PLAN.interval}, {PRO_PLAN.credits_per_period} credits)
         </Button>
         <Button
           variant="outline"
           disabled={isPending}
           onClick={() => go(() => createCheckoutSession('credits'))}
         >
-          Buy 30 credits ($20)
+          Buy {CREDIT_PACK.credits} credits (${CREDIT_PACK.amount_cents / 100})
         </Button>
         {hasCustomer && (
           <Button

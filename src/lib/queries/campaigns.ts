@@ -14,19 +14,20 @@ export type CampaignRow = {
 
 export async function listCampaigns(): Promise<CampaignRow[]> {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('campaigns')
     .select(
       'id, name, status, channel, geo, offer_id, test_kit_id, created_at, offers(name)'
     )
     .order('created_at', { ascending: false })
     .returns<CampaignRow[]>()
+  if (error) console.error('[queries/campaigns] DB error:', error)
   return data ?? []
 }
 
 export async function getCampaign(id: string): Promise<CampaignRow | null> {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('campaigns')
     .select(
       'id, name, status, channel, geo, offer_id, test_kit_id, created_at, offers(name)'
@@ -34,6 +35,7 @@ export async function getCampaign(id: string): Promise<CampaignRow | null> {
     .eq('id', id)
     .maybeSingle()
     .returns<CampaignRow>()
+  if (error) console.error('[queries/campaigns] DB error:', error)
   return data ?? null
 }
 
@@ -51,13 +53,14 @@ export async function getCampaignResults(
   campaignId: string
 ): Promise<CampaignResultsRow> {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('campaign_results')
     .select(
       'spend_usd, impressions, clicks, landing_views, conversions, revenue_usd, days_running'
     )
     .eq('campaign_id', campaignId)
     .maybeSingle()
+  if (error) console.error('[queries/campaigns] DB error:', error)
   return (data as CampaignResultsRow) ?? null
 }
 
@@ -73,12 +76,13 @@ export async function getLatestDiagnosis(
 } | null> {
   const supabase = await createClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data } = await (supabase as any)
+  const { data, error } = await (supabase as any)
     .from('result_diagnoses')
     .select('id, payload, created_at, creative_analysis, winning_hooks, winners_added_to_library')
     .eq('campaign_id', campaignId)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
+  if (error) console.error('[queries/campaigns] DB error:', error)
   return data ?? null
 }

@@ -3,41 +3,45 @@ import type { AiRun, Offer, Vertical } from '@/types/db'
 
 export async function listVerticals(): Promise<Vertical[]> {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('verticals')
     .select('*')
     .order('display_order')
+  if (error) console.error('[queries/offers] DB error:', error)
   return (data ?? []) as Vertical[]
 }
 
 export async function listOffers(): Promise<Offer[]> {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('offers')
     .select('*')
     .order('created_at', { ascending: false })
+  if (error) console.error('[queries/offers] DB error:', error)
   return (data ?? []) as Offer[]
 }
 
 export async function getOfferById(id: string): Promise<Offer | null> {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('offers')
     .select('*')
     .eq('id', id)
     .maybeSingle()
+  if (error) console.error('[queries/offers] DB error:', error)
   return (data as Offer | null) ?? null
 }
 
 export async function getLatestRun(offerId: string): Promise<AiRun | null> {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('ai_runs')
     .select('*')
     .eq('offer_id', offerId)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
+  if (error) console.error('[queries/offers] DB error:', error)
   return (data as AiRun | null) ?? null
 }
 
@@ -46,7 +50,7 @@ export async function getLatestRunByOrchestrator(
   orchestratorName: string
 ): Promise<AiRun | null> {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('ai_runs')
     .select('*')
     .eq('offer_id', offerId)
@@ -54,6 +58,7 @@ export async function getLatestRunByOrchestrator(
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
+  if (error) console.error('[queries/offers] DB error:', error)
   return (data as AiRun | null) ?? null
 }
 
@@ -65,13 +70,14 @@ export type LatestTestKit = {
 
 export async function getLatestTestKit(offerId: string): Promise<LatestTestKit> {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('test_kits')
     .select('id, payload, created_at')
     .eq('offer_id', offerId)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
+  if (error) console.error('[queries/offers] DB error:', error)
   return (data as LatestTestKit) ?? null
 }
 
@@ -83,13 +89,14 @@ export type LatestAdCopy = {
 
 export async function getLatestAdCopy(offerId: string): Promise<LatestAdCopy> {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('ad_copy_generations')
     .select('id, payload, created_at')
     .eq('offer_id', offerId)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
+  if (error) console.error('[queries/offers] DB error:', error)
   return (data as LatestAdCopy) ?? null
 }
 
@@ -106,7 +113,7 @@ export async function getLatestCompliance(
   offerId: string
 ): Promise<LatestCompliance> {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('offer_compliance_warnings')
     .select(
       'id, overall_risk_level, compliance_score, suggested_verdict_cap, payload, created_at'
@@ -115,6 +122,7 @@ export async function getLatestCompliance(
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
+  if (error) console.error('[queries/offers] DB error:', error)
   return (data as LatestCompliance) ?? null
 }
 
@@ -134,13 +142,14 @@ export async function getVerifiedFacts(
   offerId: string
 ): Promise<VerifiedFact[]> {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('extracted_facts')
     .select(
       'id, fact_type, fact_value, source_quote, confidence_score, source_documents(url)'
     )
     .eq('offer_id', offerId)
     .eq('status', 'verified')
+  if (error) console.error('[queries/offers] DB error:', error)
   return (data ?? []) as VerifiedFact[]
 }
 
@@ -152,13 +161,14 @@ export type LatestDeepBrief = {
 
 export async function getLatestDeepBrief(offerId: string): Promise<LatestDeepBrief> {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('offer_deep_briefs')
     .select('id, payload, created_at')
     .eq('offer_id', offerId)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
+  if (error) console.error('[queries/offers] DB error:', error)
   return (data as LatestDeepBrief) ?? null
 }
 
@@ -170,13 +180,14 @@ export type LatestAvatar = {
 
 export async function getLatestAvatar(offerId: string): Promise<LatestAvatar> {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('offer_avatars')
     .select('id, payload, created_at')
     .eq('offer_id', offerId)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
+  if (error) console.error('[queries/offers] DB error:', error)
   return (data as LatestAvatar) ?? null
 }
 
@@ -190,13 +201,14 @@ export type LatestSpyAnalysis = {
 
 export async function getLatestSpyAnalysis(offerId: string): Promise<LatestSpyAnalysis> {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('spy_analyses')
     .select('id, payload, input_type, raw_input, created_at')
     .eq('offer_id', offerId)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
+  if (error) console.error('[queries/offers] DB error:', error)
   return (data as LatestSpyAnalysis) ?? null
 }
 
@@ -208,13 +220,14 @@ export type LatestCreatives = {
 
 export async function getLatestCreatives(offerId: string): Promise<LatestCreatives> {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('offer_creatives')
     .select('id, payload, created_at')
     .eq('offer_id', offerId)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
+  if (error) console.error('[queries/offers] DB error:', error)
   return (data as LatestCreatives) ?? null
 }
 
@@ -236,11 +249,12 @@ export type OfferNetworkData = {
 export async function getOfferNetworkData(offerId: string): Promise<OfferNetworkData[]> {
   const supabase = await createClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data } = await (supabase as any)
+  const { data, error } = await (supabase as any)
     .from('offer_network_data')
     .select('*')
     .eq('offer_id', offerId)
     .order('is_recommended', { ascending: false })
+  if (error) console.error('[queries/offers] DB error:', error)
   return (data ?? []) as OfferNetworkData[]
 }
 

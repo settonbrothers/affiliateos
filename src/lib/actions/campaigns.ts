@@ -50,7 +50,7 @@ export async function saveCampaignResults(
   input: CampaignResultsInput
 ): Promise<{ error: string } | void> {
   const parsed = CampaignResultsSchema.safeParse(input)
-  if (!parsed.success) return { error: 'Check the numbers — all must be ≥ 0.' }
+  if (!parsed.success) return { error: parsed.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('; ') }
 
   const supabase = await createClient()
   const now = new Date().toISOString()

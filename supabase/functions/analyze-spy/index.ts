@@ -44,8 +44,8 @@ Deno.serve(async (req: Request) => {
     if (!offerId) return jsonResponse({ error: 'offer_id is required' }, 400)
     if (!inputType) return jsonResponse({ error: 'input_type is required' }, 400)
     if (!rawInput) return jsonResponse({ error: 'raw_input is required' }, 400)
-    if (!['text', 'url', 'batch'].includes(inputType)) {
-      return jsonResponse({ error: 'input_type must be one of: text, url, batch' }, 400)
+    if (!['text', 'url', 'batch', 'image'].includes(inputType)) {
+      return jsonResponse({ error: 'input_type must be one of: text, url, batch, image' }, 400)
     }
 
     const admin = getAdminClient()
@@ -95,6 +95,8 @@ Deno.serve(async (req: Request) => {
       inputPayload: {
         offer_id: offerId,
         input_type: inputType,
+        // Omit raw_input for image type to avoid storing large base64 blobs
+        ...(inputType !== 'image' ? { raw_input_preview: rawInput.slice(0, 200) } : {}),
       },
       userId: user.id,
       workspaceId: offer.workspace_id ?? undefined,
@@ -118,7 +120,7 @@ Deno.serve(async (req: Request) => {
               vertical: (offer as { vertical?: string | null }).vertical ?? null,
             },
             rawInput,
-            inputType: inputType as 'text' | 'url' | 'batch',
+            inputType: inputType as 'text' | 'url' | 'batch' | 'image',
           })
 
           const traceId = await createTrace({
