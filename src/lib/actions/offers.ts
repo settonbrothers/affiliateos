@@ -78,6 +78,31 @@ export async function updateOffer(
   if (!parsed.success) return { error: 'Invalid offer details.' }
 
   const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated.' }
+
+  // Authorize: user must own the offer (via workspace membership) or be admin.
+  const { data: offer } = await supabase
+    .from('offers')
+    .select('workspace_id, created_by_user_id')
+    .eq('id', offerId)
+    .maybeSingle()
+  if (!offer) return { error: 'Offer not found.' }
+
+  const isAdmin = await isCurrentUserAdmin()
+  if (!isAdmin) {
+    if (!offer.workspace_id) return { error: 'Unauthorized.' }
+    const { data: membership } = await supabase
+      .from('workspace_members')
+      .select('workspace_id')
+      .eq('user_id', user.id)
+      .eq('workspace_id', offer.workspace_id)
+      .maybeSingle()
+    if (!membership) return { error: 'Unauthorized.' }
+  }
+
   const { error } = await supabase
     .from('offers')
     .update({
@@ -100,6 +125,31 @@ export async function deleteOffer(
   offerId: string
 ): Promise<{ error: string } | void> {
   const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated.' }
+
+  // Authorize: user must own the offer (via workspace membership) or be admin.
+  const { data: offer } = await supabase
+    .from('offers')
+    .select('workspace_id, created_by_user_id')
+    .eq('id', offerId)
+    .maybeSingle()
+  if (!offer) return { error: 'Offer not found.' }
+
+  const isAdmin = await isCurrentUserAdmin()
+  if (!isAdmin) {
+    if (!offer.workspace_id) return { error: 'Unauthorized.' }
+    const { data: membership } = await supabase
+      .from('workspace_members')
+      .select('workspace_id')
+      .eq('user_id', user.id)
+      .eq('workspace_id', offer.workspace_id)
+      .maybeSingle()
+    if (!membership) return { error: 'Unauthorized.' }
+  }
+
   const { error } = await supabase.from('offers').delete().eq('id', offerId)
   if (error) return { error: error.message }
 

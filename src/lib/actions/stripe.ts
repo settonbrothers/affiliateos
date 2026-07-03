@@ -29,10 +29,13 @@ async function ensureCustomer(
     .maybeSingle()
   if (data?.stripe_customer_id) return data.stripe_customer_id
 
-  const customer = await stripe.customers.create({
-    email,
-    metadata: { workspace_id: workspaceId },
-  })
+  const customer = await stripe.customers.create(
+    {
+      email,
+      metadata: { workspace_id: workspaceId },
+    },
+    { idempotencyKey: `customer-${workspaceId}` }
+  )
   await admin
     .from('stripe_customers')
     .upsert(

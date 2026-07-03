@@ -3,6 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { useForm } from 'react-hook-form'
 
@@ -16,8 +17,12 @@ type ServerMessage = { type: 'error' | 'info'; text: string }
 
 export function LoginForm() {
   const t = useTranslations('auth')
+  const searchParams = useSearchParams()
+  const urlError = searchParams.get('error')
   const [isPending, startTransition] = useTransition()
-  const [serverMessage, setServerMessage] = useState<ServerMessage | null>(null)
+  const [serverMessage, setServerMessage] = useState<ServerMessage | null>(
+    urlError ? { type: 'error', text: urlError } : null
+  )
 
   const {
     register,

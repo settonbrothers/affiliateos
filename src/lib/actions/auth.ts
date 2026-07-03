@@ -84,10 +84,20 @@ export async function signup(input: SignupInput): Promise<AuthActionResult> {
       workspace_id: workspaceId,
       credits_granted: workspaceId ? inviteCode.bonus_credits : 0,
     })
-    await admin
+    // Atomic increment: only updates if uses hasn't changed since we read it
+    // (optimistic locking). This prevents the race where two concurrent signups
+    // both read the same uses count and both succeed past the max_uses check.
+    const { data: updatedRows } = await admin
       .from('invite_codes')
       .update({ uses: inviteCode.uses + 1 })
       .eq('id', inviteCode.id)
+      .eq('uses', inviteCode.uses)
+      .lt('uses', inviteCode.max_uses)
+      .select('id')
+    if (!updatedRows || updatedRows.length === 0) {
+      // Another signup consumed the last slot between our read and this write.
+      return { error: 'Invite code is no longer valid. Please request a new one.' }
+    }
   }
 
   // Welcome email (best-effort; no-ops without RESEND_API_KEY).

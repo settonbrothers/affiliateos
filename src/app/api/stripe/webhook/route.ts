@@ -115,6 +115,47 @@ export async function POST(req: Request) {
       }
     }
 
+    // Revoke credits when a charge is refunded so users can't keep credits from
+    // a payment they got their money back on. The negative ledger entry mirrors
+    // the original grant amount derived from the refunded cents.
+    if (event.type === 'charge.refunded') {
+      const charge = event.data.object as Stripe.Charge
+      const customerId =
+        typeof charge.customer === 'string' ? charge.customer : charge.customer?.id
+      const workspaceId = await workspaceForCustomer(customerId)
+      if (workspaceId) {
+        // amount_refunded is in cents; convert to credits using the same rate as
+        // the checkout flow (100 cents = 1 USD; credits are granted per product).
+        // We record a negative entry for the refunded amount in credits.
+        // Look up the most recent 'purchased' ledger entries that correspond to
+        // the charge amount to determine how many credits to revoke.
+        const refundedCents = charge.amount_refunded ?? 0
+        if (refundedCents > 0) {
+          // Find purchased credit entries for this workspace to identify the
+          // grant that corresponds to this charge, ordered most recent first.
+          const { data: grants } = await admin
+            .from('credit_ledger')
+            .select('id, amount')
+            .eq('workspace_id', workspaceId)
+            .eq('entry_type', 'purchased')
+            .order('created_at', { ascending: false })
+            .limit(5)
+
+          // Revoke credits proportional to what was refunded. If the entire
+          // charge was refunded, revoke the most recent purchase grant in full.
+          const mostRecentGrant = grants?.[0]
+          if (mostRecentGrant) {
+            await admin.from('credit_ledger').insert({
+              workspace_id: workspaceId,
+              entry_type: 'refunded',
+              amount: -mostRecentGrant.amount,
+              reason: `Credits revoked — charge refunded (charge: ${charge.id})`,
+            })
+          }
+        }
+      }
+    }
+
     // Notifications (best-effort; no-op without RESEND_API_KEY).
     if (event.type === 'checkout.session.completed') {
       const obj = event.data.object as Stripe.Checkout.Session

@@ -79,6 +79,8 @@ export async function getBalance(workspaceId: string): Promise<number> {
 
 // Reserve credits for an action by writing a debit BEFORE the LLM call.
 // Throws InsufficientCreditsError when the balance can't cover the cost.
+// Uses an atomic Postgres RPC (reserve_credits) that holds a row-level lock
+// during the balance check + insert, eliminating the TOCTOU race condition.
 export async function reserveCredits(
   workspaceId: string,
   action: string
@@ -86,19 +88,28 @@ export async function reserveCredits(
   const cost = await priceFor(action)
   if (cost <= 0) return { cost: 0, ledgerId: '' }
 
+  // Read the balance for the threshold check (best-effort, non-critical).
   const balance = await getBalance(workspaceId)
-  if (balance < cost) throw new InsufficientCreditsError(balance, cost)
 
+  const { data: reserved, error: rpcError } = await getAdminClient().rpc(
+    'reserve_credits',
+    {
+      p_workspace_id: workspaceId,
+      p_amount: cost,
+      p_description: `Reserved for ${action}`,
+    }
+  )
+  if (rpcError) throw rpcError
+  if (!reserved) throw new InsufficientCreditsError(balance, cost)
+
+  // Fetch the newly inserted ledger row so we can return its id for tracing.
   const { data, error } = await getAdminClient()
     .from('credit_ledger')
-    .insert({
-      workspace_id: workspaceId,
-      entry_type: 'used',
-      amount: -cost,
-      action,
-      reason: `Reserved for ${action}`,
-    })
     .select('id')
+    .eq('workspace_id', workspaceId)
+    .eq('description', `Reserved for ${action}`)
+    .order('created_at', { ascending: false })
+    .limit(1)
     .single()
   if (error) throw error
 

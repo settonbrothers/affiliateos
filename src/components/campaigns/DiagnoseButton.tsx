@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { triggerDiagnose } from '@/lib/actions/campaigns'
@@ -27,6 +27,8 @@ export function DiagnoseButton({
   const [error, setError] = useState<string | null>(null)
 
   const isRunning = status === 'pending' || status === 'running'
+  const statusRef = useRef(status)
+  useEffect(() => { statusRef.current = status }, [status])
 
   useEffect(() => {
     if (!runId || !isRunning) return
@@ -49,8 +51,23 @@ export function DiagnoseButton({
           }
         }
       )
-      .subscribe()
+      .subscribe((subscribeStatus) => {
+        if (subscribeStatus === 'CHANNEL_ERROR' || subscribeStatus === 'TIMED_OUT') {
+          setStatus('failed')
+          setError('Connection lost. Please refresh and try again.')
+        }
+      })
+
+    const timeout = setTimeout(() => {
+      if (statusRef.current === 'running' || statusRef.current === 'pending') {
+        setStatus('failed')
+        setError('Timed out. The generation may still be running — refresh to check.')
+        void supabase.removeChannel(channel)
+      }
+    }, 90_000)
+
     return () => {
+      clearTimeout(timeout)
       void supabase.removeChannel(channel)
     }
   }, [runId, isRunning, router])

@@ -59,9 +59,24 @@ export function useAiRunStatus(
           if (TERMINAL.includes(next)) resolve(next)
         }
       )
-      .subscribe()
+      .subscribe((subscribeStatus) => {
+        if (subscribeStatus === 'CHANNEL_ERROR' || subscribeStatus === 'TIMED_OUT') {
+          setStatus('idle')
+          setError('Connection lost. Please refresh and try again.')
+        }
+      })
 
     const startedAt = Date.now()
+
+    // 90-second timeout fallback for the realtime channel.
+    const realtimeTimeout = setTimeout(() => {
+      if (!resolved) {
+        resolved = true
+        setStatus('idle')
+        setError('Timed out. The generation may still be running — refresh to check.')
+        void supabase.removeChannel(channel)
+      }
+    }, 90_000)
 
     const poll = setInterval(async () => {
       if (resolved) return
@@ -84,6 +99,7 @@ export function useAiRunStatus(
     }, POLL_MS)
 
     return () => {
+      clearTimeout(realtimeTimeout)
       clearInterval(poll)
       void supabase.removeChannel(channel)
     }
