@@ -40,6 +40,7 @@ Deno.serve(async (req: Request) => {
     const body = (await req.json().catch(() => ({}))) as {
       campaign_id?: string
       creative_input?: string
+      images?: string[]
     }
     const campaignId = body.campaign_id
     if (!campaignId) return jsonResponse({ error: 'campaign_id is required' }, 400)
@@ -54,8 +55,8 @@ Deno.serve(async (req: Request) => {
       .single()
     if (cErr || !campaign) return jsonResponse({ error: 'Campaign not found' }, 404)
 
-    // ── V2 flow: creative input analysis ─────────────────────────────────────
-    if (body.creative_input) {
+    // ── V2 flow: creative input analysis (text or images) ────────────────────
+    if (body.creative_input || (body.images && body.images.length > 0)) {
       try {
         await assertNotPaused('DiagnosisV2Orchestrator')
       } catch (err) {
@@ -121,11 +122,12 @@ Deno.serve(async (req: Request) => {
       await linkCreditToRun(creditHold, runId)
 
       // Record the creative input for traceability
+      const isImageInput = !!(body.images && body.images.length > 0)
       await admin.from('diagnose_creative_inputs').insert({
         campaign_id: campaignId,
         workspace_id: campaign.workspace_id ?? null,
-        raw_input: body.creative_input,
-        input_type: 'text',
+        raw_input: isImageInput ? `[${body.images!.length} image(s) uploaded]` : body.creative_input,
+        input_type: isImageInput ? 'image' : 'text',
       })
 
       EdgeRuntime.waitUntil(
@@ -138,7 +140,8 @@ Deno.serve(async (req: Request) => {
                 name: campaign.name,
                 channel: campaign.channel,
               },
-              rawCreativeInput: body.creative_input!,
+              rawCreativeInput: body.creative_input ?? '',
+              images: body.images,
               metrics,
             })
 

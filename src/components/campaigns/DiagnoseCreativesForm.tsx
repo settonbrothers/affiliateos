@@ -9,10 +9,17 @@ import { createClient } from '@/lib/supabase/client'
 import type { AiRunStatus } from '@/types/db'
 
 const TERMINAL: AiRunStatus[] = ['success', 'failed', 'partial']
+const MAX_IMAGES = 3
+const ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/webp']
+
+type Tab = 'text' | 'images'
 
 export function DiagnoseCreativesForm({ campaignId }: { campaignId: string }) {
   const router = useRouter()
+  const [activeTab, setActiveTab] = useState<Tab>('text')
   const [creativeInput, setCreativeInput] = useState('')
+  const [images, setImages] = useState<File[]>([])
+  const [imagePreviews, setImagePreviews] = useState<string[]>([])
   const [status, setStatus] = useState<AiRunStatus | 'idle'>('idle')
   const [runId, setRunId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -20,6 +27,13 @@ export function DiagnoseCreativesForm({ campaignId }: { campaignId: string }) {
   const isRunning = status === 'pending' || status === 'running'
   const statusRef = useRef(status)
   useEffect(() => { statusRef.current = status }, [status])
+
+  // Generate object URLs for previews; revoke on change
+  useEffect(() => {
+    const urls = images.map((f) => URL.createObjectURL(f))
+    setImagePreviews(urls)
+    return () => { urls.forEach((u) => URL.revokeObjectURL(u)) }
+  }, [images])
 
   useEffect(() => {
     if (!runId || !isRunning) return
@@ -63,13 +77,49 @@ export function DiagnoseCreativesForm({ campaignId }: { campaignId: string }) {
     }
   }, [runId, isRunning, router])
 
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? [])
+    const valid = files.filter((f) => ACCEPTED_TYPES.includes(f.type))
+    setImages((prev) => [...prev, ...valid].slice(0, MAX_IMAGES))
+    // Reset so same file can be re-selected
+    e.target.value = ''
+  }
+
+  function removeImage(index: number) {
+    setImages((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  function readFileAsBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        const result = reader.result as string
+        // Strip the data URL prefix (e.g. "data:image/png;base64,")
+        const base64 = result.split(',')[1] ?? ''
+        resolve(base64)
+      }
+      reader.onerror = () => reject(reader.error)
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const canSubmitText = activeTab === 'text' && creativeInput.trim().length > 0
+  const canSubmitImages = activeTab === 'images' && images.length > 0
+  const canSubmit = !isRunning && (canSubmitText || canSubmitImages)
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!creativeInput.trim()) return
+    if (!canSubmit) return
     setError(null)
     setStatus('running')
     try {
-      const result = await triggerDiagnoseCreatives(campaignId, creativeInput)
+      let result: Awaited<ReturnType<typeof triggerDiagnoseCreatives>>
+      if (activeTab === 'images') {
+        const base64Images = await Promise.all(images.map(readFileAsBase64))
+        result = await triggerDiagnoseCreatives(campaignId, '', base64Images)
+      } else {
+        result = await triggerDiagnoseCreatives(campaignId, creativeInput)
+      }
       if ('error' in result) {
         setError(result.error)
         setStatus('idle')
@@ -84,16 +134,101 @@ export function DiagnoseCreativesForm({ campaignId }: { campaignId: string }) {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3">
-      <textarea
-        value={creativeInput}
-        onChange={(e) => setCreativeInput(e.target.value)}
-        placeholder="הדבק את טקסט המודעות שרצו"
-        rows={8}
-        disabled={isRunning}
-        className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm placeholder:text-[var(--color-muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)] disabled:opacity-50"
-      />
+      {/* Tabs */}
+      <div className="flex gap-1 rounded-md border border-[var(--color-border)] p-1 w-fit">
+        <button
+          type="button"
+          onClick={() => setActiveTab('text')}
+          disabled={isRunning}
+          className={`rounded px-3 py-1 text-sm transition-colors disabled:opacity-50 ${
+            activeTab === 'text'
+              ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)]'
+              : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
+          }`}
+        >
+          טקסט
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('images')}
+          disabled={isRunning}
+          className={`rounded px-3 py-1 text-sm transition-colors disabled:opacity-50 ${
+            activeTab === 'images'
+              ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)]'
+              : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
+          }`}
+        >
+          תמונות
+        </button>
+      </div>
+
+      {/* Text tab */}
+      {activeTab === 'text' && (
+        <textarea
+          value={creativeInput}
+          onChange={(e) => setCreativeInput(e.target.value)}
+          placeholder="הדבק את טקסט המודעות שרצו"
+          rows={8}
+          disabled={isRunning}
+          className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm placeholder:text-[var(--color-muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)] disabled:opacity-50"
+        />
+      )}
+
+      {/* Images tab */}
+      {activeTab === 'images' && (
+        <div className="flex flex-col gap-3">
+          {images.length < MAX_IMAGES && (
+            <label
+              className={`flex flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed border-[var(--color-border)] p-6 text-center cursor-pointer transition-colors hover:border-[var(--color-ring)] ${isRunning ? 'pointer-events-none opacity-50' : ''}`}
+            >
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                multiple
+                disabled={isRunning}
+                onChange={handleFileChange}
+                className="sr-only"
+              />
+              <span className="text-sm text-[var(--color-muted-foreground)]">
+                {`גרור תמונות לכאן או לחץ לבחירה · PNG, JPG, WEBP · עד ${MAX_IMAGES} תמונות`}
+              </span>
+            </label>
+          )}
+
+          {imagePreviews.length > 0 && (
+            <div className="flex flex-wrap gap-3">
+              {imagePreviews.map((src, i) => (
+                <div key={i} className="relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={src}
+                    alt={`Creative ${i + 1}`}
+                    className="h-32 w-32 rounded-md border border-[var(--color-border)] object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(i)}
+                    disabled={isRunning}
+                    aria-label="הסר תמונה"
+                    className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs disabled:opacity-50 hover:bg-red-600"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {images.length >= MAX_IMAGES && (
+            <p className="text-xs text-[var(--color-muted-foreground)]">
+              {`הגעת למקסימום (${MAX_IMAGES} תמונות). הסר תמונה כדי להוסיף אחרת.`}
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="flex items-center gap-3">
-        <Button type="submit" disabled={isRunning || !creativeInput.trim()}>
+        <Button type="submit" disabled={!canSubmit}>
           {isRunning ? 'מנתח קריאייטיבים...' : 'נתח קריאייטיבים'}
         </Button>
         {isRunning && (

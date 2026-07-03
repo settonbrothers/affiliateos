@@ -1,5 +1,7 @@
 // DiagnosisV2Orchestrator — creative analysis + learning loop.
 // DO NOT modify diagnosis.ts — this is the separate V2 orchestrator.
+import Anthropic from 'npm:@anthropic-ai/sdk@^0.32.0'
+
 import { callAnthropicWithTool } from '../anthropicJson.ts'
 import { assertNotPaused } from '../killSwitch.ts'
 import { loadActivePrompt } from '../loadActivePrompt.ts'
@@ -16,6 +18,7 @@ const MAX_TOKENS = 3000
 export type DiagnosisV2Input = {
   campaign: { id: string; name: string; channel?: string | null }
   rawCreativeInput: string
+  images?: string[]  // base64-encoded PNG/JPG/WEBP
   metrics?: {
     ctr?: number
     cpl_usd?: number
@@ -76,6 +79,14 @@ function mockDiagnosisV2(): DiagnosisV2Response {
   }
 }
 
+function detectMediaType(b64: string): 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif' {
+  const prefix = atob(b64.slice(0, 8))
+  if (prefix.startsWith('\x89PNG')) return 'image/png'
+  if (prefix.startsWith('\xFF\xD8')) return 'image/jpeg'
+  if (prefix.startsWith('RIFF')) return 'image/webp'
+  return 'image/png' // fallback
+}
+
 export async function runDiagnosisV2(
   input: DiagnosisV2Input
 ): Promise<DiagnosisV2Result> {
@@ -87,6 +98,83 @@ export async function runDiagnosisV2(
 
   const systemPrompt = await loadActivePrompt('DiagnosisV2Orchestrator')
 
+  // ── Image path: multimodal message with one or more ad creative images ──────
+  if (input.images && input.images.length > 0) {
+    const apiKey = Deno.env.get('ANTHROPIC_API_KEY')!
+    const anthropic = new Anthropic({ apiKey })
+
+    const { zodToJsonSchema } = await import('npm:zod-to-json-schema@^3.23')
+
+    const inputSchema = zodToJsonSchema(DiagnosisV2ResponseSchema, {
+      target: 'jsonSchema7',
+      $refStrategy: 'none',
+    })
+
+    const campaignContext = JSON.stringify({
+      campaign: {
+        id: input.campaign.id,
+        name: input.campaign.name,
+        channel: input.campaign.channel ?? null,
+      },
+      metrics: input.metrics ?? null,
+    }, null, 2)
+
+    // Build a multimodal content array: text instruction + one image block per image
+    const userContent: Anthropic.MessageParam['content'] = [
+      {
+        type: 'text',
+        text: `Analyze these ad creative images visually. For each image, extract the hook, copy structure, CTA, psychological triggers, visual style, and likely performance. Identify winners and losing elements.\n\nContext:\n${campaignContext}`,
+      },
+      ...input.images.map((b64): Anthropic.ImageBlockParam => ({
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: detectMediaType(b64),
+          data: b64,
+        },
+      })),
+    ]
+
+    const resp = await anthropic.messages.create({
+      model: MODEL,
+      max_tokens: MAX_TOKENS,
+      tools: [{
+        name: TOOL_NAME,
+        description: TOOL_DESCRIPTION,
+        input_schema: inputSchema as Anthropic.Tool['input_schema'],
+      }],
+      tool_choice: { type: 'tool', name: TOOL_NAME },
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userContent }],
+    })
+
+    const toolUse = resp.content.find((c) => c.type === 'tool_use')
+    if (!toolUse || toolUse.type !== 'tool_use') {
+      throw new Error('No tool_use block in Anthropic vision response')
+    }
+
+    const parsed = DiagnosisV2ResponseSchema.safeParse(toolUse.input)
+    if (!parsed.success) {
+      throw new Error(`Vision response Zod validation failed: ${parsed.error.message}`)
+    }
+
+    const pricing = { input: 3, output: 15 } // claude-sonnet-4-6 per 1M tokens
+    const costUsd =
+      (resp.usage.input_tokens / 1_000_000) * pricing.input +
+      (resp.usage.output_tokens / 1_000_000) * pricing.output
+
+    return {
+      output: parsed.data,
+      usage: {
+        input_tokens: resp.usage.input_tokens,
+        output_tokens: resp.usage.output_tokens,
+        cost_usd: costUsd,
+      },
+      mode: 'real',
+    }
+  }
+
+  // ── Text path: standard tool-call with ad copy text ──────────────────────
   const metricsSection = input.metrics
     ? JSON.stringify(
         {
