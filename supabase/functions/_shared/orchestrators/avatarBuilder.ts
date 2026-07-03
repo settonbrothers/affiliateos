@@ -19,6 +19,8 @@ export type AvatarBuilderInput = {
     operator_notes?: string | null
     vertical?: string | null
   }
+  deepBriefContext?: Record<string, unknown> | null
+  spyContext?: Record<string, unknown> | null
 }
 
 export type OrchestratorResult = {
@@ -98,6 +100,13 @@ export async function runAvatarBuilder(
         vertical: input.offer.vertical ?? null,
       },
       search_results: searchSummary ?? null,
+      deep_brief: input.deepBriefContext ?? null,
+      spy_analysis: input.spyContext
+        ? {
+            note: 'Competitor ad analysis — use these hooks, angles, and patterns to inform the avatar\'s voice and emotional triggers.',
+            data: input.spyContext,
+          }
+        : null,
     },
     null,
     2

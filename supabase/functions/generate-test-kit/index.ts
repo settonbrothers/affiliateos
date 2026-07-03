@@ -84,6 +84,26 @@ Deno.serve(async (req: Request) => {
       .eq('status', 'verified')
     const facts = factsRows ?? []
 
+    // Fetch deep brief context (optional — non-fatal if missing).
+    const { data: deepBriefRow } = await admin
+      .from('offer_deep_briefs')
+      .select('payload')
+      .eq('offer_id', offerId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    const deepBriefContext = (deepBriefRow?.payload as Record<string, unknown> | null) ?? null
+
+    // Fetch avatar context (optional — non-fatal if missing).
+    const { data: avatarRow } = await admin
+      .from('offer_avatars')
+      .select('payload')
+      .eq('offer_id', offerId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    const avatarContext = (avatarRow?.payload as Record<string, unknown> | null) ?? null
+
     const verticalSlug =
       (offer as unknown as { verticals?: { slug: string } | null }).verticals?.slug ??
       undefined
@@ -129,6 +149,8 @@ Deno.serve(async (req: Request) => {
             facts,
             underwriting: uwRun.output_payload as Record<string, unknown> | undefined,
             operatorNotes: offer.operator_notes,
+            deepBriefContext,
+            avatarContext,
           })
 
           const judgement =

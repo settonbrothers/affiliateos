@@ -2,6 +2,7 @@
 // DO NOT modify diagnosis.ts — this is the separate V2 orchestrator.
 import { callAnthropicWithTool } from '../anthropicJson.ts'
 import { assertNotPaused } from '../killSwitch.ts'
+import { loadActivePrompt } from '../loadActivePrompt.ts'
 import { DiagnosisV2ResponseSchema, type DiagnosisV2Response } from '../types/diagnosisV2.ts'
 
 export { OrchestratorPausedError } from '../killSwitch.ts'
@@ -84,12 +85,7 @@ export async function runDiagnosisV2(
     return { output: mockDiagnosisV2(), mode: 'mock' }
   }
 
-  const systemPrompt = `You are a campaign performance analyst specializing in ad copy effectiveness.
-Analyze the provided ad copy texts for what worked and what didn't.
-For each piece of copy: identify the hook, its type, and assess effectiveness based on copywriting principles.
-Flag as winner if the hook/angle appears to be strong (based on copy quality signals such as specificity, emotional resonance, clarity, and proven framework alignment).
-Give 2-3 actionable next-campaign recommendations based on what you observe.
-Output ONLY via the ${TOOL_NAME} tool — no other text.`
+  const systemPrompt = await loadActivePrompt('DiagnosisV2Orchestrator')
 
   const metricsSection = input.metrics
     ? JSON.stringify(

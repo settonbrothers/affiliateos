@@ -23,7 +23,7 @@ function SectionCard({
 }
 
 function Field({ label, value }: { label: string; value?: unknown }) {
-  if (value === undefined || value === null) return null
+  if (!value) return null
   return (
     <div className="mb-2">
       <p className="text-xs font-medium text-[var(--color-muted-foreground)]">{label}</p>
@@ -169,12 +169,18 @@ export async function CampaignView({
               <ol className="list-decimal pl-4 text-sm text-[var(--color-foreground)]">
                 {ordered.map((hook, i) => {
                   const h = hook as Record<string, unknown>
+                  const isRecommended = h.is_recommended === true
                   return (
                     <li key={i} className="mb-1">
                       <span className="text-xs text-[var(--color-muted-foreground)]">
                         [{String(h.lang ?? '')}]
                       </span>{' '}
                       {String(h.text ?? h.hook ?? JSON.stringify(h))}
+                      {isRecommended && (
+                        <span className="mr-2 inline-block rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
+                          ⭐ מומלץ
+                        </span>
+                      )}
                     </li>
                   )
                 })}

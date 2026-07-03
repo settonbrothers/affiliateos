@@ -55,6 +55,30 @@ export async function AdCopyView({
         </CardContent>
       </Card>
 
+      {/* Hooks — with recommended highlight. */}
+      {p.hooks.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">{t('copyHooksTitle')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ol className="flex flex-col gap-2">
+              {p.hooks.map((h, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm">
+                  <Badge>{h.lang.toUpperCase()}</Badge>
+                  <span>{h.text}</span>
+                  {h.is_recommended && (
+                    <span className="shrink-0 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
+                      ⭐ מומלץ
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Variants — bilingual, each with its Edit-Loop control. */}
       {p.variants.map((v, i) => (
         <Card key={`${v.lang}-${i}`}>
@@ -65,6 +89,11 @@ export async function AdCopyView({
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
+            {v.subheadline && (
+              <p className="text-sm font-medium text-[var(--color-muted-foreground)]">
+                {v.subheadline}
+              </p>
+            )}
             <p
               dir={v.lang === 'he' ? 'rtl' : 'ltr'}
               className="whitespace-pre-wrap text-sm"
@@ -74,6 +103,12 @@ export async function AdCopyView({
             <p className="text-sm text-[var(--color-muted-foreground)]">
               {t('copyHook')}: {v.hook}
             </p>
+            {v.cta_button && (
+              <p className="text-sm">
+                <span className="font-medium text-[var(--color-muted-foreground)]">CTA: </span>
+                <Badge>{v.cta_button}</Badge>
+              </p>
+            )}
             <AdCopyEditor
               generationId={generationId}
               variantLang={v.lang}

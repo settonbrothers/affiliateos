@@ -35,6 +35,7 @@ export const AdCopyHookSchema = z.object({
   text: z.string(),
   angle_index: z.number().int().min(0),
   lang: z.enum(AD_COPY_LANGS),
+  is_recommended: z.boolean().optional(),
 })
 
 // A Facebook ad copy variant in one language.
@@ -42,7 +43,9 @@ export const FacebookAdVariantSchema = z.object({
   lang: z.enum(AD_COPY_LANGS),
   primary_text: z.string(),
   headline: z.string(),
+  subheadline: z.string().optional(),
   hook: z.string(),
+  cta_button: z.string().optional(),
   angle_index: z.number().int().min(0),
 })
 

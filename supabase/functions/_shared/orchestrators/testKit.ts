@@ -20,6 +20,9 @@ type TestKitInput = {
   // is built to execute that verdict, not to re-decide it.
   underwriting?: Record<string, unknown>
   operatorNotes?: string | null
+  // Optional upstream context from the data chain.
+  deepBriefContext?: Record<string, unknown> | null
+  avatarContext?: Record<string, unknown> | null
 }
 
 export type OrchestratorResult = {
@@ -70,6 +73,8 @@ export async function runTestKit(
         confidence: f.confidence_score,
       })),
       operator_notes: operatorNotes,
+      deep_brief: input.deepBriefContext ?? null,
+      avatar: input.avatarContext ?? null,
     },
     null,
     2

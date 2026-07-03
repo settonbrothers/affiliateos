@@ -67,9 +67,9 @@ export function ExecuteCopyButton({
           disabled={isRunning}
           className="rounded-md border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm text-[var(--color-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)] disabled:opacity-50"
         >
-          {COPY_TEMPLATES.map((t) => (
-            <option key={t.value} value={t.value}>
-              {t.label}
+          {COPY_TEMPLATES.map((tmpl) => (
+            <option key={tmpl.value} value={tmpl.value}>
+              {tmpl.label}
             </option>
           ))}
         </select>

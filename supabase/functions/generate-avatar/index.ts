@@ -44,6 +44,26 @@ Deno.serve(async (req: Request) => {
       .single()
     if (offerErr || !offer) return jsonResponse({ error: 'Offer not found' }, 404)
 
+    // Fetch deep brief context (optional — non-fatal if missing).
+    const { data: deepBriefRow } = await admin
+      .from('offer_deep_briefs')
+      .select('payload')
+      .eq('offer_id', offerId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    const deepBriefContext = (deepBriefRow?.payload as Record<string, unknown> | null) ?? null
+
+    // Fetch latest spy analysis context (optional — non-fatal if missing).
+    const { data: spyRow } = await admin
+      .from('spy_analyses')
+      .select('payload')
+      .eq('offer_id', offerId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    const spyContext = (spyRow?.payload as Record<string, unknown> | null) ?? null
+
     // Kill switch — fail fast before opening an ai_runs row.
     try {
       await assertNotPaused(ORCHESTRATOR)
@@ -106,6 +126,8 @@ Deno.serve(async (req: Request) => {
               operator_notes: offer.operator_notes ?? null,
               vertical: (offer as { vertical?: string | null }).vertical ?? null,
             },
+            deepBriefContext,
+            spyContext,
           })
 
           const traceId = await createTrace({
