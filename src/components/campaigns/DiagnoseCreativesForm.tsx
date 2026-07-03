@@ -198,7 +198,7 @@ export function DiagnoseCreativesForm({ campaignId }: { campaignId: string }) {
           {imagePreviews.length > 0 && (
             <div className="flex flex-wrap gap-3">
               {imagePreviews.map((src, i) => (
-                <div key={i} className="relative">
+                <div key={src + '-' + i} className="relative">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={src}

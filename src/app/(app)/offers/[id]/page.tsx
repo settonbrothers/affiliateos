@@ -105,11 +105,11 @@ export default async function OfferDetailPage({
     'test-kit': t('tabTestKit'),
     copy: t('tabCopy'),
     compliance: t('tabCompliance'),
-    'deep-brief': 'Deep Brief',
-    avatar: 'Avatar',
-    spy: 'Spy',
-    creatives: 'Creatives',
-    'campaign-view': 'Campaign View',
+    'deep-brief': t('tabDeepBrief'),
+    avatar: t('tabAvatar'),
+    spy: t('tabSpy'),
+    creatives: t('tabCreatives'),
+    'campaign-view': t('tabCampaignView'),
   }
 
   const facts = activeTab === 'overview' ? await getVerifiedFacts(id) : []

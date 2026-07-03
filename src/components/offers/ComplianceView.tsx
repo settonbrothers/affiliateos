@@ -57,7 +57,7 @@ export function ComplianceView({
       {p.detected_claims.length > 0 ? (
         <div className="flex flex-col gap-3">
           {p.detected_claims.map((c, i) => (
-            <Card key={i}>
+            <Card key={c.claim_type + '-' + i}>
               <CardHeader className="p-4 pb-1">
                 <div className="flex items-start justify-between gap-2">
                   <CardTitle className="text-sm">{c.claim_type}</CardTitle>
@@ -118,7 +118,7 @@ export function ComplianceView({
               <h4 className="font-medium">Required disclaimers</h4>
               <ul className="list-disc pl-4 text-[var(--color-muted-foreground)]">
                 {p.required_disclaimers.map((d, i) => (
-                  <li key={i}>{d}</li>
+                  <li key={d + '-' + i}>{d}</li>
                 ))}
               </ul>
             </div>

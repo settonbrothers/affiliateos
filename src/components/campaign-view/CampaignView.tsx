@@ -125,7 +125,7 @@ export async function CampaignView({
                       </p>
                       <ul className="list-disc pl-4 text-sm text-[var(--color-foreground)]">
                         {winningList.map((item, i) => (
-                          <li key={i}>{String(item)}</li>
+                          <li key={String(item) + '-' + i}>{String(item)}</li>
                         ))}
                       </ul>
                     </div>
@@ -137,7 +137,7 @@ export async function CampaignView({
                       </p>
                       <ul className="list-disc pl-4 text-sm text-[var(--color-foreground)]">
                         {gapsList.map((item, i) => (
-                          <li key={i}>{String(item)}</li>
+                          <li key={String(item) + '-' + i}>{String(item)}</li>
                         ))}
                       </ul>
                     </div>
@@ -171,7 +171,7 @@ export async function CampaignView({
                   const h = hook as Record<string, unknown>
                   const isRecommended = h.is_recommended === true
                   return (
-                    <li key={i} className="mb-1">
+                    <li key={String((hook as Record<string, unknown>).lang ?? '') + '-' + String((hook as Record<string, unknown>).text ?? '').slice(0, 20) + '-' + i} className="mb-1">
                       <span className="text-xs text-[var(--color-muted-foreground)]">
                         [{String(h.lang ?? '')}]
                       </span>{' '}
@@ -249,7 +249,7 @@ export async function CampaignView({
                 {creativeList.map((c, i) => {
                   const creative = c as Record<string, unknown>
                   return (
-                    <div key={i} className="flex flex-col items-center gap-1">
+                    <div key={String(creative.type_label ?? creative.image_url ?? i) + '-' + i} className="flex flex-col items-center gap-1">
                       {!!creative.image_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -282,15 +282,7 @@ export async function CampaignView({
 
       {/* Section 7 — Actions */}
       <SectionCard title="פעולות">
-        <div className="flex flex-wrap gap-3">
-          <ExportButton offerId={offerId} />
-          <button
-            disabled
-            className="cursor-not-allowed rounded-md border border-[var(--color-border)] px-4 py-2 text-sm font-medium text-[var(--color-muted-foreground)] opacity-50"
-          >
-            ייצוא PDF — בקרוב
-          </button>
-        </div>
+        <ExportButton offerId={offerId} />
       </SectionCard>
     </div>
   )

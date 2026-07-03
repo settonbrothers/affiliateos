@@ -97,7 +97,7 @@ export function TestKitView({ payload }: { payload: unknown }) {
       <Section title={`Angles (${p.angles.length})`}>
         <div className="grid gap-3 sm:grid-cols-3">
           {p.angles.map((a, i) => (
-            <Card key={i}>
+            <Card key={a.name + '-' + i}>
               <CardHeader className="p-4 pb-1">
                 <CardTitle className="text-sm">
                   {i}. {a.name}
@@ -117,7 +117,7 @@ export function TestKitView({ payload }: { payload: unknown }) {
       <Section title={`Hooks (${p.hooks.length})`}>
         <ul className="flex flex-col gap-1.5 text-sm">
           {p.hooks.map((h, i) => (
-            <li key={i} className="flex items-baseline gap-2">
+            <li key={h.text.slice(0, 20) + '-' + i} className="flex items-baseline gap-2">
               <Badge>#{h.angle_index}</Badge>
               <span>{h.text}</span>
               <span className="text-xs text-[var(--color-muted-foreground)]">
@@ -131,7 +131,7 @@ export function TestKitView({ payload }: { payload: unknown }) {
       <Section title="Ad copy">
         <div className="grid gap-3 sm:grid-cols-3">
           {p.ad_copy_variants.map((v, i) => (
-            <Card key={i}>
+            <Card key={v.headline.slice(0, 20) + '-' + i}>
               <CardHeader className="p-4 pb-1">
                 <CardTitle className="text-sm">{v.headline}</CardTitle>
               </CardHeader>
@@ -195,7 +195,7 @@ export function TestKitView({ payload }: { payload: unknown }) {
           <p className="font-medium">Compliance</p>
           <ul className="mt-1 list-disc pl-5">
             {p.compliance_warnings.map((w, i) => (
-              <li key={i}>{w}</li>
+              <li key={w.slice(0, 20) + '-' + i}>{w}</li>
             ))}
           </ul>
         </div>

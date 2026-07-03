@@ -68,6 +68,10 @@ export function OnboardingWizard({ verticals }: { verticals: Vertical[] }) {
 
   function finish() {
     setError(null)
+    if (budgetMin && budgetMax && Number(budgetMin) > Number(budgetMax)) {
+      setError('Budget minimum cannot exceed maximum')
+      return
+    }
     const payload: OnboardingInput = {
       experience_level: (experience || undefined) as OnboardingInput['experience_level'],
       cashflow_tolerance: (cashflow || undefined) as OnboardingInput['cashflow_tolerance'],
