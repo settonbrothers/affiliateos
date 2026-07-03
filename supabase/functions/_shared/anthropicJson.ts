@@ -23,7 +23,7 @@ export class AnthropicValidationError extends Error {
 export type CallOptions<T extends ZodTypeAny> = {
   model: string
   systemPrompt: string
-  userMessage: string
+  userMessage: string | unknown[]
   toolName: string
   toolDescription: string
   responseSchema: T
@@ -79,7 +79,7 @@ export async function callAnthropicWithTool<T extends ZodTypeAny>(
         tools: [tool],
         tool_choice: { type: 'tool', name: args.toolName },
         system: args.systemPrompt,
-        messages: [{ role: 'user', content: args.userMessage }],
+        messages: [{ role: 'user', content: args.userMessage as Anthropic.MessageParam['content'] }],
       })
 
       const toolUse = resp.content.find((c) => c.type === 'tool_use')

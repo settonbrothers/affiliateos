@@ -32,8 +32,9 @@ Deno.serve(async (req: Request) => {
   try {
     const user = await requireUser(req)
 
-    const body = (await req.json().catch(() => ({}))) as { offer_id?: string }
+    const body = (await req.json().catch(() => ({}))) as { offer_id?: string; reference_image_base64?: string }
     const offerId = body.offer_id
+    const referenceImageBase64 = body.reference_image_base64 ?? undefined
     if (!offerId) return jsonResponse({ error: 'offer_id is required' }, 400)
 
     const admin = getAdminClient()
@@ -82,6 +83,7 @@ Deno.serve(async (req: Request) => {
       model,
       inputPayload: {
         offer_id: offerId,
+        has_reference_image: !!referenceImageBase64,
       },
       userId: user.id,
       workspaceId: offer.workspace_id ?? undefined,
@@ -144,6 +146,7 @@ Deno.serve(async (req: Request) => {
             },
             avatarContext,
             deepBriefContext,
+            referenceImageBase64,
           })
 
           const traceId = await createTrace({

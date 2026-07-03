@@ -1,8 +1,11 @@
 'use client'
 
+import { useState } from 'react'
+
 import { Button } from '@/components/ui/button'
 import { useAiRunStatus } from '@/hooks/useAiRunStatus'
 import { triggerGenerateCreatives } from '@/lib/actions/creativeEngine'
+import { CreativeReferenceUpload } from './CreativeReferenceUpload'
 
 export function GenerateCreativesButton({
   offerId,
@@ -17,12 +20,13 @@ export function GenerateCreativesButton({
 }) {
   const { status, setStatus, isRunning, setRunId, error, setError } =
     useAiRunStatus(initialStatus, initialRunId)
+  const [referenceImageBase64, setReferenceImageBase64] = useState<string | null>(null)
 
   async function onGenerate() {
     setError(null)
     setStatus('running')
     try {
-      const result = await triggerGenerateCreatives(offerId)
+      const result = await triggerGenerateCreatives(offerId, referenceImageBase64 ?? undefined)
       if ('error' in result) {
         setError(result.error)
         setStatus('idle')
@@ -36,15 +40,18 @@ export function GenerateCreativesButton({
   }
 
   return (
-    <div className="flex flex-col items-start gap-1">
-      <Button onClick={onGenerate} disabled={isRunning}>
-        {isRunning
-          ? 'Generating…'
-          : hasCreatives
-            ? 'Regenerate Creatives'
-            : 'Generate Creatives'}
-      </Button>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+    <div className="flex flex-col items-start gap-3">
+      <CreativeReferenceUpload onImageChange={setReferenceImageBase64} disabled={isRunning} />
+      <div className="flex flex-col items-start gap-1">
+        <Button onClick={onGenerate} disabled={isRunning}>
+          {isRunning
+            ? 'Generating…'
+            : hasCreatives
+              ? 'Regenerate Creatives'
+              : 'Generate Creatives'}
+        </Button>
+        {error && <p className="text-sm text-red-600">{error}</p>}
+      </div>
     </div>
   )
 }

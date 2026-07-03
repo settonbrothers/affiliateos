@@ -21,6 +21,7 @@ export type CreativeEngineInput = {
   }
   avatarContext?: string   // brief avatar summary for grounding visuals
   deepBriefContext?: string // brief what_we_sell for grounding
+  referenceImageBase64?: string // optional user-uploaded product reference image
 }
 
 export type OrchestratorResult = {
@@ -76,7 +77,7 @@ export async function runCreativeEngine(
   // Step 1 — Claude generates 7 DALL-E prompts
   const systemPrompt = await loadActivePrompt('CreativeEngineOrchestrator')
 
-  const userMessage = JSON.stringify(
+  const userMessageText = JSON.stringify(
     {
       offer: {
         id: input.offer.id,
@@ -94,6 +95,22 @@ export async function runCreativeEngine(
     null,
     2
   )
+
+  // If the user provided a reference image, send it as a vision content block so Claude
+  // can ground the DALL-E prompts in the actual product visuals.
+  const userMessage: string | unknown[] = input.referenceImageBase64
+    ? [
+        {
+          type: 'image' as const,
+          source: {
+            type: 'base64' as const,
+            media_type: 'image/jpeg' as const,
+            data: input.referenceImageBase64,
+          },
+        },
+        { type: 'text' as const, text: userMessageText },
+      ]
+    : userMessageText
 
   const briefsResult = await callAnthropicWithTool({
     model: MODEL,
