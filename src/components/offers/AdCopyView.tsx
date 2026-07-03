@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AdCopyEditor } from '@/components/offers/AdCopyEditor'
+import { HooksList } from '@/components/offers/HooksList'
 import type { AdCopyResponse } from '@/types/agents/adCopy'
 
 const OK_BADGE = 'border-green-300 bg-green-50 text-green-700 dark:bg-green-950/40'
@@ -62,19 +63,7 @@ export async function AdCopyView({
             <CardTitle className="text-base">{t('copyHooksTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <ol className="flex flex-col gap-2">
-              {p.hooks.map((h, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm">
-                  <Badge>{h.lang.toUpperCase()}</Badge>
-                  <span>{h.text}</span>
-                  {h.is_recommended && (
-                    <span className="shrink-0 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
-                      ⭐ מומלץ
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ol>
+            <HooksList hooks={p.hooks} />
           </CardContent>
         </Card>
       )}
