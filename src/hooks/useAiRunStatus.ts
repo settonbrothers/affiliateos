@@ -8,6 +8,7 @@ import type { AiRunStatus } from '@/types/db'
 
 const TERMINAL: AiRunStatus[] = ['success', 'failed', 'partial']
 const POLL_MS = 4_000
+const MAX_RUNNING_MS = 10 * 60 * 1_000 // 10 min — safety valve if the DB row is permanently stuck
 
 /**
  * Manages the live status of a single ai_runs row.
@@ -60,8 +61,18 @@ export function useAiRunStatus(
       )
       .subscribe()
 
+    const startedAt = Date.now()
+
     const poll = setInterval(async () => {
       if (resolved) return
+      // Safety valve: if the run has been stuck for 10+ minutes, reset to idle
+      // so the user can retry rather than waiting forever.
+      if (Date.now() - startedAt > MAX_RUNNING_MS) {
+        resolved = true
+        setStatus('idle')
+        setError('Generation timed out — please try again.')
+        return
+      }
       const { data } = await supabase
         .from('ai_runs')
         .select('status')
