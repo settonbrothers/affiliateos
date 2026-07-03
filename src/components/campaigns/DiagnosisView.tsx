@@ -59,7 +59,7 @@ export function DiagnosisView({ payload }: { payload: unknown }) {
                 <td className="py-1">{METRIC_LABELS[key] ?? key}</td>
                 <td className="py-1 tabular-nums">{mtr.actual}</td>
                 <td className="py-1 tabular-nums text-[var(--color-muted-foreground)]">
-                  {mtr.expected[0]}–{mtr.expected[1]}
+                  {mtr.expected?.[0] ?? '?'}–{mtr.expected?.[1] ?? '?'}
                 </td>
                 <td className={`py-1 ${VERDICT_CLASS[mtr.verdict] ?? ''}`}>
                   {mtr.verdict}

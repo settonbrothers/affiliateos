@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation'
 
 import { CampaignResultsForm } from '@/components/campaigns/CampaignResultsForm'
 import { DiagnoseButton } from '@/components/campaigns/DiagnoseButton'
+import { DiagnoseCreativesForm } from '@/components/campaigns/DiagnoseCreativesForm'
+import { DiagnoseV2Display } from '@/components/campaigns/DiagnoseV2Display'
 import { DiagnosisView } from '@/components/campaigns/DiagnosisView'
 import { TranslationFiller } from '@/components/i18n/TranslationFiller'
 import { Badge } from '@/components/ui/badge'
@@ -88,6 +90,22 @@ export default async function CampaignDetailPage({
         ) : (
           <p className="text-sm text-[var(--color-muted-foreground)]">
             {t('diagnosisEmpty')}
+          </p>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-medium">ניתוח קריאייטיבים (V2)</h2>
+        <DiagnoseCreativesForm campaignId={campaign.id} />
+        {diagnosis?.creative_analysis ? (
+          <DiagnoseV2Display
+            creativeAnalysis={diagnosis.creative_analysis}
+            winningHooks={diagnosis.winning_hooks}
+            winnersAddedToLibrary={diagnosis.winners_added_to_library}
+          />
+        ) : (
+          <p className="text-sm text-[var(--color-muted-foreground)]">
+            הדבק טקסט מודעות שרצו כדי לנתח קריאייטיבים ולמצוא winning hooks.
           </p>
         )}
       </section>

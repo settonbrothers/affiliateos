@@ -21,6 +21,9 @@ import { SpyInputForm } from '@/components/spy-analysis/SpyInputForm'
 import { SpyAnalysisDisplay } from '@/components/spy-analysis/SpyAnalysisDisplay'
 import { GenerateCreativesButton } from '@/components/creative-engine/GenerateCreativesButton'
 import { CreativesDisplay } from '@/components/creative-engine/CreativesDisplay'
+import { CampaignView } from '@/components/campaign-view/CampaignView'
+import { NetworkComparisonCard } from '@/components/offers/NetworkComparisonCard'
+import { TrendingBadge } from '@/components/offers/TrendingBadge'
 import { TranslationFiller } from '@/components/i18n/TranslationFiller'
 import { isCurrentUserAdmin } from '@/lib/auth/role'
 import {
@@ -54,6 +57,7 @@ const TAB_KEYS = [
   'avatar',
   'spy',
   'creatives',
+  'campaign-view',
 ] as const
 
 export default async function OfferDetailPage({
@@ -88,7 +92,8 @@ export default async function OfferDetailPage({
     tab === 'deep-brief' ||
     tab === 'avatar' ||
     tab === 'spy' ||
-    tab === 'creatives'
+    tab === 'creatives' ||
+    tab === 'campaign-view'
       ? tab
       : 'overview'
   const isAdmin = await isCurrentUserAdmin()
@@ -104,6 +109,7 @@ export default async function OfferDetailPage({
     avatar: 'Avatar',
     spy: 'Spy',
     creatives: 'Creatives',
+    'campaign-view': 'Campaign View',
   }
 
   const facts = activeTab === 'overview' ? await getVerifiedFacts(id) : []
@@ -204,12 +210,18 @@ export default async function OfferDetailPage({
       </nav>
 
       {activeTab === 'overview' && (
-        <OfferOverview
-          offer={offer}
-          operatorNotes={offer.operator_notes}
-          isAdmin={isAdmin}
-          facts={facts}
-        />
+        <>
+          <div className="flex items-center gap-2">
+            <TrendingBadge signal={(offer as unknown as Record<string, unknown>).trending_signal as 'rising' | 'stable' | 'declining' | null | undefined} />
+          </div>
+          <NetworkComparisonCard offerId={offer.id} />
+          <OfferOverview
+            offer={offer}
+            operatorNotes={offer.operator_notes}
+            isAdmin={isAdmin}
+            facts={facts}
+          />
+        </>
       )}
       {activeTab === 'scorecard' && (
         <>
@@ -380,6 +392,9 @@ export default async function OfferDetailPage({
             </p>
           )}
         </div>
+      )}
+      {activeTab === 'campaign-view' && (
+        <CampaignView offerId={offer.id} offerName={offer.name} />
       )}
     </div>
   )

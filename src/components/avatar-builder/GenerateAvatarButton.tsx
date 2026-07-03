@@ -22,13 +22,18 @@ export function GenerateAvatarButton({
   async function onGenerate() {
     setError(null)
     setStatus('running')
-    const result = await triggerGenerateAvatar(offerId)
-    if ('error' in result) {
-      setError(result.error)
+    try {
+      const result = await triggerGenerateAvatar(offerId)
+      if ('error' in result) {
+        setError(result.error)
+        setStatus('idle')
+        return
+      }
+      setRunId(result.run_id)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unexpected error')
       setStatus('idle')
-      return
     }
-    setRunId(result.run_id)
   }
 
   return (

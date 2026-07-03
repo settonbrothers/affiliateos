@@ -58,13 +58,18 @@ export function DiagnoseButton({
   async function onClick() {
     setError(null)
     setStatus('running')
-    const result = await triggerDiagnose(campaignId)
-    if ('error' in result) {
-      setError(result.error)
+    try {
+      const result = await triggerDiagnose(campaignId)
+      if ('error' in result) {
+        setError(result.error)
+        setStatus('idle')
+        return
+      }
+      setRunId(result.run_id)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unexpected error')
       setStatus('idle')
-      return
     }
-    setRunId(result.run_id)
   }
 
   return (

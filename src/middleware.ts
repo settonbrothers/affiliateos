@@ -1,7 +1,7 @@
 import { type CookieOptions, createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 
-const PROTECTED_PREFIXES = ['/offers', '/admin', '/campaigns', '/billing']
+const PROTECTED_PREFIXES = ['/offers', '/admin', '/campaigns', '/billing', '/onboarding']
 
 export async function middleware(request: NextRequest) {
   // Before Supabase is configured (e.g. local dev without .env.local), skip auth

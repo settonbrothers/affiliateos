@@ -23,7 +23,7 @@ function SectionCard({
 }
 
 function Field({ label, value }: { label: string; value?: unknown }) {
-  if (!value) return null
+  if (value === undefined || value === null) return null
   return (
     <div className="mb-2">
       <p className="text-xs font-medium text-[var(--color-muted-foreground)]">{label}</p>

@@ -74,7 +74,7 @@ export function OnboardingWizard({ verticals }: { verticals: Vertical[] }) {
       primary_channels: channels as OnboardingInput['primary_channels'],
       budget_min_usd: budgetMin ? Number(budgetMin) : undefined,
       budget_max_usd: budgetMax ? Number(budgetMax) : undefined,
-      preferred_vertical_id: verticalId || '',
+      preferred_vertical_id: verticalId || undefined,
     }
     startTransition(async () => {
       const result = await saveOnboarding(payload)

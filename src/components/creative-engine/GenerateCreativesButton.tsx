@@ -21,13 +21,18 @@ export function GenerateCreativesButton({
   async function onGenerate() {
     setError(null)
     setStatus('running')
-    const result = await triggerGenerateCreatives(offerId)
-    if ('error' in result) {
-      setError(result.error)
+    try {
+      const result = await triggerGenerateCreatives(offerId)
+      if ('error' in result) {
+        setError(result.error)
+        setStatus('idle')
+        return
+      }
+      setRunId(result.run_id)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unexpected error')
       setStatus('idle')
-      return
     }
-    setRunId(result.run_id)
   }
 
   return (

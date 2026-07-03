@@ -54,7 +54,7 @@ export function AvatarDisplay({ payload }: { payload: unknown }) {
         </CardHeader>
         <CardContent className="p-4 pt-0">
           <ul className="list-disc pl-4 text-sm text-[var(--color-muted-foreground)]">
-            {p.pain_points.map((item, i) => (
+            {(p.pain_points ?? []).map((item, i) => (
               <li key={i}>{item}</li>
             ))}
           </ul>
@@ -67,7 +67,7 @@ export function AvatarDisplay({ payload }: { payload: unknown }) {
         </CardHeader>
         <CardContent className="p-4 pt-0">
           <ul className="list-disc pl-4 text-sm text-[var(--color-muted-foreground)]">
-            {p.objections.map((item, i) => (
+            {(p.objections ?? []).map((item, i) => (
               <li key={i}>{item}</li>
             ))}
           </ul>
@@ -80,7 +80,7 @@ export function AvatarDisplay({ payload }: { payload: unknown }) {
         </CardHeader>
         <CardContent className="p-4 pt-0">
           <ul className="list-disc pl-4 text-sm text-[var(--color-muted-foreground)]">
-            {p.desires.map((item, i) => (
+            {(p.desires ?? []).map((item, i) => (
               <li key={i}>{item}</li>
             ))}
           </ul>
@@ -93,7 +93,7 @@ export function AvatarDisplay({ payload }: { payload: unknown }) {
         </CardHeader>
         <CardContent className="p-4 pt-0">
           <ul className="list-disc pl-4 text-sm text-[var(--color-muted-foreground)]">
-            {p.voice_of_customer.map((item, i) => (
+            {(p.voice_of_customer ?? []).map((item, i) => (
               <li key={i}>{item}</li>
             ))}
           </ul>
@@ -106,7 +106,7 @@ export function AvatarDisplay({ payload }: { payload: unknown }) {
         </CardHeader>
         <CardContent className="p-4 pt-0">
           <ul className="list-disc pl-4 text-sm text-[var(--color-muted-foreground)]">
-            {p.trust_signals.map((item, i) => (
+            {(p.trust_signals ?? []).map((item, i) => (
               <li key={i}>{item}</li>
             ))}
           </ul>

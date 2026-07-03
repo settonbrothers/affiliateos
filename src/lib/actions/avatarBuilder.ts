@@ -12,5 +12,6 @@ export async function triggerGenerateAvatar(
     body: { offer_id: offerId },
   })
   if (error) return { error: error.message }
+  if (!data?.run_id) return { error: 'Unexpected response from server' }
   return data as { run_id: string }
 }

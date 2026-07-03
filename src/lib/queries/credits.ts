@@ -18,11 +18,25 @@ export async function getCurrentWorkspaceId(): Promise<string | null> {
 
 export async function getBalance(workspaceId: string): Promise<number> {
   const supabase = await createClient()
-  const { data } = await supabase
+  // Use PostgREST aggregate to compute the sum server-side, avoiding the
+  // 1000-row client-side truncation that the previous .reduce() approach had.
+  const { data, error } = await supabase
     .from('credit_ledger')
-    .select('amount')
+    .select('amount.sum()')
     .eq('workspace_id', workspaceId)
-  return (data ?? []).reduce((sum, r) => sum + Number(r.amount ?? 0), 0)
+    .returns<[{ sum: number | null }]>()
+    .single()
+  if (error) {
+    // Fallback: fetch all rows explicitly (no implicit 1000 cap via .throwOnError)
+    const { data: rows, error: rowsError } = await supabase
+      .from('credit_ledger')
+      .select('amount')
+      .eq('workspace_id', workspaceId)
+      .limit(10000)
+    if (rowsError) throw new Error(rowsError.message)
+    return (rows ?? []).reduce((sum, r) => sum + Number(r.amount ?? 0), 0)
+  }
+  return Number(data?.sum ?? 0)
 }
 
 // Current user's balance, or null if no workspace.

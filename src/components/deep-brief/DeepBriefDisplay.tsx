@@ -82,21 +82,21 @@ export function DeepBriefDisplay({ payload }: { payload: unknown }) {
         </CardHeader>
         <CardContent className="p-4 pt-0">
           <ul className="list-disc pl-4 text-sm text-[var(--color-muted-foreground)]">
-            {p.must_know.map((item, i) => (
+            {(p.must_know ?? []).map((item, i) => (
               <li key={i}>{item}</li>
             ))}
           </ul>
         </CardContent>
       </Card>
 
-      {p.proofs.length > 0 && (
+      {(p.proofs ?? []).length > 0 && (
         <Card>
           <CardHeader className="p-4 pb-1">
             <CardTitle className="text-sm">Proofs</CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <ul className="list-disc pl-4 text-sm text-[var(--color-muted-foreground)]">
-              {p.proofs.map((item, i) => (
+              {(p.proofs ?? []).map((item, i) => (
                 <li key={i}>{item}</li>
               ))}
             </ul>

@@ -63,14 +63,22 @@ export async function getCampaignResults(
 
 export async function getLatestDiagnosis(
   campaignId: string
-): Promise<{ id: string; payload: unknown; created_at: string } | null> {
+): Promise<{
+  id: string
+  payload: unknown
+  created_at: string
+  creative_analysis: unknown
+  winning_hooks: unknown
+  winners_added_to_library: boolean | null
+} | null> {
   const supabase = await createClient()
-  const { data } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase as any)
     .from('result_diagnoses')
-    .select('id, payload, created_at')
+    .select('id, payload, created_at, creative_analysis, winning_hooks, winners_added_to_library')
     .eq('campaign_id', campaignId)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
-  return (data as { id: string; payload: unknown; created_at: string }) ?? null
+  return data ?? null
 }

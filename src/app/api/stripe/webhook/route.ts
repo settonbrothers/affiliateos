@@ -65,21 +65,29 @@ export async function POST(req: Request) {
     return data?.workspace_id ?? null
   }
 
-  // Idempotency: first insert wins; a duplicate delivery hits the unique pk.
-  const { error: dupErr } = await admin
+  // Idempotency: check for duplicate before processing; insert only after success.
+  const { data: existingEvent } = await admin
     .from('stripe_events')
-    .insert({ event_id: event.id, type: event.type })
-  if (dupErr) return NextResponse.json({ received: true, duplicate: true })
+    .select('event_id')
+    .eq('event_id', event.id)
+    .maybeSingle()
+  if (existingEvent) return NextResponse.json({ received: true, duplicate: true })
 
   try {
     await applyStripeEffects(
       planStripeEffects(event as unknown as { type: string; data: { object: Record<string, unknown> } })
     )
 
+    // Insert idempotency row only after effects are successfully applied.
+    // If applyStripeEffects threw, we skip this so Stripe can retry.
+    await admin
+      .from('stripe_events')
+      .insert({ event_id: event.id, type: event.type })
+
     // Subscription renewals: grant the period's credits. The first invoice
     // (billing_reason 'subscription_create') is already covered by the initial
     // checkout grant, so only 'subscription_cycle' renewals grant here.
-    if (event.type === 'invoice.paid' || event.type === 'invoice.payment_succeeded') {
+    if (event.type === 'invoice.paid') {
       const inv = event.data.object as Stripe.Invoice & { billing_reason?: string }
       const customerId = typeof inv.customer === 'string' ? inv.customer : inv.customer?.id
       if (inv.billing_reason === 'subscription_cycle' && customerId) {

@@ -11,5 +11,6 @@ export async function triggerDiagnoseCreatives(
     body: { campaign_id: campaignId, creative_input: creativeInput },
   })
   if (error) return { error: error.message }
+  if (!data?.run_id) return { error: 'Unexpected response from server' }
   return data as { run_id: string }
 }

@@ -125,14 +125,17 @@ Deno.serve(async (req: Request) => {
             endTime: new Date(),
           })
 
-          // Persist the avatar.
-          await admin.from('offer_avatars').insert({
-            offer_id: offerId,
-            workspace_id: offer.workspace_id,
-            ai_run_id: runId,
-            payload: result.output,
-            status: 'generated',
-          })
+          // Persist the avatar (upsert so regeneration doesn't violate the unique constraint).
+          await admin.from('offer_avatars').upsert(
+            {
+              offer_id: offerId,
+              workspace_id: offer.workspace_id,
+              ai_run_id: runId,
+              payload: result.output,
+              status: 'generated',
+            },
+            { onConflict: 'offer_id' }
+          )
 
           await recordRunSuccess(runId, {
             outputPayload: result.output,

@@ -21,7 +21,7 @@ export function ExportButton({ offerId }: { offerId: string }) {
       a.href = url
       a.download = `campaign-bundle-${offerId}.json`
       a.click()
-      URL.revokeObjectURL(url)
+      setTimeout(() => URL.revokeObjectURL(url), 100)
     } finally {
       setLoading(false)
     }
