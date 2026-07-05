@@ -143,7 +143,7 @@ export default async function OfferDetailPage({
     { key: 'spy', label: t('tabSpy'), isComplete: !!spyAnalysis, isLocked: !avatar, isSkippable: true, isActive: activeTab === 'spy', href: `/offers/${offer.id}?tab=spy` },
     { key: 'test-kit', label: t('tabTestKit'), isComplete: !!testKit, isLocked: !avatar, isSkippable: false, isActive: activeTab === 'test-kit', href: `/offers/${offer.id}?tab=test-kit` },
     { key: 'copy', label: t('tabCopy'), isComplete: !!adCopy, isLocked: !testKit, isSkippable: false, isActive: activeTab === 'copy', href: `/offers/${offer.id}?tab=copy` },
-    { key: 'creatives', label: t('tabCreatives'), isComplete: !!creatives, isLocked: !adCopy, isSkippable: false, isActive: activeTab === 'creatives', href: `/offers/${offer.id}?tab=creatives` },
+    { key: 'creatives', label: t('tabCreatives'), isComplete: !!creatives, isLocked: !adCopy || !adCopy.selected_hook_indices?.length, isSkippable: false, isActive: activeTab === 'creatives', href: `/offers/${offer.id}?tab=creatives` },
     { key: 'campaign-view', label: t('tabCampaignView'), isComplete: false, isLocked: !creatives, isSkippable: false, isActive: activeTab === 'campaign-view', href: `/offers/${offer.id}?tab=campaign-view` },
   ]
   const completedCount = wizardSteps.filter(s => s.isComplete).length
@@ -260,7 +260,11 @@ export default async function OfferDetailPage({
               hasCopy={!!adCopy}
             />
             {adCopy ? (
-              <AdCopyView payload={adCopy.payload} generationId={adCopy.id} />
+              <AdCopyView
+                payload={adCopy.payload}
+                generationId={adCopy.id}
+                initialSelectedIndices={adCopy.selected_hook_indices ?? null}
+              />
             ) : (
               !!testKit && (
                 <p className="text-sm text-[var(--color-muted-foreground)]">

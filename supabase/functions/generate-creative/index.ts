@@ -121,14 +121,21 @@ Deno.serve(async (req: Request) => {
           const deepBriefContext = (latestDeepBrief?.payload as Record<string, unknown> | null) ?? null
 
           // Fetch latest ad copy context (hooks + body inform creative direction).
-          const { data: latestCopy } = await admin
+          const { data: latestCopyFull } = await admin
             .from('ad_copy_generations')
-            .select('payload')
+            .select('payload, selected_hook_indices')
             .eq('offer_id', offerId)
             .order('created_at', { ascending: false })
             .limit(1)
             .maybeSingle()
-          const copyContext = (latestCopy?.payload as Record<string, unknown> | null) ?? null
+          const copyContext = (latestCopyFull?.payload as Record<string, unknown> | null) ?? null
+          const selectedHookIndices = (latestCopyFull?.selected_hook_indices as number[] | null) ?? null
+
+          let selectedHooksContext: unknown[] | null = null
+          if (selectedHookIndices && copyContext) {
+            const allHooks = (copyContext.hooks as unknown[] | undefined) ?? []
+            selectedHooksContext = selectedHookIndices.map(i => allHooks[i]).filter(Boolean)
+          }
 
           // Fetch spy analysis context (optional).
           const { data: spyRow } = await admin
@@ -150,6 +157,7 @@ Deno.serve(async (req: Request) => {
             avatarContext,
             deepBriefContext,
             copyContext,
+            selectedHooks: selectedHooksContext,
             spyContext,
             referenceImageBase64,
           })

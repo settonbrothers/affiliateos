@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AdCopyEditor } from '@/components/offers/AdCopyEditor'
 import { HooksList } from '@/components/offers/HooksList'
+import { HookSelectorPanel } from '@/components/offers/HookSelectorPanel'
 import type { AdCopyResponse } from '@/types/agents/adCopy'
 
 const OK_BADGE = 'border-green-300 bg-green-50 text-green-700 dark:bg-green-950/40'
@@ -12,9 +13,11 @@ const BAD_BADGE = 'border-red-300 bg-red-50 text-red-700 dark:bg-red-950/40'
 export async function AdCopyView({
   payload,
   generationId,
+  initialSelectedIndices,
 }: {
   payload: unknown
   generationId: string
+  initialSelectedIndices: number[] | null
 }) {
   const t = await getTranslations('offers')
   // jsonb arrives untyped; the orchestrator validated it against the Zod
@@ -56,14 +59,24 @@ export async function AdCopyView({
         </CardContent>
       </Card>
 
-      {/* Hooks — with recommended highlight. */}
+      {/* Hooks — with recommended highlight and multi-select for creative engine. */}
       {p.hooks.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">{t('copyHooksTitle')}</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-col gap-4">
             <HooksList hooks={p.hooks} />
+            <div className="border-t pt-4">
+              <p className="mb-3 text-sm font-medium text-[var(--color-muted-foreground)]">
+                בחר hooks לשימוש ב-Creative Engine:
+              </p>
+              <HookSelectorPanel
+                generationId={generationId}
+                hooks={p.hooks}
+                initialSelectedIndices={initialSelectedIndices}
+              />
+            </div>
           </CardContent>
         </Card>
       )}

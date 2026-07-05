@@ -84,6 +84,7 @@ export async function getLatestTestKit(offerId: string): Promise<LatestTestKit> 
 export type LatestAdCopy = {
   id: string
   payload: unknown
+  selected_hook_indices: number[] | null
   created_at: string
 } | null
 
@@ -91,7 +92,7 @@ export async function getLatestAdCopy(offerId: string): Promise<LatestAdCopy> {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('ad_copy_generations')
-    .select('id, payload, created_at')
+    .select('id, payload, selected_hook_indices, created_at')
     .eq('offer_id', offerId)
     .order('created_at', { ascending: false })
     .limit(1)
