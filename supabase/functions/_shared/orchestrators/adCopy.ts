@@ -67,6 +67,10 @@ export type AdCopyInput = {
   template?: string
   // Admin-curated hook examples; injected as {{HOOK_LIBRARY_FEWSHOT}} in copy_hook.
   hookLibrary?: Array<{ text: string; lang: string; hook_type: string; label: string }>
+  // Optional upstream context from the data chain.
+  deepBriefContext?: Record<string, unknown> | null
+  avatarContext?: Record<string, unknown> | null
+  spyContext?: Record<string, unknown> | null
 }
 
 export type OrchestratorResult = {
@@ -137,7 +141,14 @@ export async function runAdCopy(input: AdCopyInput): Promise<OrchestratorResult>
     'submit_product_excavation',
     'Submit the product excavation. Call exactly once.',
     ProductExcavationSchema,
-    { offer, product_context: input.productContext ?? null, test_kit: input.testKit ?? null },
+    {
+      offer,
+      product_context: input.productContext ?? null,
+      test_kit: input.testKit ?? null,
+      deep_brief: input.deepBriefContext ?? null,
+      avatar: input.avatarContext ?? null,
+      spy: input.spyContext ?? null,
+    },
     GENERATION_MODEL,
     vertical
   )

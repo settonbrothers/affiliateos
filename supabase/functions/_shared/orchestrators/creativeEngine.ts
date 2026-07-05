@@ -19,8 +19,10 @@ export type CreativeEngineInput = {
     vertical?: string | null
     description?: string | null
   }
-  avatarContext?: string   // brief avatar summary for grounding visuals
-  deepBriefContext?: string // brief what_we_sell for grounding
+  avatarContext?: Record<string, unknown> | null   // full avatar payload for grounding visuals
+  deepBriefContext?: Record<string, unknown> | null // full deep brief payload for grounding
+  copyContext?: Record<string, unknown> | null      // latest ad copy (hooks + body inform creative direction)
+  spyContext?: Record<string, unknown> | null       // spy analysis context
   referenceImageBase64?: string // optional user-uploaded product reference image
 }
 
@@ -85,8 +87,10 @@ export async function runCreativeEngine(
         vertical: input.offer.vertical ?? null,
         description: input.offer.description ?? null,
       },
-      avatar_context: input.avatarContext ?? null,
-      deep_brief_context: input.deepBriefContext ?? null,
+      avatar: input.avatarContext ?? null,
+      deep_brief: input.deepBriefContext ?? null,
+      ad_copy: input.copyContext ?? null,
+      spy: input.spyContext ?? null,
       creative_types: CREATIVE_TYPES.map((type) => ({
         type,
         label: CREATIVE_TYPE_LABELS[type],

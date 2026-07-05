@@ -2,6 +2,7 @@ import Link from 'next/link'
 
 import { getCampaignViewData } from '@/lib/queries/campaignView'
 import { ExportButton } from './ExportButton'
+import { Button } from '@/components/ui/button'
 
 const EMPTY_PLACEHOLDER = 'עדיין לא נוצר — לך לטאב הרלוונטי כדי ליצור'
 
@@ -284,6 +285,21 @@ export async function CampaignView({
       <SectionCard title="פעולות">
         <ExportButton offerId={offerId} />
       </SectionCard>
+
+      {/* Loop 2 trigger — show when creatives exist */}
+      {data.creatives && (
+        <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-muted)] p-5 text-center">
+          <p className="mb-1 text-base font-semibold text-[var(--color-foreground)]">
+            🎯 הקמפיין מוכן לריצה!
+          </p>
+          <p className="mb-4 text-sm text-[var(--color-muted-foreground)]">
+            כשתהיה לך תוצאות — חזור ל-Diagnose והזן את הנתונים כדי ש-AFFEX ילמד.
+          </p>
+          <Button asChild>
+            <Link href="/campaigns">לקמפיינים שלי</Link>
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

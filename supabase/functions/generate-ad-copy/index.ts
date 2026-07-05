@@ -101,6 +101,36 @@ Deno.serve(async (req: Request) => {
       .maybeSingle()
     const testKit = testKitRow?.payload ?? null
 
+    // Fetch deep brief context (optional — non-fatal if missing).
+    const { data: deepBriefRow } = await admin
+      .from('offer_deep_briefs')
+      .select('payload')
+      .eq('offer_id', offerId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    const deepBriefContext = (deepBriefRow?.payload as Record<string, unknown> | null) ?? null
+
+    // Fetch avatar context (optional — non-fatal if missing).
+    const { data: avatarRow } = await admin
+      .from('offer_avatars')
+      .select('payload')
+      .eq('offer_id', offerId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    const avatarContext = (avatarRow?.payload as Record<string, unknown> | null) ?? null
+
+    // Fetch spy analysis context (optional — non-fatal if missing).
+    const { data: spyRow } = await admin
+      .from('spy_analyses')
+      .select('payload')
+      .eq('offer_id', offerId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    const spyContext = (spyRow?.payload as Record<string, unknown> | null) ?? null
+
     // Taste Corpus: human-labelled examples (Edit-Loop + any seed), scoped to the
     // workspace plus global admin examples. Drives few-shot + (later) calibration.
     let corpusQuery = admin
@@ -175,6 +205,9 @@ Deno.serve(async (req: Request) => {
             verticalSlug,
             template,
             hookLibrary,
+            deepBriefContext,
+            avatarContext,
+            spyContext,
           }
 
           const result = await runAdCopy(input)

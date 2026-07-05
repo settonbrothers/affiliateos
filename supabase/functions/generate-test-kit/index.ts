@@ -59,31 +59,6 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // A test kit is built to execute a verdict — require a prior successful
-    // underwriting run for this offer.
-    const { data: uwRun } = await admin
-      .from('ai_runs')
-      .select('id, output_payload')
-      .eq('offer_id', offerId)
-      .eq('orchestrator_name', 'UnderwritingOrchestrator')
-      .eq('status', 'success')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-    if (!uwRun) {
-      return jsonResponse(
-        { error: 'Run an analysis first — a test kit is built from the verdict.' },
-        400
-      )
-    }
-
-    const { data: factsRows } = await admin
-      .from('extracted_facts')
-      .select('fact_type, fact_value, source_quote, confidence_score')
-      .eq('offer_id', offerId)
-      .eq('status', 'verified')
-    const facts = factsRows ?? []
-
     // Fetch deep brief context (optional — non-fatal if missing).
     const { data: deepBriefRow } = await admin
       .from('offer_deep_briefs')
@@ -103,6 +78,16 @@ Deno.serve(async (req: Request) => {
       .limit(1)
       .maybeSingle()
     const avatarContext = (avatarRow?.payload as Record<string, unknown> | null) ?? null
+
+    // Fetch spy analysis context (optional — non-fatal if missing).
+    const { data: spyRow } = await admin
+      .from('spy_analyses')
+      .select('payload')
+      .eq('offer_id', offerId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    const spyContext = (spyRow?.payload as Record<string, unknown> | null) ?? null
 
     const verticalSlug =
       (offer as unknown as { verticals?: { slug: string } | null }).verticals?.slug ??
@@ -128,9 +113,7 @@ Deno.serve(async (req: Request) => {
       model,
       inputPayload: {
         offer_id: offerId,
-        verified_fact_count: facts.length,
         vertical: verticalSlug ?? null,
-        source_underwriting_run_id: uwRun.id,
       },
       userId: user.id,
       workspaceId: offer.workspace_id ?? undefined,
@@ -146,11 +129,10 @@ Deno.serve(async (req: Request) => {
             offerId,
             offerName: offer.name,
             verticalSlug,
-            facts,
-            underwriting: uwRun.output_payload as Record<string, unknown> | undefined,
             operatorNotes: offer.operator_notes,
             deepBriefContext,
             avatarContext,
+            spyContext,
           })
 
           const judgement =
@@ -159,7 +141,7 @@ Deno.serve(async (req: Request) => {
                   aiRunId: runId,
                   orchestratorName: 'TestKitOrchestrator',
                   userInput: JSON.stringify(
-                    { offer_id: offerId, verified_fact_count: facts.length },
+                    { offer_id: offerId },
                     null,
                     2
                   ),
@@ -175,7 +157,7 @@ Deno.serve(async (req: Request) => {
             traceId,
             name: `TestKitOrchestrator (${result.mode})`,
             model,
-            input: { offer_id: offerId, verified_fact_count: facts.length },
+            input: { offer_id: offerId },
             output: result.output,
             promptTokens: result.usage?.input_tokens ?? 0,
             completionTokens: result.usage?.output_tokens ?? 0,
@@ -193,7 +175,6 @@ Deno.serve(async (req: Request) => {
             workspace_id: offer.workspace_id ?? null,
             created_by_user_id: user.id,
             ai_run_id: runId,
-            source_underwriting_run_id: uwRun.id,
             payload: result.output,
             status: 'generated',
           })

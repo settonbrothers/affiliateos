@@ -1,7 +1,7 @@
 import { callAnthropicWithTool } from '../anthropicJson.ts'
 import { assertNotPaused } from '../killSwitch.ts'
 import { loadActivePrompt } from '../loadActivePrompt.ts'
-import { mockTestKit, type UnderwritingFactInput } from '../mockAi.ts'
+import { mockTestKit } from '../mockAi.ts'
 import { TestKitResponseSchema } from '../types/testKit.ts'
 
 export { OrchestratorPausedError } from '../killSwitch.ts'
@@ -15,14 +15,11 @@ type TestKitInput = {
   offerId: string
   offerName?: string
   verticalSlug?: string
-  facts?: UnderwritingFactInput[]
-  // The verdict payload from the prior UnderwritingOrchestrator run — the kit
-  // is built to execute that verdict, not to re-decide it.
-  underwriting?: Record<string, unknown>
   operatorNotes?: string | null
   // Optional upstream context from the data chain.
   deepBriefContext?: Record<string, unknown> | null
   avatarContext?: Record<string, unknown> | null
+  spyContext?: Record<string, unknown> | null
 }
 
 export type OrchestratorResult = {
@@ -39,8 +36,6 @@ export async function runTestKit(
 ): Promise<OrchestratorResult> {
   await assertNotPaused('TestKitOrchestrator')
 
-  const facts = input.facts ?? []
-
   if (!Deno.env.get('ANTHROPIC_API_KEY')) {
     return { output: mockTestKit(), mode: 'mock' }
   }
@@ -55,26 +50,15 @@ export async function runTestKit(
       ? input.operatorNotes.trim()
       : null
 
-  const underwritingPayload =
-    (input.underwriting as { payload?: unknown } | undefined)?.payload ??
-    input.underwriting ??
-    null
-
   const userMessage = JSON.stringify(
     {
       offer_id: input.offerId,
       offer_name: input.offerName ?? null,
       vertical: input.verticalSlug ?? null,
-      underwriting: underwritingPayload,
-      facts: facts.map((f) => ({
-        type: f.fact_type,
-        value: f.fact_value,
-        source_quote: f.source_quote,
-        confidence: f.confidence_score,
-      })),
       operator_notes: operatorNotes,
       deep_brief: input.deepBriefContext ?? null,
       avatar: input.avatarContext ?? null,
+      spy: input.spyContext ?? null,
     },
     null,
     2

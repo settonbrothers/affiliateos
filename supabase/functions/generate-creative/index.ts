@@ -100,10 +100,7 @@ Deno.serve(async (req: Request) => {
             await new Promise((resolve) => setTimeout(resolve, MOCK_LATENCY_MS))
           }
 
-          // Fetch additional context: avatar and deep brief summaries.
-          let avatarContext: string | undefined
-          let deepBriefContext: string | undefined
-
+          // Fetch full avatar context.
           const { data: latestAvatar } = await admin
             .from('offer_avatars')
             .select('payload')
@@ -111,19 +108,9 @@ Deno.serve(async (req: Request) => {
             .order('created_at', { ascending: false })
             .limit(1)
             .maybeSingle()
+          const avatarContext = (latestAvatar?.payload as Record<string, unknown> | null) ?? null
 
-          if (latestAvatar?.payload) {
-            const payload = latestAvatar.payload as Record<string, unknown>
-            // Extract a brief summary from the avatar payload
-            const who = payload.who as string | undefined
-            const topPains = Array.isArray(payload.top_pains)
-              ? (payload.top_pains as string[]).slice(0, 2).join('; ')
-              : undefined
-            if (who || topPains) {
-              avatarContext = [who, topPains].filter(Boolean).join(' | ')
-            }
-          }
-
+          // Fetch full deep brief context.
           const { data: latestDeepBrief } = await admin
             .from('offer_deep_briefs')
             .select('payload')
@@ -131,11 +118,27 @@ Deno.serve(async (req: Request) => {
             .order('created_at', { ascending: false })
             .limit(1)
             .maybeSingle()
+          const deepBriefContext = (latestDeepBrief?.payload as Record<string, unknown> | null) ?? null
 
-          if (latestDeepBrief?.payload) {
-            const payload = latestDeepBrief.payload as Record<string, unknown>
-            deepBriefContext = payload.what_we_sell as string | undefined
-          }
+          // Fetch latest ad copy context (hooks + body inform creative direction).
+          const { data: latestCopy } = await admin
+            .from('ad_copy_generations')
+            .select('payload')
+            .eq('offer_id', offerId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+          const copyContext = (latestCopy?.payload as Record<string, unknown> | null) ?? null
+
+          // Fetch spy analysis context (optional).
+          const { data: spyRow } = await admin
+            .from('spy_analyses')
+            .select('payload')
+            .eq('offer_id', offerId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+          const spyContext = (spyRow?.payload as Record<string, unknown> | null) ?? null
 
           const result = await runCreativeEngine({
             offer: {
@@ -146,6 +149,8 @@ Deno.serve(async (req: Request) => {
             },
             avatarContext,
             deepBriefContext,
+            copyContext,
+            spyContext,
             referenceImageBase64,
           })
 

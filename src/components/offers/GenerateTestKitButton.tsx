@@ -11,13 +11,13 @@ export function GenerateTestKitButton({
   offerId,
   initialStatus,
   initialRunId,
-  hasVerdict,
+  hasBrief,
   hasKit,
 }: {
   offerId: string
   initialStatus: AiRunStatus | null
   initialRunId?: string | null
-  hasVerdict: boolean
+  hasBrief: boolean
   hasKit: boolean
 }) {
   const t = useTranslations('offers')
@@ -36,10 +36,10 @@ export function GenerateTestKitButton({
     setRunId(result.run_id)
   }
 
-  if (!hasVerdict) {
+  if (!hasBrief) {
     return (
       <p className="text-sm text-[var(--color-muted-foreground)]">
-        {t('testKitNeedsVerdict')}
+        Generate a Deep Brief first to unlock the Test Kit
       </p>
     )
   }
