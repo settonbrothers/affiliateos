@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Heebo:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #0A0A0A; }
+  ::selection { background: rgba(245,197,24,0.22); }
+  ::-webkit-scrollbar { width: 11px; }
+  ::-webkit-scrollbar-track { background: #0A0A0A; }
+  ::-webkit-scrollbar-thumb { background: #262626; }
+  @keyframes pulseDot { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+  @keyframes riseRow { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes sparkGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+  .prow { transition: background 0.18s ease; position: relative; }
+  .prow:hover { background: #121212 !important; }
+  .prow:hover .pedge { transform: scaleY(1) !important; }
+  .prow:hover .parrow { opacity: 1 !important; }
+  .navlink:hover { color: #FFFFFF !important; }
+</style>
+</helmet>
+
+<div dir="rtl" style="width: 100%; min-height: 100vh; background: #0A0A0A; color: #FFFFFF; font-family: 'Heebo', sans-serif; display: flex; flex-direction: column;">
+
+  <!-- ═══════ TOP NAV (chrome) ═══════ -->
+  <div style="position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; height: 62px; padding: 0 clamp(20px,3vw,44px); background: rgba(10,10,10,0.9); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.09);">
+    <div style="display: flex; align-items: center; gap: clamp(20px,3vw,44px);">
+      <div dir="ltr" style="display: flex; align-items: baseline; gap: 1px;"><span style="font-family: 'Oswald', sans-serif; font-size: 21px; font-weight: 700;">AFF</span><span style="font-family: 'Oswald', sans-serif; font-size: 21px; font-weight: 700; color: {{ accent }};">EX</span></div>
+      <div style="display: flex; align-items: center; gap: clamp(16px,2vw,30px);">
+        <span style="position: relative; font-family: 'Oswald', sans-serif; font-size: 14px; font-weight: 500; letter-spacing: 0.06em; color: #FFFFFF;">AI PICKS<span style="position: absolute; inset-inline: 0; bottom: -21px; height: 2px; background: {{ accent }};"></span></span>
+        <span class="navlink" style="font-size: 13.5px; font-weight: 500; color: #7A7A78; cursor: pointer; transition: color 0.2s;">קמפיינים</span>
+        <span class="navlink" style="font-size: 13.5px; font-weight: 500; color: #7A7A78; cursor: pointer; transition: color 0.2s;">חיוב</span>
+        <span class="navlink" style="font-size: 13.5px; font-weight: 500; color: #7A7A78; cursor: pointer; transition: color 0.2s;">ניהול</span>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: clamp(14px,2vw,22px);">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#8A8A88" stroke-width="1.6"><circle cx="11" cy="11" r="7"></circle><line x1="16.2" y1="16.2" x2="21" y2="21"></line></svg>
+      <div dir="ltr" style="display: flex; align-items: center; gap: 7px; font-family: 'IBM Plex Mono', monospace;">
+        <span style="width: 6px; height: 6px; border-radius: 50%; background: {{ accent }}; animation: pulseDot 2s ease-in-out infinite;"></span>
+        <span style="font-size: 12.5px; font-weight: 600; color: #E4E4E2;">1,240</span>
+        <span style="font-size: 10px; letter-spacing: 0.08em; color: #7A7A78;">CR</span>
+      </div>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #8A8A88; border: 1px solid rgba(255,255,255,0.16); padding: 3px 8px;">EN</span>
+    </div>
+  </div>
+
+  <!-- ═══════ CONTENT ═══════ -->
+  <div style="flex: 1; padding: clamp(28px,4vw,52px) clamp(20px,4vw,64px) 40px; max-width: 1500px; width: 100%; margin: 0 auto;">
+
+    <!-- header -->
+    <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap;">
+      <div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.22em; color: {{ accent }}; margin-bottom: 12px;">TODAY'S OPPORTUNITIES</div>
+        <h1 style="margin: 0; font-size: clamp(34px,5vw,56px); font-weight: 800; line-height: 0.95; letter-spacing: -0.01em;">ההזדמנויות של היום</h1>
+        <div dir="ltr" style="margin-top: 14px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #7A7A78; display: flex; gap: 14px; justify-content: flex-end;"><span><span style="color: #C9C9C7;">24</span> OFFERS</span><span style="color: #3A3A38;">·</span><span><span style="color: {{ accent }};">6</span> SCORED</span><span style="color: #3A3A38;">·</span><span><span style="color: {{ accent }};">2</span> HOT</span></div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 18px;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #7A7A78;">SCAN 2h AGO</span>
+        <button style="font-family: 'Heebo', sans-serif; font-size: 14px; font-weight: 700; color: #0A0A0A; background: {{ accent }}; border: none; padding: 12px 22px; cursor: pointer; white-space: nowrap;">הוספת הצעה +</button>
+      </div>
+    </div>
+
+    <!-- filters -->
+    <div style="margin-top: clamp(24px,3vw,38px); display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid rgba(255,255,255,0.09); padding-bottom: 0;">
+      <div style="display: flex; gap: clamp(18px,2vw,30px);">
+        <sc-for list="{{ filters }}" as="f" hint-placeholder-count="4">
+          <div onClick="{{ f.onSel }}" style="position: relative; padding: 0 0 14px; font-size: 14px; font-weight: 600; color: {{ f.color }}; cursor: pointer; display: flex; align-items: center; gap: 7px; white-space: nowrap;">
+            <sc-if value="{{ f.dot }}" hint-placeholder-val="{{ false }}"><span style="width: 5px; height: 5px; border-radius: 50%; background: {{ accent }};"></span></sc-if>
+            {{ f.label }}
+            <span style="position: absolute; inset-inline: 0; bottom: -1px; height: 2px; background: {{ f.underline }};"></span>
+          </div>
+        </sc-for>
+      </div>
+      <div dir="ltr" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #6E6E6C; padding-bottom: 14px; white-space: nowrap;">SORT · <span style="color: #C9C9C7;">CRACK SCORE ▾</span></div>
+    </div>
+
+    <!-- column header -->
+    <div dir="rtl" style="display: grid; grid-template-columns: 40px minmax(120px,1.4fr) 96px 106px 76px 138px 140px; align-items: center; gap: 16px; padding: 16px 12px 12px; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.12em; color: #5E5E5C;">
+      <span>#</span><span>OFFER</span><span>VERTICAL</span><span>PAYOUT</span><span>MOM.</span><span>VERDICT</span><span style="color: {{ accentDim }};">CRACK SCORE</span>
+    </div>
+
+    <!-- rows -->
+    <div style="border-top: 1px solid rgba(255,255,255,0.09);">
+      <sc-for list="{{ offers }}" as="o" hint-placeholder-count="10">
+        <div class="prow" style="display: grid; grid-template-columns: 40px minmax(120px,1.4fr) 96px 106px 76px 138px 140px; align-items: center; gap: 16px; padding: 18px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); cursor: pointer; background: {{ o.rowBg }}; animation: riseRow 0.5s cubic-bezier(0.2,0.9,0.1,1) {{ o.delay }} both;">
+          <span class="pedge" style="position: absolute; inset-inline-start: 0; top: 10px; bottom: 10px; width: 2px; background: {{ accent }}; transform: scaleY(0); transform-origin: center; transition: transform 0.2s ease;"></span>
+
+          <span dir="ltr" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 500; color: {{ o.rankColor }}; text-align: right;">{{ o.rank }}</span>
+
+          <div style="min-width: 0;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span dir="ltr" style="font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 600; letter-spacing: 0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ o.name }}</span>
+              <sc-if value="{{ o.hot }}" hint-placeholder-val="{{ false }}"><span dir="ltr" style="flex-shrink: 0; font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: 0.06em; color: #0A0A0A; background: {{ accent }}; padding: 2px 6px;">▲ HOT</span></sc-if>
+              <sc-if value="{{ o.isNew }}" hint-placeholder-val="{{ false }}"><span dir="ltr" style="flex-shrink: 0; font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: 0.06em; color: {{ accent }}; border: 1px solid {{ accentDim }}; padding: 2px 6px;">NEW</span></sc-if>
+            </div>
+            <div dir="ltr" style="margin-top: 4px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #6E6E6C; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right;">{{ o.url }}</div>
+          </div>
+
+          <span style="font-family: 'Heebo', sans-serif; font-size: 13px; color: #9A9A98;">{{ o.vertical }}</span>
+
+          <span dir="ltr" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #C9C9C7; text-align: right; white-space: nowrap;">{{ o.payout }}</span>
+
+          <span dir="ltr" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; color: {{ o.momColor }}; text-align: right; white-space: nowrap;">{{ o.mom }}</span>
+
+          <span style="display: inline-flex; align-items: center; gap: 7px; justify-self: start; font-family: 'Heebo', sans-serif; font-size: 12px; font-weight: 600; color: {{ o.vColor }}; border: 1px solid {{ o.vBorder }}; background: {{ o.vBg }}; padding: 5px 11px; white-space: nowrap;"><span style="width: 5px; height: 5px; border-radius: 50%; background: {{ o.vDot }};"></span>{{ o.verdict }}</span>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <div dir="ltr" style="display: flex; align-items: baseline; gap: 3px;">
+              <span style="font-family: 'Oswald', sans-serif; font-size: 42px; font-weight: 600; line-height: 0.8; letter-spacing: -0.01em; color: {{ o.scoreColor }};">{{ o.display }}</span>
+              <span style="font-family: 'Oswald', sans-serif; font-size: 14px; color: #4E4E4C;">/100</span>
+            </div>
+            <span class="parrow" style="font-family: 'Oswald', sans-serif; font-size: 20px; color: {{ accent }}; opacity: 0; transition: opacity 0.2s ease;">‹</span>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- footer -->
+    <div dir="ltr" style="margin-top: 18px; display: flex; align-items: center; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #6E6E6C;">
+      <span>SHOWING {{ shownCount }} / 24 · SORTED BY CRACK SCORE</span>
+      <span style="color: #8A8A88;">2 CR / RE-SCAN</span>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1440, &quot;height&quot;: 940}, &quot;accent&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;yellow&quot;, &quot;orange&quot;, &quot;lime&quot;], &quot;default&quot;: &quot;yellow&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Brand&quot;}}">
+class Component extends DCLogic {
+  state = { t: 0, filter: 'all' };
+
+  componentDidMount() {
+    const dur = 900, start = performance.now();
+    const tick = (now) => {
+      const t = Math.min(1, (now - start) / dur);
+      this.setState({ t: 1 - Math.pow(1 - t, 3) });
+      if (t < 1) this._raf = requestAnimationFrame(tick);
+    };
+    this._raf = requestAnimationFrame(tick);
+  }
+  componentWillUnmount() { if (this._raf) cancelAnimationFrame(this._raf); }
+
+  setFilter(f) { this.setState({ filter: f }); }
+
+  renderVals() {
+    const ACC = { yellow: '#F5C518', orange: '#FF5B00', lime: '#C6F23E' };
+    const accent = ACC[this.props.accent] || ACC.yellow;
+    const accentDim = accent === '#F5C518' ? 'rgba(245,197,24,0.4)' : (accent === '#FF5B00' ? 'rgba(255,91,0,0.4)' : 'rgba(198,242,62,0.4)');
+    const accentTint = accent === '#F5C518' ? 'rgba(245,197,24,0.05)' : (accent === '#FF5B00' ? 'rgba(255,91,0,0.05)' : 'rgba(198,242,62,0.05)');
+    const t = this.state.t;
+
+    const raw = [
+      { name: 'REELY',       url: 'reely.io',        vertical: 'AI / SaaS',  payout: '$180 +30%',  score: 91, mom: 6,  hot: true,  isNew: false },
+      { name: 'NOVALEDGER',  url: 'novaledger.app',  vertical: 'פינטק',       payout: '$140 CPA',   score: 87, mom: 9,  hot: true,  isNew: true },
+      { name: 'LEANBIOME',   url: 'getleanbiome.com',vertical: 'נוטרה',       payout: '$95 CPS',    score: 84, mom: 3,  hot: false, isNew: false },
+      { name: 'ARIA',        url: 'aria.date',       vertical: 'דייטינג',     payout: '$45 CPA',    score: 79, mom: 4,  hot: false, isNew: false },
+      { name: 'SOLARSWITCH', url: 'solarswitch.us',  vertical: 'סולארי',      payout: '$65 CPL',    score: 76, mom: 0,  hot: false, isNew: true },
+      { name: 'PLAYVAULT',   url: 'playvault.gg',    vertical: 'סוויפס',      payout: '$2.10 CPI',  score: 71, mom: -2, hot: false, isNew: false },
+      { name: 'GLOWDERM',    url: 'glowderm.co',     vertical: 'ביוטי',       payout: '$38 CPS',    score: 68, mom: 1,  hot: false, isNew: false },
+      { name: 'CRYPTOPULSE', url: 'cryptopulse.io',  vertical: 'קריפטו',      payout: '$220 CPA',   score: 63, mom: -5, hot: false, isNew: false },
+      { name: 'KETOKFORCE',  url: 'ketokforce.com',  vertical: 'נוטרה',       payout: '$70 CPS',    score: 58, mom: -3, hot: false, isNew: false },
+      { name: 'FASTCASH',    url: 'fastcashloans.net',vertical: 'הלוואות',    payout: '$32 CPL',    score: 52, mom: -8, hot: false, isNew: false },
+    ];
+
+    const filter = this.state.filter;
+    const passes = (o) => filter === 'all' || (filter === 'rec' && o.score >= 80) || (filter === 'hot' && o.hot) || (filter === 'new' && o.isNew);
+    const list = raw.filter(passes);
+
+    const verdictFor = (score) => {
+      if (score >= 88) return { verdict: 'תקרה גבוהה',   tier: 'hi' };
+      if (score >= 83) return { verdict: 'הזדמנות אסטרטגית', tier: 'hi' };
+      if (score >= 78) return { verdict: 'בדיקה חזקה',    tier: 'hi' };
+      if (score >= 70) return { verdict: 'בדיקה בתשלום',  tier: 'mid' };
+      if (score >= 63) return { verdict: 'מעקב',          tier: 'low' };
+      return { verdict: 'דחייה', tier: 'low' };
+    };
+
+    const offers = list.map((o, i) => {
+      const origIdx = raw.indexOf(o);
+      const strong = o.score >= 80, mid = o.score >= 65 && o.score < 80;
+      const scoreColor = strong ? accent : (mid ? '#FFFFFF' : '#6E6E6C');
+      const v = verdictFor(o.score);
+      let vColor, vBorder, vBg, vDot;
+      if (v.tier === 'hi')      { vColor = accent;   vBorder = accentDim;            vBg = accentTint;   vDot = accent; }
+      else if (v.tier === 'mid'){ vColor = '#E4E4E2';vBorder = 'rgba(255,255,255,0.16)'; vBg = 'transparent'; vDot = '#B0B0AE'; }
+      else                      { vColor = '#8A8A88';vBorder = 'rgba(255,255,255,0.08)'; vBg = 'transparent'; vDot = '#5E5E5C'; }
+
+      let mom, momColor;
+      if (o.mom > 0)      { mom = '▲ +' + o.mom;  momColor = o.mom >= 5 ? accent : '#C9C9C7'; }
+      else if (o.mom < 0) { mom = '▼ ' + o.mom;   momColor = '#6E6E6C'; }
+      else                { mom = '— 0';          momColor = '#5E5E5C'; }
+
+      return {
+        rank: String(origIdx + 1).padStart(2, '0'),
+        rankColor: origIdx === 0 ? accent : '#5E5E5C',
+        name: o.name, url: o.url, vertical: o.vertical, payout: o.payout,
+        hot: o.hot, isNew: o.isNew,
+        display: Math.round(t * o.score),
+        scoreColor,
+        verdict: v.verdict, vColor, vBorder, vBg, vDot,
+        mom, momColor,
+        rowBg: origIdx === 0 ? accentTint : 'transparent',
+        delay: (0.04 + i * 0.045).toFixed(2) + 's',
+      };
+    });
+
+    const fdefs = [
+      { key: 'all', label: 'הכל' },
+      { key: 'rec', label: 'מומלצות' },
+      { key: 'hot', label: 'חמות', dot: true },
+      { key: 'new', label: 'חדשות' },
+    ];
+    const filters = fdefs.map((f) => ({
+      label: f.label, dot: !!f.dot,
+      onSel: () => this.setFilter(f.key),
+      color: filter === f.key ? '#FFFFFF' : '#7A7A78',
+      underline: filter === f.key ? accent : 'transparent',
+    }));
+
+    return { accent, accentDim, offers, filters, shownCount: list.length };
+  }
+}
+</script>
+</body>
+</html>

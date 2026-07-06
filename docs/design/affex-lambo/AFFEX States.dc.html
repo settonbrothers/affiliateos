@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Heebo:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #0A0A0A; }
+  ::selection { background: rgba(245,197,24,0.22); }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulseDot { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+  .tab:hover { color: #FFFFFF !important; }
+  .cta:hover { background: #FFFFFF !important; }
+</style>
+</helmet>
+
+<div dir="rtl" style="width: 100%; min-height: 100vh; background: #0A0A0A; color: #FFFFFF; font-family: 'Heebo', sans-serif; display: flex; flex-direction: column;">
+
+  <!-- nav -->
+  <div style="display: flex; align-items: center; justify-content: space-between; height: 62px; padding: 0 clamp(20px,3vw,44px); border-bottom: 1px solid rgba(255,255,255,0.09);">
+    <div dir="ltr" style="display: flex; align-items: baseline; gap: 1px;"><span style="font-family: 'Oswald', sans-serif; font-size: 21px; font-weight: 700;">AFF</span><span style="font-family: 'Oswald', sans-serif; font-size: 21px; font-weight: 700; color: #F5C518;">EX</span></div>
+    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.18em; color: #7A7A78;">STATES</span>
+  </div>
+
+  <!-- switcher -->
+  <div style="display: flex; gap: clamp(16px,2vw,32px); padding: 0 clamp(20px,4vw,64px); border-bottom: 1px solid rgba(255,255,255,0.09); overflow-x: auto;">
+    <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4">
+      <div class="tab" onClick="{{ t.onSel }}" style="position: relative; padding: 16px 0; cursor: pointer; white-space: nowrap; font-family: 'Heebo', sans-serif; font-size: 14px; font-weight: 600; color: {{ t.color }}; transition: color 0.2s;">{{ t.label }}<span style="position: absolute; inset-inline: 0; bottom: -1px; height: 2px; background: {{ t.underline }};"></span></div>
+    </sc-for>
+  </div>
+
+  <!-- state body -->
+  <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: clamp(24px,5vw,64px);">
+    <div style="width: 100%; max-width: 560px; text-align: center; animation: fadeUp 0.4s ease-out both;">
+
+      <!-- icon -->
+      <div style="display: flex; justify-content: center; margin-bottom: 26px;">
+        <div style="width: 64px; height: 64px; border: 1px solid {{ iconBorder }}; background: {{ iconBg }}; display: flex; align-items: center; justify-content: center;">
+          <span style="{{ dotStyle }}"></span>
+          <span dir="ltr" style="font-family: 'Oswald', sans-serif; font-size: 26px; font-weight: 600; color: {{ iconColor }};">{{ iconGlyph }}</span>
+        </div>
+      </div>
+
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.2em; color: {{ eyebrowColor }}; margin-bottom: 14px;">{{ eyebrow }}</div>
+      <h1 style="margin: 0 0 12px; font-family: 'Heebo', sans-serif; font-size: clamp(28px,4vw,42px); font-weight: 800; line-height: 1.05;">{{ title }}</h1>
+      <p style="margin: 0 auto 28px; max-width: 42ch; font-family: 'Heebo', sans-serif; font-size: 14.5px; line-height: 1.7; color: #8A8A88;">{{ body }}</p>
+
+      <!-- meta strip (credits / refund) -->
+      <sc-if value="{{ hasMeta }}" hint-placeholder-val="{{ false }}">
+        <div dir="ltr" style="display: inline-flex; align-items: center; gap: 12px; border: 1px solid {{ metaBorder }}; background: {{ metaBg }}; padding: 10px 16px; margin-bottom: 28px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: {{ metaColor }};">{{ metaText }}</div>
+        <div style="height: 4px;"></div>
+      </sc-if>
+
+      <div style="display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap;">
+        <button class="cta" style="font-family: 'Heebo', sans-serif; font-size: 15px; font-weight: 700; color: #0A0A0A; background: #F5C518; border: none; padding: 14px 28px; cursor: pointer;">{{ ctaLabel }}</button>
+        <sc-if value="{{ hasSecondary }}" hint-placeholder-val="{{ false }}"><span style="font-family: 'Heebo', sans-serif; font-size: 13.5px; color: #8A8A88; cursor: pointer;">{{ secondaryLabel }}</span></sc-if>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 900, &quot;height&quot;: 640}}">
+class Component extends DCLogic {
+  state = { view: 'offers' };
+  select(v) { this.setState({ view: v }); }
+  renderVals() {
+    const Y = '#F5C518';
+    const view = this.state.view;
+    const tabs = [
+      { key: 'offers', label: 'אין הצעות' },
+      { key: 'campaigns', label: 'אין קמפיינים' },
+      { key: 'failed', label: 'ריצה נכשלה' },
+      { key: 'credits', label: 'אין קרדיטים' },
+    ].map((t) => ({ label: t.label, onSel: () => this.select(t.key), color: t.key === view ? '#FFFFFF' : '#7A7A78', underline: t.key === view ? Y : 'transparent' }));
+
+    const D = {
+      offers: {
+        glyph: '+', eyebrow: 'AI PICKS · EMPTY', title: 'אין הצעות עדיין',
+        body: 'הוסף את ההצעה הראשונה — הדבק URL, ו‑AFFEX יסרוק, ינתח ויחזיר Crack Score תוך דקות.',
+        ctaLabel: 'הוספת הצעה +', secondary: null, meta: null, tone: 'accent',
+      },
+      campaigns: {
+        glyph: '⚑', eyebrow: 'CAMPAIGNS · EMPTY', title: 'אין קמפיינים עדיין',
+        body: 'פתח הצעה ← ערכת בדיקה ← צור ערכה ← "צור קמפיין מהערכה". התוצאות והאבחון יופיעו כאן.',
+        ctaLabel: 'למסך AI Picks ›', secondary: null, meta: null, tone: 'accent',
+      },
+      failed: {
+        glyph: '!', eyebrow: 'AI RUN · FAILED', title: 'הריצה נכשלה',
+        body: 'משהו השתבש באורקסטרטור. העבודה נכנסה ל‑dead‑letter וניתן להריץ מחדש עם אותו payload.',
+        ctaLabel: '↻ הרצה מחדש', secondary: 'צפה בפרטים', meta: 'AUTO-REFUNDED · +8 CR הוחזרו', tone: 'warn',
+      },
+      credits: {
+        glyph: '0', eyebrow: 'ERROR 402 · INSUFFICIENT', title: 'אין מספיק קרדיטים',
+        body: 'הפעולה הזו דורשת 14 קרדיטים ונותרו לך 6. טען קרדיטים כדי להמשיך — ריצות שנכשלו תמיד מזוכות.',
+        ctaLabel: 'טעינת קרדיטים ›', secondary: 'למסך החיוב', meta: 'BALANCE 6 · NEEDS 14', tone: 'accent',
+      },
+    };
+    const d = D[view];
+    const warn = d.tone === 'warn';
+    const accentC = warn ? '#C97A6E' : Y;
+
+    return {
+      tabs,
+      iconGlyph: d.glyph, iconColor: accentC,
+      iconBorder: warn ? 'rgba(201,122,110,0.4)' : 'rgba(245,197,24,0.4)',
+      iconBg: warn ? 'rgba(201,122,110,0.06)' : 'rgba(245,197,24,0.06)',
+      dotStyle: 'display:none;',
+      eyebrow: d.eyebrow, eyebrowColor: accentC,
+      title: d.title, body: d.body,
+      ctaLabel: d.ctaLabel,
+      hasSecondary: !!d.secondary, secondaryLabel: d.secondary || '',
+      hasMeta: !!d.meta, metaText: d.meta || '',
+      metaColor: accentC,
+      metaBorder: warn ? 'rgba(201,122,110,0.3)' : 'rgba(245,197,24,0.3)',
+      metaBg: warn ? 'rgba(201,122,110,0.05)' : 'rgba(245,197,24,0.05)',
+    };
+  }
+}
+</script>
+</body>
+</html>

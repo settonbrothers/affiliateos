@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Heebo:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #0A0A0A; }
+  ::selection { background: rgba(245,197,24,0.22); }
+  ::-webkit-scrollbar { width: 11px; }
+  ::-webkit-scrollbar-track { background: #0A0A0A; }
+  ::-webkit-scrollbar-thumb { background: #262626; }
+  @keyframes pulseDot { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+  .navlink:hover { color: #FFFFFF !important; }
+  .cta:hover { background: #FFFFFF !important; }
+</style>
+</helmet>
+
+<div dir="rtl" style="width: 100%; min-height: 100vh; background: #0A0A0A; color: #FFFFFF; font-family: 'Heebo', sans-serif; display: flex; flex-direction: column;">
+
+  <div style="position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; height: 62px; padding: 0 clamp(20px,3vw,44px); background: rgba(10,10,10,0.9); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.09);">
+    <div style="display: flex; align-items: center; gap: clamp(20px,3vw,44px);">
+      <div dir="ltr" style="display: flex; align-items: baseline; gap: 1px;"><span style="font-family: 'Oswald', sans-serif; font-size: 21px; font-weight: 700;">AFF</span><span style="font-family: 'Oswald', sans-serif; font-size: 21px; font-weight: 700; color: {{ accent }};">EX</span></div>
+      <div style="display: flex; align-items: center; gap: clamp(16px,2vw,30px);">
+        <span class="navlink" style="font-family: 'Oswald', sans-serif; font-size: 14px; font-weight: 500; letter-spacing: 0.06em; color: #7A7A78; cursor: pointer; transition: color 0.2s;">AI PICKS</span>
+        <span class="navlink" style="font-size: 13.5px; font-weight: 500; color: #7A7A78; cursor: pointer; transition: color 0.2s;">קמפיינים</span>
+        <span style="position: relative; font-size: 13.5px; font-weight: 600; color: #FFFFFF;">חיוב<span style="position: absolute; inset-inline: 0; bottom: -21px; height: 2px; background: {{ accent }};"></span></span>
+        <span class="navlink" style="font-size: 13.5px; font-weight: 500; color: #7A7A78; cursor: pointer; transition: color 0.2s;">ניהול</span>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: clamp(14px,2vw,22px);">
+      <div dir="ltr" style="display: flex; align-items: center; gap: 7px; font-family: 'IBM Plex Mono', monospace;"><span style="width: 6px; height: 6px; border-radius: 50%; background: {{ accent }}; animation: pulseDot 2s ease-in-out infinite;"></span><span style="font-size: 12.5px; font-weight: 600; color: #E4E4E2;">1,240</span><span style="font-size: 10px; letter-spacing: 0.08em; color: #7A7A78;">CR</span></div>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #8A8A88; border: 1px solid rgba(255,255,255,0.16); padding: 3px 8px;">EN</span>
+    </div>
+  </div>
+
+  <div style="flex: 1; padding: clamp(24px,3vw,44px) clamp(20px,4vw,64px) 56px; max-width: 1160px; width: 100%; margin: 0 auto;">
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.22em; color: {{ accent }}; margin-bottom: 14px;">BILLING &amp; CREDITS</div>
+    <h1 style="margin: 0 0 8px; font-size: clamp(34px,5vw,56px); font-weight: 800; line-height: 0.95;">חיוב וקרדיטים</h1>
+    <p style="margin: 0 0 32px; font-size: 14px; color: #8A8A88;">כל פעולת AI צורכת קרדיטים. ריצות שנכשלו מזוכות אוטומטית.</p>
+
+    <!-- balance + plan -->
+    <div style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; margin-bottom: 40px;">
+      <div style="border: 1px solid {{ accentDim }}; background: radial-gradient(90% 130% at 22% 0%, #17140A 0%, #0C0C0C 62%); padding: clamp(24px,3vw,36px);">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.14em; color: #8A8A88;">CURRENT BALANCE · יתרה נוכחית</div>
+        <div dir="ltr" style="display: flex; align-items: baseline; justify-content: flex-start; gap: 10px; margin-top: 10px;">
+          <span style="font-family: 'Oswald', sans-serif; font-size: clamp(72px,10vw,124px); font-weight: 600; line-height: 0.8; color: {{ accent }};">{{ balance }}</span>
+          <span style="font-family: 'Heebo', sans-serif; font-size: 16px; color: #8A8A88;">קרדיטים</span>
+        </div>
+        <button class="cta" style="margin-top: 26px; font-family: 'Heebo', sans-serif; font-size: 15px; font-weight: 700; color: #0A0A0A; background: {{ accent }}; border: none; padding: 13px 26px; cursor: pointer;">טעינת קרדיטים ›</button>
+      </div>
+      <div style="border: 1px solid rgba(255,255,255,0.1); background: #0C0C0C; padding: clamp(24px,3vw,36px); display: flex; flex-direction: column;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.14em; color: #8A8A88;">PLAN · תוכנית</div>
+        <div style="margin-top: 14px; display: flex; align-items: center; gap: 10px;">
+          <span style="display: inline-flex; align-items: center; gap: 7px; font-family: 'Heebo', sans-serif; font-size: 12px; font-weight: 700; color: #0A0A0A; background: {{ accent }}; padding: 5px 11px;">פעיל</span>
+          <span style="font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 600;">PRO</span>
+        </div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #7A7A78; margin-top: 10px;">מתחדש ב‑06/08/2026</div>
+        <div style="margin-top: auto; padding-top: 18px; display: flex; gap: 18px;">
+          <span style="font-size: 13px; color: #C9C9C7; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.28); padding-bottom: 3px;">ניהול מנוי</span>
+          <span style="font-size: 13px; color: #7A7A78; cursor: pointer;">חשבוניות</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- pricing -->
+    <div style="display: flex; align-items: baseline; gap: 14px; margin-bottom: 16px;">
+      <span style="width: 4px; height: 20px; background: {{ accent }};"></span>
+      <span style="font-family: 'Oswald', sans-serif; font-size: 22px; font-weight: 600; letter-spacing: 0.03em;">PRICING</span>
+      <span style="font-family: 'Heebo', sans-serif; font-size: 12px; color: #6E6E6C; margin-inline-start: auto;">קרדיטים לכל פעולה</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 1px; background: rgba(255,255,255,0.09); border: 1px solid rgba(255,255,255,0.09); margin-bottom: 40px;">
+      <sc-for list="{{ pricing }}" as="p" hint-placeholder-count="8">
+        <div style="background: #0A0A0A; padding: 16px 18px; display: flex; align-items: center; justify-content: space-between;">
+          <span style="font-family: 'Heebo', sans-serif; font-size: 13px; color: #C9C9C7;">{{ p.action }}</span>
+          <span dir="ltr" style="font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 600; color: {{ accent }};">{{ p.credits }}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- history -->
+    <div style="display: flex; align-items: baseline; gap: 14px; margin-bottom: 8px;">
+      <span style="width: 4px; height: 20px; background: {{ accent }};"></span>
+      <span style="font-family: 'Oswald', sans-serif; font-size: 22px; font-weight: 600; letter-spacing: 0.03em;">HISTORY</span>
+    </div>
+    <div dir="rtl" style="display: grid; grid-template-columns: 150px minmax(0,1fr) 140px 90px; gap: 16px; padding: 14px 12px; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.12em; color: #5E5E5C; border-bottom: 1px solid rgba(255,255,255,0.09);">
+      <span>מתי</span><span>פירוט</span><span>סוג</span><span style="text-align: left;">סכום</span>
+    </div>
+    <sc-for list="{{ ledger }}" as="e" hint-placeholder-count="6">
+      <div dir="rtl" style="display: grid; grid-template-columns: 150px minmax(0,1fr) 140px 90px; gap: 16px; padding: 14px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); align-items: center;">
+        <span dir="ltr" style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #7A7A78; text-align: right;">{{ e.when }}</span>
+        <span style="font-family: 'Heebo', sans-serif; font-size: 13.5px; color: #C9C9C7;">{{ e.detail }}</span>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8A8A88;">{{ e.type }}</span>
+        <span dir="ltr" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; color: {{ e.amtColor }}; text-align: left;">{{ e.amount }}</span>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1160, &quot;height&quot;: 980}, &quot;accent&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;yellow&quot;, &quot;orange&quot;, &quot;lime&quot;], &quot;default&quot;: &quot;yellow&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Brand&quot;}}">
+class Component extends DCLogic {
+  state = { t: 0 };
+  componentDidMount() {
+    const dur = 900, start = performance.now();
+    const tick = (now) => {
+      const t = Math.min(1, (now - start) / dur);
+      this.setState({ t: 1 - Math.pow(1 - t, 3) });
+      if (t < 1) this._raf = requestAnimationFrame(tick);
+    };
+    this._raf = requestAnimationFrame(tick);
+  }
+  componentWillUnmount() { if (this._raf) cancelAnimationFrame(this._raf); }
+  renderVals() {
+    const ACC = { yellow: '#F5C518', orange: '#FF5B00', lime: '#C6F23E' };
+    const accent = ACC[this.props.accent] || ACC.yellow;
+    const rgb = accent === '#F5C518' ? '245,197,24' : (accent === '#FF5B00' ? '255,91,0' : '198,242,62');
+    const accentDim = 'rgba(' + rgb + ',0.4)';
+
+    const pricing = [
+      { action: 'ניתוח', credits: 8 }, { action: 'בריף מעמיק', credits: 14 }, { action: 'אבטר', credits: 10 }, { action: 'ריגול', credits: 12 },
+      { action: 'ערכת בדיקה', credits: 16 }, { action: 'קופי', credits: 8 }, { action: 'קריאייטיבים', credits: 20 }, { action: 'אבחון', credits: 12 },
+    ];
+
+    const led = [
+      ['06/07 14:20', 'ניתוח · REELY', 'debit', -8],
+      ['06/07 14:02', 'בריף מעמיק · REELY', 'debit', -14],
+      ['05/07 19:41', 'קריאייטיבים · NOVALEDGER', 'debit', -20],
+      ['05/07 11:10', 'טעינה · PRO', 'purchase', 1000],
+      ['04/07 22:03', 'ריצה שנכשלה · זיכוי', 'refund', 12],
+      ['04/07 09:15', 'אבחון · LEANBIOME', 'debit', -12],
+    ];
+    const ledger = led.map(([when, detail, type, amount]) => ({
+      when, detail, type,
+      amount: amount > 0 ? '+' + amount : String(amount),
+      amtColor: amount > 0 ? accent : '#9A9A98',
+    }));
+
+    return { accent, accentDim, balance: Math.round(this.state.t * 1240).toLocaleString('en-US'), pricing, ledger };
+  }
+}
+</script>
+</body>
+</html>

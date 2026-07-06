@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Heebo:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #0A0A0A; }
+  ::selection { background: rgba(245,197,24,0.22); }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .opt:hover { border-color: rgba(255,255,255,0.4) !important; }
+  .ghost:hover { color: #FFFFFF !important; }
+  .cta:hover { background: #FFFFFF !important; }
+  input[type=range] { -webkit-appearance: none; appearance: none; height: 3px; background: rgba(255,255,255,0.14); outline: none; accent-color: var(--acc,#F5C518); }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: var(--acc,#F5C518); cursor: pointer; border-radius: 0; }
+  input[type=range]::-moz-range-thumb { width: 16px; height: 16px; background: var(--acc,#F5C518); cursor: pointer; border: none; border-radius: 0; }
+</style>
+</helmet>
+
+<div dir="rtl" style="width: 100%; min-height: 100vh; background: radial-gradient(80% 70% at 78% 6%, rgba(245,197,24,0.06) 0%, rgba(10,10,10,0) 55%), #0A0A0A; color: #FFFFFF; font-family: 'Heebo', sans-serif; display: flex; flex-direction: column;">
+
+  <!-- top -->
+  <div style="display: flex; align-items: center; justify-content: space-between; height: 62px; padding: 0 clamp(20px,4vw,52px); border-bottom: 1px solid rgba(255,255,255,0.08);">
+    <div dir="ltr" style="display: flex; align-items: baseline; gap: 1px;"><span style="font-family: 'Oswald', sans-serif; font-size: 21px; font-weight: 700;">AFF</span><span style="font-family: 'Oswald', sans-serif; font-size: 21px; font-weight: 700; color: {{ accent }};">EX</span></div>
+    <div dir="ltr" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.14em; color: #8A8A88;"><span style="color: {{ accent }};">{{ stepNo }}</span> / 04</div>
+  </div>
+
+  <!-- stepper -->
+  <div style="padding: 22px clamp(20px,4vw,52px) 0; display: flex; gap: 10px;">
+    <sc-for list="{{ steppers }}" as="s" hint-placeholder-count="4">
+      <div style="flex: 1;">
+        <div style="height: 3px; background: {{ s.bar }};"></div>
+        <div style="margin-top: 9px; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.1em; color: {{ s.numColor }};">0{{ s.n }}</div>
+        <div style="font-family: 'Heebo', sans-serif; font-size: 12px; color: {{ s.labelColor }}; margin-top: 2px;">{{ s.label }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <!-- body -->
+  <div style="flex: 1; display: flex; align-items: center; padding: clamp(20px,3vw,40px) clamp(20px,4vw,52px);">
+    <div style="width: 100%; max-width: 760px;">
+
+      <!-- STEP 0 · WHO -->
+      <sc-if value="{{ isStep0 }}" hint-placeholder-val="{{ true }}">
+        <div style="animation: fadeUp 0.45s cubic-bezier(0.2,0.9,0.1,1) both;">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.22em; color: {{ accent }}; margin-bottom: 16px;">01 · WHO YOU ARE</div>
+          <h1 style="margin: 0 0 8px; font-size: clamp(32px,5vw,54px); font-weight: 800; line-height: 1;">מה רמת הניסיון שלך?</h1>
+          <p style="margin: 0 0 32px; font-family: 'Heebo', sans-serif; font-size: 14px; color: #8A8A88;">המנתח שופט התאמת‑מפעיל לפי הרמה שלך.</p>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <sc-for list="{{ expOpts }}" as="o" hint-placeholder-count="3">
+              <div class="opt" onClick="{{ o.onSel }}" style="flex: 1; min-width: 160px; border: 1px solid {{ o.border }}; background: {{ o.bg }}; color: {{ o.color }}; padding: 20px 22px; cursor: pointer; transition: border-color 0.2s;">
+                <div style="font-family: 'Oswald', sans-serif; font-size: 22px; font-weight: 600;">{{ o.label }}</div>
+                <div dir="ltr" style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: {{ o.subColor }}; margin-top: 6px; text-align: right;">{{ o.sub }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- STEP 1 · HOW -->
+      <sc-if value="{{ isStep1 }}" hint-placeholder-val="{{ false }}">
+        <div style="animation: fadeUp 0.45s cubic-bezier(0.2,0.9,0.1,1) both;">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.22em; color: {{ accent }}; margin-bottom: 16px;">02 · HOW YOU BUY</div>
+          <h1 style="margin: 0 0 32px; font-size: clamp(32px,5vw,54px); font-weight: 800; line-height: 1;">איך אתה קונה מדיה?</h1>
+          <div style="font-family: 'Heebo', sans-serif; font-size: 13px; font-weight: 600; color: #B0B0AE; margin-bottom: 12px;">סבילות תזרים</div>
+          <div style="display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap;">
+            <sc-for list="{{ cashOpts }}" as="o" hint-placeholder-count="3">
+              <div class="opt" onClick="{{ o.onSel }}" style="flex: 1; min-width: 120px; text-align: center; border: 1px solid {{ o.border }}; background: {{ o.bg }}; color: {{ o.color }}; padding: 13px; cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 17px; font-weight: 500; transition: border-color 0.2s;">{{ o.label }}</div>
+            </sc-for>
+          </div>
+          <div style="font-family: 'Heebo', sans-serif; font-size: 13px; font-weight: 600; color: #B0B0AE; margin-bottom: 12px;">ערוצי תנועה עיקריים</div>
+          <div style="display: flex; gap: 9px; flex-wrap: wrap;">
+            <sc-for list="{{ channelOpts }}" as="o" hint-placeholder-count="6">
+              <div onClick="{{ o.onSel }}" style="border: 1px solid {{ o.border }}; background: {{ o.bg }}; color: {{ o.color }}; padding: 9px 16px; cursor: pointer; font-size: 13.5px; font-weight: 500;">{{ o.label }}</div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- STEP 2 · FOCUS -->
+      <sc-if value="{{ isStep2 }}" hint-placeholder-val="{{ false }}">
+        <div style="animation: fadeUp 0.45s cubic-bezier(0.2,0.9,0.1,1) both;">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.22em; color: {{ accent }}; margin-bottom: 16px;">03 · YOUR FOCUS</div>
+          <h1 style="margin: 0 0 32px; font-size: clamp(32px,5vw,54px); font-weight: 800; line-height: 1;">על מה אתה מתמקד?</h1>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <span style="font-family: 'Heebo', sans-serif; font-size: 13px; font-weight: 600; color: #B0B0AE;">תקציב בדיקה טיפוסי</span>
+            <span dir="ltr" style="font-family: 'Oswald', sans-serif; font-size: 22px; font-weight: 600; color: {{ accent }};">${{ budgetMin }} – ${{ budgetMax }}</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 34px;">
+            <div><div dir="ltr" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #6E6E6C; margin-bottom: 8px; text-align: right;">MIN ${{ budgetMin }}</div><input type="range" min="50" max="2000" step="50" value="{{ budgetMin }}" onInput="{{ setMin }}" style="--acc: {{ accent }}; width: 100%;"></div>
+            <div><div dir="ltr" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #6E6E6C; margin-bottom: 8px; text-align: right;">MAX ${{ budgetMax }}</div><input type="range" min="200" max="8000" step="100" value="{{ budgetMax }}" onInput="{{ setMax }}" style="--acc: {{ accent }}; width: 100%;"></div>
+          </div>
+          <div style="font-family: 'Heebo', sans-serif; font-size: 13px; font-weight: 600; color: #B0B0AE; margin-bottom: 12px;">הוורטיקל שאתה מתמקד בו</div>
+          <div style="display: flex; gap: 9px; flex-wrap: wrap;">
+            <sc-for list="{{ verticalOpts }}" as="o" hint-placeholder-count="6">
+              <div onClick="{{ o.onSel }}" style="border: 1px solid {{ o.border }}; background: {{ o.bg }}; color: {{ o.color }}; padding: 9px 16px; cursor: pointer; font-size: 13.5px; font-weight: 500;">{{ o.label }}</div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- STEP 3 · READY -->
+      <sc-if value="{{ isStep3 }}" hint-placeholder-val="{{ false }}">
+        <div style="animation: fadeUp 0.45s cubic-bezier(0.2,0.9,0.1,1) both;">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.22em; color: {{ accent }}; margin-bottom: 16px;">04 · READY</div>
+          <h1 style="margin: 0 0 10px; font-size: clamp(40px,6vw,72px); font-weight: 800; line-height: 0.95;">אתה מסודר.</h1>
+          <p style="margin: 0 0 30px; font-family: 'Heebo', sans-serif; font-size: 15px; line-height: 1.7; color: #9A9A98; max-width: 46ch;">המנתח משתמש בהקשר הזה כדי לשפוט התאמת‑מפעיל לכל הצעה. אפשר לערוך בכל רגע בפרופיל.</p>
+          <div style="border: 1px solid rgba(255,255,255,0.1); background: #0C0C0C;">
+            <sc-for list="{{ summary }}" as="s" hint-placeholder-count="4">
+              <div dir="rtl" style="display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: #6E6E6C;">{{ s.k }}</span>
+                <span dir="ltr" style="font-family: 'Heebo', sans-serif; font-size: 14px; font-weight: 600; color: {{ accent }};">{{ s.v }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+    </div>
+  </div>
+
+  <!-- footer nav -->
+  <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px clamp(20px,4vw,52px); border-top: 1px solid rgba(255,255,255,0.08);">
+    <div onClick="{{ back }}" class="ghost" style="font-family: 'Heebo', sans-serif; font-size: 14px; font-weight: 500; color: {{ backColor }}; cursor: {{ backCursor }};">‹ חזרה</div>
+    <div style="display: flex; align-items: center; gap: 20px;">
+      <sc-if value="{{ showSkip }}" hint-placeholder-val="{{ true }}"><span onClick="{{ skip }}" class="ghost" style="font-family: 'Heebo', sans-serif; font-size: 13px; color: #7A7A78; cursor: pointer;">דילוג</span></sc-if>
+      <button onClick="{{ next }}" class="cta" style="font-family: 'Heebo', sans-serif; font-size: 15px; font-weight: 700; color: #0A0A0A; background: {{ accent }}; border: none; padding: 13px 30px; cursor: pointer;">{{ nextLabel }}</button>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1120, &quot;height&quot;: 800}, &quot;accent&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;yellow&quot;, &quot;orange&quot;, &quot;lime&quot;], &quot;default&quot;: &quot;yellow&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Brand&quot;}}">
+class Component extends DCLogic {
+  state = {
+    step: 0,
+    exp: 'מנוסה',
+    cashflow: 'בינונית',
+    channels: ['פייסבוק'],
+    budgetMin: 200,
+    budgetMax: 1000,
+    vertical: 'AI / SaaS',
+  };
+
+  next() { this.setState((s) => ({ step: Math.min(3, s.step + 1) })); }
+  back() { this.setState((s) => ({ step: Math.max(0, s.step - 1) })); }
+  setExp(v) { this.setState({ exp: v }); }
+  setCash(v) { this.setState({ cashflow: v }); }
+  setVertical(v) { this.setState({ vertical: v }); }
+  toggleChannel(v) {
+    this.setState((s) => ({ channels: s.channels.includes(v) ? s.channels.filter((c) => c !== v) : [...s.channels, v] }));
+  }
+
+  renderVals() {
+    const ACC = { yellow: '#F5C518', orange: '#FF5B00', lime: '#C6F23E' };
+    const accent = ACC[this.props.accent] || ACC.yellow;
+    const rgb = accent === '#F5C518' ? '245,197,24' : (accent === '#FF5B00' ? '255,91,0' : '198,242,62');
+    const step = this.state.step;
+
+    const stepLabels = ['מי אתה', 'איך אתה קונה', 'המיקוד שלך', 'מוכן'];
+    const steppers = stepLabels.map((label, i) => ({
+      n: i + 1, label,
+      bar: i <= step ? accent : 'rgba(255,255,255,0.12)',
+      numColor: i <= step ? accent : '#5E5E5C',
+      labelColor: i === step ? '#FFFFFF' : (i < step ? '#9A9A98' : '#5E5E5C'),
+    }));
+
+    const seg = (val, current, onSel, extra) => ({
+      onSel,
+      label: val.label !== undefined ? val.label : val,
+      sub: extra ? extra : '',
+      active: (val.label !== undefined ? val.label : val) === current,
+      border: (val.label !== undefined ? val.label : val) === current ? accent : 'rgba(255,255,255,0.16)',
+      bg: (val.label !== undefined ? val.label : val) === current ? accent : 'transparent',
+      color: (val.label !== undefined ? val.label : val) === current ? '#0A0A0A' : '#FFFFFF',
+      subColor: (val.label !== undefined ? val.label : val) === current ? 'rgba(10,10,10,0.6)' : '#6E6E6C',
+    });
+
+    const expData = [
+      { label: 'מתחיל', sub: '< 1Y · LEARNING' },
+      { label: 'מנוסה', sub: '1–4Y · SCALING' },
+      { label: 'סופר‑אפיליאייט', sub: '5Y+ · $$$' },
+    ];
+    const expOpts = expData.map((d) => seg(d, this.state.exp, () => this.setExp(d.label), d.sub));
+
+    const cashOpts = ['נמוכה', 'בינונית', 'גבוהה'].map((v) => seg(v, this.state.cashflow, () => this.setCash(v)));
+
+    const chan = ['פייסבוק', 'גוגל', 'נייטיב', 'יוטיוב', 'טיקטוק', 'אימייל', 'SEO'];
+    const channelOpts = chan.map((v) => {
+      const on = this.state.channels.includes(v);
+      return { label: v, onSel: () => this.toggleChannel(v), border: on ? accent : 'rgba(255,255,255,0.16)', bg: on ? 'rgba(' + rgb + ',0.1)' : 'transparent', color: on ? accent : '#B0B0AE' };
+    });
+
+    const verts = ['AI / SaaS', 'פינטק', 'נוטרה', 'דייטינג', 'סוויפס', 'ביוטי', 'ללא העדפה'];
+    const verticalOpts = verts.map((v) => {
+      const on = this.state.vertical === v;
+      return { label: v, onSel: () => this.setVertical(v), border: on ? accent : 'rgba(255,255,255,0.16)', bg: on ? accent : 'transparent', color: on ? '#0A0A0A' : '#B0B0AE' };
+    });
+
+    const summary = [
+      { k: 'EXPERIENCE', v: this.state.exp },
+      { k: 'CASHFLOW', v: this.state.cashflow },
+      { k: 'CHANNELS', v: this.state.channels.join(' · ') || '—' },
+      { k: 'BUDGET', v: '$' + this.state.budgetMin + '–$' + this.state.budgetMax },
+      { k: 'VERTICAL', v: this.state.vertical },
+    ];
+
+    return {
+      accent,
+      stepNo: '0' + (step + 1),
+      steppers,
+      isStep0: step === 0, isStep1: step === 1, isStep2: step === 2, isStep3: step === 3,
+      expOpts, cashOpts, channelOpts, verticalOpts, summary,
+      budgetMin: this.state.budgetMin, budgetMax: this.state.budgetMax,
+      setMin: (e) => this.setState({ budgetMin: +e.target.value }),
+      setMax: (e) => this.setState({ budgetMax: +e.target.value }),
+      next: () => this.next(), back: () => this.back(), skip: () => this.next(),
+      backColor: step === 0 ? '#3A3A38' : '#9A9A98',
+      backCursor: step === 0 ? 'default' : 'pointer',
+      showSkip: step < 3,
+      nextLabel: step === 3 ? 'כניסה ל‑AFFEX ›' : 'הבא ›',
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Heebo:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #0A0A0A; }
+  ::selection { background: rgba(245,197,24,0.22); }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulseDot { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+  .fld { background: #0C0C0C; border: 1px solid rgba(255,255,255,0.12); color: #FFFFFF; font-family: 'Heebo', sans-serif; font-size: 14.5px; padding: 14px 16px; width: 100%; outline: none; transition: border-color 0.2s; }
+  .fld:focus { border-color: var(--acc,#F5C518) !important; }
+  .fld::placeholder { color: #5E5E5C; }
+  .cta:hover { background: #FFFFFF !important; }
+  .ghost:hover { color: #FFFFFF !important; }
+</style>
+</helmet>
+
+<div dir="rtl" style="width: 100%; min-height: 100vh; background: radial-gradient(70% 60% at 82% 4%, rgba(245,197,24,0.07) 0%, rgba(10,10,10,0) 55%), #0A0A0A; color: #FFFFFF; font-family: 'Heebo', sans-serif; display: grid; grid-template-columns: 1.1fr 0.9fr;">
+
+  <!-- LEFT · statement -->
+  <div style="display: flex; flex-direction: column; justify-content: space-between; padding: clamp(32px,4vw,56px); border-inline-end: 1px solid rgba(255,255,255,0.08); min-height: 100vh;">
+    <div dir="ltr" style="display: flex; align-items: baseline; gap: 1px;"><span style="font-family: 'Oswald', sans-serif; font-size: 24px; font-weight: 700;">AFF</span><span style="font-family: 'Oswald', sans-serif; font-size: 24px; font-weight: 700; color: {{ accent }};">EX</span></div>
+    <div>
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.22em; color: {{ accent }}; margin-bottom: 18px;">MARKET INTELLIGENCE TERMINAL</div>
+      <h1 style="margin: 0; font-size: clamp(40px,6vw,84px); font-weight: 800; line-height: 0.92; letter-spacing: -0.01em;">החדר שבו<br>מפצחים<br>הצעות.</h1>
+      <p style="margin: 22px 0 0; max-width: 40ch; font-family: 'Heebo', sans-serif; font-size: 15px; line-height: 1.7; color: #8A8A88;">הצעה נכנסת, AI סורק 13 מימדים ומחזיר Crack Score ופסיקה — עד ערכת בדיקה רצה. הכל נמדד בקרדיטים.</p>
+    </div>
+    <div dir="ltr" style="display: flex; gap: 20px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.1em; color: #5E5E5C;"><span><span style="color: {{ accent }};">13</span> DIMENSIONS</span><span><span style="color: {{ accent }};">8</span> VERDICTS</span><span>INVITE-ONLY</span></div>
+  </div>
+
+  <!-- RIGHT · form -->
+  <div style="display: flex; align-items: center; justify-content: center; padding: clamp(28px,4vw,56px);">
+    <div style="width: 100%; max-width: 380px; animation: fadeUp 0.45s cubic-bezier(0.2,0.9,0.1,1) both;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.2em; color: #6E6E6C; margin-bottom: 12px;">{{ eyebrow }}</div>
+      <h2 style="margin: 0 0 6px; font-family: 'Oswald', sans-serif; font-size: clamp(30px,4vw,40px); font-weight: 600; letter-spacing: 0.01em;">{{ title }}</h2>
+      <p style="margin: 0 0 30px; font-size: 13.5px; color: #8A8A88;">{{ subtitle }}</p>
+
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div>
+          <label style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.12em; color: #8A8A88; margin-bottom: 8px;">אימייל</label>
+          <input class="fld" dir="ltr" style="--acc: {{ accent }}; text-align: right;" placeholder="you@company.com">
+        </div>
+        <div>
+          <label style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.12em; color: #8A8A88; margin-bottom: 8px;">סיסמה</label>
+          <input class="fld" type="password" dir="ltr" style="--acc: {{ accent }}; text-align: right;" placeholder="••••••••">
+        </div>
+        <sc-if value="{{ isSignup }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <label style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.12em; color: {{ accent }}; margin-bottom: 8px;">קוד הזמנה *</label>
+            <input class="fld" dir="ltr" style="--acc: {{ accent }}; text-align: right; letter-spacing: 0.08em;" placeholder="AFX-XXXX-XXXX">
+          </div>
+        </sc-if>
+      </div>
+
+      <button class="cta" style="width: 100%; margin-top: 24px; font-family: 'Heebo', sans-serif; font-size: 15px; font-weight: 700; color: #0A0A0A; background: {{ accent }}; border: none; padding: 15px; cursor: pointer;">{{ ctaLabel }}</button>
+
+      <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ true }}">
+        <div style="margin-top: 16px; text-align: center;"><span class="ghost" style="font-family: 'Heebo', sans-serif; font-size: 13px; color: #7A7A78; cursor: pointer; transition: color 0.2s;">שליחת קישור קסם ›</span></div>
+      </sc-if>
+
+      <div style="margin-top: 28px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,0.09); text-align: center; font-family: 'Heebo', sans-serif; font-size: 13.5px; color: #8A8A88;">
+        {{ switchPrompt }} <span onClick="{{ toggle }}" style="color: {{ accent }}; cursor: pointer; font-weight: 600;">{{ switchLink }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1100, &quot;height&quot;: 720}, &quot;accent&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;yellow&quot;, &quot;orange&quot;, &quot;lime&quot;], &quot;default&quot;: &quot;yellow&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Brand&quot;}}">
+class Component extends DCLogic {
+  state = { mode: 'login' };
+  toggle() { this.setState((s) => ({ mode: s.mode === 'login' ? 'signup' : 'login' })); }
+  renderVals() {
+    const ACC = { yellow: '#F5C518', orange: '#FF5B00', lime: '#C6F23E' };
+    const accent = ACC[this.props.accent] || ACC.yellow;
+    const login = this.state.mode === 'login';
+    return {
+      accent,
+      isLogin: login, isSignup: !login,
+      eyebrow: login ? 'SIGN IN' : 'CREATE ACCOUNT',
+      title: login ? 'ברוך שובך' : 'יצירת חשבון',
+      subtitle: login ? 'התחבר כדי להמשיך לפצח הצעות.' : 'ההרשמה בהזמנה בלבד — נדרש קוד הזמנה.',
+      ctaLabel: login ? 'התחברות ›' : 'יצירת חשבון ›',
+      switchPrompt: login ? 'אין חשבון?' : 'כבר יש לך חשבון?',
+      switchLink: login ? 'הרשמה' : 'התחברות',
+      toggle: () => this.toggle(),
+    };
+  }
+}
+</script>
+</body>
+</html>

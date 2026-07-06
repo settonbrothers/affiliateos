@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Heebo:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #0A0A0A; }
+  ::selection { background: rgba(245,197,24,0.22); }
+  ::-webkit-scrollbar { width: 11px; } ::-webkit-scrollbar-track { background: #0A0A0A; } ::-webkit-scrollbar-thumb { background: #262626; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .tab:hover { color: #FFFFFF !important; }
+  .trow:hover { background: #111 !important; }
+</style>
+</helmet>
+
+<div dir="rtl" style="width: 100%; min-height: 100vh; background: #0A0A0A; color: #FFFFFF; font-family: 'Heebo', sans-serif; display: flex; flex-direction: column;">
+
+  <!-- admin nav -->
+  <div style="position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; height: 62px; padding: 0 clamp(20px,3vw,44px); background: rgba(10,10,10,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.09);">
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <div dir="ltr" style="display: flex; align-items: baseline; gap: 1px;"><span style="font-family: 'Oswald', sans-serif; font-size: 21px; font-weight: 700;">AFF</span><span style="font-family: 'Oswald', sans-serif; font-size: 21px; font-weight: 700; color: {{ accent }};">EX</span></div>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.18em; color: #7A7A78; border-inline-start: 1px solid rgba(255,255,255,0.14); padding-inline-start: 14px;">ניהול</span>
+    </div>
+    <span style="font-family: 'Heebo', sans-serif; font-size: 13px; color: #7A7A78; cursor: pointer;">← חזרה לאפליקציה</span>
+  </div>
+
+  <!-- sub tabs -->
+  <div style="display: flex; gap: clamp(16px,2vw,32px); padding: 0 clamp(20px,4vw,64px); border-bottom: 1px solid rgba(255,255,255,0.09); overflow-x: auto;">
+    <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4">
+      <div class="tab" onClick="{{ t.onSel }}" style="position: relative; padding: 16px 0; cursor: pointer; white-space: nowrap; font-family: 'Heebo', sans-serif; font-size: 14px; font-weight: 600; color: {{ t.color }}; transition: color 0.2s;">
+        {{ t.label }}<span style="position: absolute; inset-inline: 0; bottom: -1px; height: 2px; background: {{ t.underline }};"></span>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="flex: 1; padding: clamp(24px,3vw,40px) clamp(20px,4vw,64px) 56px; max-width: 1280px; width: 100%; margin: 0 auto;">
+    <div style="margin-bottom: 24px;">
+      <h1 style="margin: 0; font-family: 'Oswald', sans-serif; font-size: clamp(28px,4vw,44px); font-weight: 600; letter-spacing: 0.02em;">{{ titleEn }}</h1>
+      <p style="margin: 8px 0 0; font-family: 'Heebo', sans-serif; font-size: 13.5px; color: #8A8A88; max-width: 62ch;">{{ subtitle }}</p>
+    </div>
+
+    <!-- AI RUNS -->
+    <sc-if value="{{ isRuns }}" hint-placeholder-val="{{ true }}">
+      <div style="animation: fadeUp 0.4s ease-out both;">
+        <div dir="rtl" style="display: grid; grid-template-columns: minmax(0,1.4fr) 100px 90px 90px 110px; gap: 16px; padding: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.1em; color: #5E5E5C; border-bottom: 1px solid rgba(255,255,255,0.09);">
+          <span>אורקסטרטור</span><span>סטטוס</span><span dir="ltr" style="text-align:right;">COST</span><span dir="ltr" style="text-align:right;">MS</span><span dir="ltr" style="text-align:right;">WHEN</span>
+        </div>
+        <sc-for list="{{ runs }}" as="r" hint-placeholder-count="7">
+          <div class="trow" dir="rtl" style="display: grid; grid-template-columns: minmax(0,1.4fr) 100px 90px 90px 110px; gap: 16px; padding: 14px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); align-items: center;">
+            <span dir="ltr" style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: #E4E4E2; text-align: right;">{{ r.orch }}</span>
+            <span style="display: inline-flex; align-items: center; gap: 7px; font-family: 'Heebo', sans-serif; font-size: 12px; color: {{ r.stColor }};"><span style="width: 6px; height: 6px; border-radius: 50%; background: {{ r.stDot }};"></span>{{ r.status }}</span>
+            <span dir="ltr" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #C9C9C7; text-align: right;">{{ r.cost }}</span>
+            <span dir="ltr" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #8A8A88; text-align: right;">{{ r.ms }}</span>
+            <span dir="ltr" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #7A7A78; text-align: right;">{{ r.when }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <!-- DISCOVERY -->
+    <sc-if value="{{ isDisc }}" hint-placeholder-val="{{ false }}">
+      <div style="animation: fadeUp 0.4s ease-out both;">
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 26px;">
+          <sc-for list="{{ funnel }}" as="f" hint-placeholder-count="4">
+            <div style="border: 1px solid {{ f.border }}; background: {{ f.bg }}; padding: 20px 22px;">
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.1em; color: #6E6E6C;">{{ f.k }}</div>
+              <div dir="ltr" style="font-family: 'Oswald', sans-serif; font-size: 40px; font-weight: 600; color: {{ f.color }}; text-align: right; margin-top: 6px; line-height: 1;">{{ f.v }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.12em; color: #6E6E6C; margin-bottom: 12px;">TOP CANDIDATES · מועמדים מובילים</div>
+        <sc-for list="{{ candidates }}" as="c" hint-placeholder-count="3">
+          <div class="trow" dir="rtl" style="display: grid; grid-template-columns: minmax(0,1fr) 90px 150px; gap: 16px; padding: 15px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); align-items: center;">
+            <div><div dir="ltr" style="font-family: 'Oswald', sans-serif; font-size: 17px; font-weight: 600; text-align: right;">{{ c.name }}</div><div dir="ltr" style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #6E6E6C; text-align: right; margin-top: 3px;">{{ c.domain }}</div></div>
+            <span dir="ltr" style="font-family: 'Oswald', sans-serif; font-size: 24px; font-weight: 600; color: {{ accent }}; text-align: right;">{{ c.score }}</span>
+            <div style="display: flex; gap: 8px; justify-content: flex-start;"><span style="font-family: 'Heebo', sans-serif; font-size: 12px; font-weight: 700; color: #0A0A0A; background: {{ accent }}; padding: 6px 12px; cursor: pointer;">אישור</span><span style="font-family: 'Heebo', sans-serif; font-size: 12px; color: #8A8A88; border: 1px solid rgba(255,255,255,0.16); padding: 6px 12px; cursor: pointer;">דחייה</span></div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <!-- KILL SWITCHES -->
+    <sc-if value="{{ isKill }}" hint-placeholder-val="{{ false }}">
+      <div style="animation: fadeUp 0.4s ease-out both; display: flex; flex-direction: column; gap: 10px;">
+        <sc-for list="{{ switches }}" as="s" hint-placeholder-count="5">
+          <div style="display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(255,255,255,0.1); background: #0C0C0C; padding: 18px 22px;">
+            <div><div dir="ltr" style="font-family: 'Oswald', sans-serif; font-size: 17px; font-weight: 500; text-align: right;">{{ s.name }}</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: {{ s.stColor }}; margin-top: 4px;">{{ s.state }}</div></div>
+            <div onClick="{{ s.onToggle }}" style="width: 52px; height: 28px; border-radius: 0; background: {{ s.trackBg }}; border: 1px solid {{ s.trackBorder }}; position: relative; cursor: pointer; transition: background 0.2s;">
+              <span style="position: absolute; top: 3px; {{ s.knobSide }}: 3px; width: 20px; height: 20px; background: {{ s.knobBg }}; transition: all 0.2s;"></span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <!-- INVITE CODES -->
+    <sc-if value="{{ isInvite }}" hint-placeholder-val="{{ false }}">
+      <div style="animation: fadeUp 0.4s ease-out both;">
+        <div style="display: flex; justify-content: flex-start; margin-bottom: 18px;"><button style="font-family: 'Heebo', sans-serif; font-size: 13.5px; font-weight: 700; color: #0A0A0A; background: {{ accent }}; border: none; padding: 11px 20px; cursor: pointer;">יצירת קוד +</button></div>
+        <div dir="rtl" style="display: grid; grid-template-columns: minmax(0,1fr) 90px 90px 110px; gap: 16px; padding: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.1em; color: #5E5E5C; border-bottom: 1px solid rgba(255,255,255,0.09);">
+          <span>קוד</span><span>בונוס</span><span>שימושים</span><span>סטטוס</span>
+        </div>
+        <sc-for list="{{ invites }}" as="i" hint-placeholder-count="4">
+          <div class="trow" dir="rtl" style="display: grid; grid-template-columns: minmax(0,1fr) 90px 90px 110px; gap: 16px; padding: 15px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); align-items: center;">
+            <span dir="ltr" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: {{ accent }}; text-align: right; letter-spacing: 0.08em;">{{ i.code }}</span>
+            <span dir="ltr" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #C9C9C7; text-align: right;">+{{ i.bonus }}</span>
+            <span dir="ltr" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #8A8A88; text-align: right;">{{ i.uses }}</span>
+            <span style="display: inline-flex; align-items: center; gap: 7px; font-family: 'Heebo', sans-serif; font-size: 12px; color: {{ i.stColor }};"><span style="width: 6px; height: 6px; border-radius: 50%; background: {{ i.stDot }};"></span>{{ i.status }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1280, &quot;height&quot;: 820}, &quot;accent&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;yellow&quot;, &quot;orange&quot;, &quot;lime&quot;], &quot;default&quot;: &quot;yellow&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Brand&quot;}}">
+class Component extends DCLogic {
+  state = { view: 'runs', kills: { Underwriting: false, SourceExtraction: false, TestKit: false, Diagnosis: true, Compliance: false } };
+  select(v) { this.setState({ view: v }); }
+  toggle(name) { this.setState((s) => ({ kills: { ...s.kills, [name]: !s.kills[name] } })); }
+
+  renderVals() {
+    const ACC = { yellow: '#F5C518', orange: '#FF5B00', lime: '#C6F23E' };
+    const accent = ACC[this.props.accent] || ACC.yellow;
+    const rgb = accent === '#F5C518' ? '245,197,24' : (accent === '#FF5B00' ? '255,91,0' : '198,242,62');
+    const view = this.state.view;
+
+    const defs = [
+      { key: 'runs',   label: 'ריצות AI',    titleEn: 'AI RUNS',      sub: 'כל קריאת AI מתועדת — עלות, זמן וסטטוס. ריצות שנכשלו נכנסות ל‑DLQ עם זיכוי אוטומטי.' },
+      { key: 'disc',   label: 'גילוי',        titleEn: 'DISCOVERY',    sub: 'משפך שקוף: חיפוש‑רשת → טריאז\' (Haiku) → ניתוח עומק (Sonnet) → אישור. כל שלב חסום ב‑kill‑switch.' },
+      { key: 'kill',   label: 'מתגי חירום',   titleEn: 'KILL SWITCHES', sub: 'עצירת חירום לכל אורקסטרטור. השהיה חוסמת מיד ריצות חדשות (edge fn מחזירה 503).' },
+      { key: 'invite', label: 'קודי הזמנה',   titleEn: 'INVITE CODES',  sub: 'ההרשמה בהזמנה בלבד. כל מימוש מעניק בונוס קרדיטים לסביבת העבודה החדשה.' },
+    ];
+    const tabs = defs.map((d) => ({
+      label: d.label, onSel: () => this.select(d.key),
+      color: d.key === view ? '#FFFFFF' : '#7A7A78',
+      underline: d.key === view ? accent : 'transparent',
+    }));
+    const cur = defs.find((d) => d.key === view);
+
+    const runs = [
+      ['UnderwritingOrchestrator', 'הושלם', '$0.041', '4,210', '14:20'],
+      ['DeepBriefOrchestrator', 'הושלם', '$0.038', '11,840', '14:02'],
+      ['CreativeEngineOrchestrator', 'הושלם', '$0.220', '38,120', '19:41'],
+      ['DiagnosisOrchestrator', 'נכשל', '$0.000', '2,010', '22:03'],
+      ['SourceExtraction', 'הושלם', '$0.006', '3,190', '11:52'],
+      ['TestKitOrchestrator', 'הושלם', '$0.052', '61,300', '10:31'],
+      ['ComplianceCheck', 'הושלם', '$0.007', '2,880', '09:14'],
+    ].map(([orch, status, cost, ms, when]) => ({
+      orch, status, cost, ms, when,
+      stColor: status === 'נכשל' ? '#C97A6E' : accent,
+      stDot: status === 'נכשל' ? '#8A5048' : accent,
+    }));
+
+    const funnel = [
+      { k: 'התגלו', v: 240, hi: false }, { k: 'טריאז\'', v: 88, hi: false }, { k: 'עומק', v: 20, hi: false }, { k: 'אושרו', v: 6, hi: true },
+    ].map((f) => ({ ...f, color: f.hi ? accent : '#FFFFFF', border: f.hi ? 'rgba(' + rgb + ',0.4)' : 'rgba(255,255,255,0.1)', bg: f.hi ? 'rgba(' + rgb + ',0.06)' : '#0C0C0C' }));
+    const candidates = [
+      { name: 'FLOWMETRIC', domain: 'flowmetric.io', score: 88 },
+      { name: 'PEAKNUTRA', domain: 'peaknutra.com', score: 81 },
+      { name: 'LENDFAST', domain: 'lendfast.co', score: 74 },
+    ];
+
+    const switches = Object.keys(this.state.kills).map((name) => {
+      const paused = this.state.kills[name];
+      return {
+        name, onToggle: () => this.toggle(name),
+        state: paused ? 'מושהה · 503' : 'פעיל',
+        stColor: paused ? '#C97A6E' : accent,
+        trackBg: paused ? 'rgba(201,122,110,0.2)' : 'rgba(' + rgb + ',0.22)',
+        trackBorder: paused ? 'rgba(201,122,110,0.4)' : 'rgba(' + rgb + ',0.5)',
+        knobBg: paused ? '#C97A6E' : accent,
+        knobSide: paused ? 'right' : 'left',
+      };
+    });
+
+    const invites = [
+      ['AFX-7K2P-9QLM', 100, '0 / 5', 'פעיל'],
+      ['AFX-M4XZ-2BND', 250, '3 / 5', 'פעיל'],
+      ['AFX-QP81-LLK3', 100, '5 / 5', 'מוצה'],
+      ['AFX-VV09-7TRA', 500, '1 / 1', 'מוצה'],
+    ].map(([code, bonus, uses, status]) => ({
+      code, bonus, uses, status,
+      stColor: status === 'מוצה' ? '#7A7A78' : accent,
+      stDot: status === 'מוצה' ? '#4E4E4C' : accent,
+    }));
+
+    return {
+      accent, tabs, titleEn: cur.titleEn, subtitle: cur.sub,
+      isRuns: view === 'runs', isDisc: view === 'disc', isKill: view === 'kill', isInvite: view === 'invite',
+      runs, funnel, candidates, switches, invites,
+    };
+  }
+}
+</script>
+</body>
+</html>

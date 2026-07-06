@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Heebo:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #0A0A0A; }
+  ::selection { background: rgba(245,197,24,0.22); }
+  @keyframes pulseDot { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+  .fld { background: #0C0C0C; border: 1px solid rgba(255,255,255,0.12); color: #FFFFFF; font-family: 'Heebo', sans-serif; font-size: 14.5px; padding: 14px 16px; width: 100%; outline: none; transition: border-color 0.2s; }
+  .fld:focus { border-color: var(--acc,#F5C518) !important; }
+  .fld::placeholder { color: #5E5E5C; }
+  .navlink:hover { color: #FFFFFF !important; }
+  .cta:hover { background: #FFFFFF !important; }
+</style>
+</helmet>
+
+<div dir="rtl" style="width: 100%; min-height: 100vh; background: #0A0A0A; color: #FFFFFF; font-family: 'Heebo', sans-serif; display: flex; flex-direction: column;">
+
+  <div style="position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; height: 62px; padding: 0 clamp(20px,3vw,44px); background: rgba(10,10,10,0.9); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.09);">
+    <div style="display: flex; align-items: center; gap: clamp(20px,3vw,44px);">
+      <div dir="ltr" style="display: flex; align-items: baseline; gap: 1px;"><span style="font-family: 'Oswald', sans-serif; font-size: 21px; font-weight: 700;">AFF</span><span style="font-family: 'Oswald', sans-serif; font-size: 21px; font-weight: 700; color: {{ accent }};">EX</span></div>
+      <div style="display: flex; align-items: center; gap: clamp(16px,2vw,30px);">
+        <span style="position: relative; font-family: 'Oswald', sans-serif; font-size: 14px; font-weight: 500; letter-spacing: 0.06em; color: #FFFFFF;">AI PICKS<span style="position: absolute; inset-inline: 0; bottom: -21px; height: 2px; background: {{ accent }};"></span></span>
+        <span class="navlink" style="font-size: 13.5px; font-weight: 500; color: #7A7A78; cursor: pointer; transition: color 0.2s;">קמפיינים</span>
+        <span class="navlink" style="font-size: 13.5px; font-weight: 500; color: #7A7A78; cursor: pointer; transition: color 0.2s;">חיוב</span>
+        <span class="navlink" style="font-size: 13.5px; font-weight: 500; color: #7A7A78; cursor: pointer; transition: color 0.2s;">ניהול</span>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: clamp(14px,2vw,22px);">
+      <div dir="ltr" style="display: flex; align-items: center; gap: 7px; font-family: 'IBM Plex Mono', monospace;"><span style="width: 6px; height: 6px; border-radius: 50%; background: {{ accent }}; animation: pulseDot 2s ease-in-out infinite;"></span><span style="font-size: 12.5px; font-weight: 600; color: #E4E4E2;">1,240</span><span style="font-size: 10px; letter-spacing: 0.08em; color: #7A7A78;">CR</span></div>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #8A8A88; border: 1px solid rgba(255,255,255,0.16); padding: 3px 8px;">EN</span>
+    </div>
+  </div>
+
+  <div style="flex: 1; padding: clamp(24px,3vw,44px) clamp(20px,4vw,64px) 56px; max-width: 780px; width: 100%; margin: 0 auto;">
+    <div dir="ltr" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #6E6E6C; margin-bottom: 20px;">‹ AI PICKS&nbsp; <span style="color: #3A3A38;">/</span>&nbsp; <span style="color: #9A9A98;">NEW OFFER</span></div>
+
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.22em; color: {{ accent }}; margin-bottom: 14px;">ADD OFFER</div>
+    <h1 style="margin: 0 0 8px; font-size: clamp(34px,5vw,56px); font-weight: 800; line-height: 0.95;">הוספת הצעה</h1>
+    <p style="margin: 0 0 36px; font-size: 14px; color: #8A8A88;">הדבק הצעה — AFFEX סורק את המקורות, מנתח ומחזיר Crack Score תוך דקות.</p>
+
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+      <div>
+        <label style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.12em; color: #8A8A88; margin-bottom: 9px;">שם ההצעה *</label>
+        <input class="fld" style="--acc: {{ accent }};" placeholder="Reely — AI Video Repurposer">
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px;">
+        <div>
+          <label style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.12em; color: #8A8A88; margin-bottom: 9px;">כתובת אתר *</label>
+          <input class="fld" dir="ltr" style="--acc: {{ accent }}; text-align: right;" placeholder="reely.io">
+        </div>
+        <div>
+          <label style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.12em; color: #8A8A88; margin-bottom: 9px;">כתובת תוכנית שותפים</label>
+          <input class="fld" dir="ltr" style="--acc: {{ accent }}; text-align: right;" placeholder="reely.io/partners">
+        </div>
+      </div>
+      <div>
+        <label style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.12em; color: #8A8A88; margin-bottom: 11px;">וורטיקל</label>
+        <div style="display: flex; gap: 9px; flex-wrap: wrap;">
+          <sc-for list="{{ verticalOpts }}" as="o" hint-placeholder-count="7">
+            <div onClick="{{ o.onSel }}" style="border: 1px solid {{ o.border }}; background: {{ o.bg }}; color: {{ o.color }}; padding: 9px 16px; cursor: pointer; font-size: 13.5px; font-weight: 500;">{{ o.label }}</div>
+          </sc-for>
+        </div>
+      </div>
+      <div>
+        <label style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.12em; color: #8A8A88; margin-bottom: 9px;">הערות מפעיל</label>
+        <textarea class="fld" rows="4" style="--acc: {{ accent }}; resize: vertical; line-height: 1.6;" placeholder="מה שאתה יודע כמדיה-באייר ולא מופיע באף דף אינטרנט…"></textarea>
+        <p style="margin: 9px 0 0; font-size: 12px; color: #6E6E6C; line-height: 1.5;">המנתח מתייחס לזה כעובדות מאומתות — CPA אמיתי, ביצועי geo, מגבלות רשת.</p>
+      </div>
+    </div>
+
+    <div style="margin-top: 36px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.09); padding-top: 24px;">
+      <span style="font-size: 14px; color: #7A7A78; cursor: pointer;">ביטול</span>
+      <button class="cta" style="font-family: 'Heebo', sans-serif; font-size: 15px; font-weight: 700; color: #0A0A0A; background: {{ accent }}; border: none; padding: 14px 30px; cursor: pointer;">יצירת הצעה + סריקה ›</button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 900, &quot;height&quot;: 820}, &quot;accent&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;yellow&quot;, &quot;orange&quot;, &quot;lime&quot;], &quot;default&quot;: &quot;yellow&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Brand&quot;}}">
+class Component extends DCLogic {
+  state = { vertical: 'AI / SaaS' };
+  renderVals() {
+    const ACC = { yellow: '#F5C518', orange: '#FF5B00', lime: '#C6F23E' };
+    const accent = ACC[this.props.accent] || ACC.yellow;
+    const verts = ['AI / SaaS', 'פינטק', 'נוטרה', 'דייטינג', 'סוויפס', 'ביוטי', 'הלוואות'];
+    const verticalOpts = verts.map((v) => {
+      const on = this.state.vertical === v;
+      return { label: v, onSel: () => this.setState({ vertical: v }), border: on ? accent : 'rgba(255,255,255,0.16)', bg: on ? accent : 'transparent', color: on ? '#0A0A0A' : '#B0B0AE' };
+    });
+    return { accent, verticalOpts };
+  }
+}
+</script>
+</body>
+</html>

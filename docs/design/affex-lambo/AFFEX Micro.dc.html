@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Heebo:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #0A0A0A; }
+  ::selection { background: rgba(245,197,24,0.22); }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: translateX(0); } }
+  .fbtn { outline: none; transition: box-shadow 0.15s; }
+  .fbtn:focus-visible { box-shadow: 0 0 0 2px #0A0A0A, 0 0 0 4px #F5C518; }
+  .pg:hover { border-color: rgba(255,255,255,0.4) !important; color: #FFFFFF !important; }
+</style>
+</helmet>
+
+<div dir="rtl" style="width: 100%; min-height: 100vh; background: #0A0A0A; color: #FFFFFF; font-family: 'Heebo', sans-serif; padding: clamp(28px,4vw,56px);">
+  <div style="max-width: 900px; margin: 0 auto;">
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.22em; color: #F5C518; margin-bottom: 12px;">MICRO · INTERACTIONS</div>
+    <h1 style="margin: 0 0 40px; font-family: 'Oswald', sans-serif; font-size: clamp(30px,4vw,44px); font-weight: 600; letter-spacing: 0.02em;">POLISH KIT</h1>
+
+    <!-- TOASTS -->
+    <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px;"><span style="width: 4px; height: 18px; background: #F5C518;"></span><span style="font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 600; letter-spacing: 0.03em;">TOASTS</span></div>
+    <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 44px; max-width: 460px;">
+      <sc-for list="{{ toasts }}" as="t" hint-placeholder-count="3">
+        <div style="display: flex; align-items: center; gap: 12px; border: 1px solid {{ t.border }}; border-inline-start: 3px solid {{ t.accent }}; background: #0E0E0E; padding: 13px 16px; animation: toastIn 0.4s cubic-bezier(0.2,0.9,0.1,1) both;">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: {{ t.accent }};">{{ t.glyph }}</span>
+          <span style="font-family: 'Heebo', sans-serif; font-size: 13.5px; color: #E4E4E2; flex: 1;">{{ t.msg }}</span>
+          <span dir="ltr" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: {{ t.metaColor }};">{{ t.meta }}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- PAGINATION + SORT -->
+    <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px;"><span style="width: 4px; height: 18px; background: #F5C518;"></span><span style="font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 600; letter-spacing: 0.03em;">PAGINATION · SORT</span></div>
+    <div style="border: 1px solid rgba(255,255,255,0.1); background: #0C0C0C; padding: 18px 20px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+      <div dir="ltr" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #7A7A78;">SHOWING <span style="color: #E4E4E2;">1–10</span> / 24</div>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <span dir="ltr" class="pg" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #7A7A78; border: 1px solid rgba(255,255,255,0.14); padding: 7px 12px; cursor: pointer;">‹ PREV</span>
+        <span dir="ltr" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #0A0A0A; background: #F5C518; padding: 7px 12px;">1</span>
+        <span dir="ltr" class="pg" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #B0B0AE; border: 1px solid rgba(255,255,255,0.14); padding: 7px 12px; cursor: pointer;">2</span>
+        <span dir="ltr" class="pg" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #B0B0AE; border: 1px solid rgba(255,255,255,0.14); padding: 7px 12px; cursor: pointer;">3</span>
+        <span dir="ltr" class="pg" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #7A7A78; border: 1px solid rgba(255,255,255,0.14); padding: 7px 12px; cursor: pointer;">NEXT ›</span>
+      </div>
+    </div>
+    <div style="display: flex; gap: 8px; margin-bottom: 44px; flex-wrap: wrap;">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #6E6E6C; align-self: center;">SORT ·</span>
+      <sc-for list="{{ sorts }}" as="s" hint-placeholder-count="3">
+        <span onClick="{{ s.onSel }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: {{ s.color }}; border: 1px solid {{ s.border }}; background: {{ s.bg }}; padding: 6px 12px; cursor: pointer;">{{ s.label }}{{ s.arrow }}</span>
+      </sc-for>
+    </div>
+
+    <!-- FOCUS + CONTRAST -->
+    <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px;"><span style="width: 4px; height: 18px; background: #F5C518;"></span><span style="font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 600; letter-spacing: 0.03em;">FOCUS · CONTRAST</span></div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <div style="border: 1px solid rgba(255,255,255,0.1); background: #0C0C0C; padding: 22px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: #6E6E6C; margin-bottom: 14px;">FOCUS RING (Tab)</div>
+        <button class="fbtn" style="font-family: 'Heebo', sans-serif; font-size: 14px; font-weight: 700; color: #0A0A0A; background: #F5C518; border: none; padding: 12px 22px; cursor: pointer;">כפתור ממוקד</button>
+        <p style="margin: 12px 0 0; font-size: 12px; color: #8A8A88;">טבעת צהובה 2px עם offset שחור — נגיש בכל אלמנט אינטראקטיבי.</p>
+      </div>
+      <div style="border: 1px solid rgba(255,255,255,0.1); background: #0C0C0C; padding: 22px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: #6E6E6C; margin-bottom: 14px;">TEXT CONTRAST</div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <span style="font-size: 13px; color: #FFFFFF;">#FFFFFF · primary · AAA</span>
+          <span style="font-size: 13px; color: #C9C9C7;">#C9C9C7 · secondary · AA</span>
+          <span style="font-size: 13px; color: #8A8A88;">#8A8A88 · muted · AA (min)</span>
+          <span style="font-size: 13px; color: #6E6E6C;">#6E6E6C · labels only · large/mono</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 960, &quot;height&quot;: 760}}">
+class Component extends DCLogic {
+  state = { sort: 'crack' };
+  renderVals() {
+    const Y = '#F5C518';
+    const toasts = [
+      { glyph: '✓', accent: Y, msg: 'נשמר — מזין את ה‑Taste Corpus', meta: 'COPY', metaColor: '#6E6E6C' },
+      { glyph: '◈', accent: Y, msg: 'ניתוח הושלם · Crack Score 91', meta: '−8 CR · 1,232', metaColor: Y },
+      { glyph: '!', accent: '#C97A6E', msg: 'הריצה נכשלה — זוכית אוטומטית', meta: '+8 CR', metaColor: '#C97A6E' },
+    ];
+    const sorts = [
+      { key: 'crack', label: 'Crack Score' }, { key: 'mom', label: 'Momentum' }, { key: 'payout', label: 'Payout' },
+    ].map((s) => {
+      const on = this.state.sort === s.key;
+      return { label: s.label, arrow: on ? ' ▾' : '', onSel: () => this.setState({ sort: s.key }), color: on ? '#0A0A0A' : '#B0B0AE', bg: on ? Y : 'transparent', border: on ? Y : 'rgba(255,255,255,0.14)' };
+    });
+    return { toasts, sorts };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Heebo:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #0A0A0A; }
+  ::selection { background: rgba(245,197,24,0.22); }
+  ::-webkit-scrollbar { width: 11px; }
+  ::-webkit-scrollbar-track { background: #0A0A0A; }
+  ::-webkit-scrollbar-thumb { background: #262626; }
+  .card { transition: border-color 0.2s ease, background 0.2s ease; }
+  .card:hover { border-color: rgba(255,255,255,0.22) !important; background: #131313 !important; }
+</style>
+</helmet>
+
+<div dir="ltr" style="width: 100%; min-height: 100vh; background: #0A0A0A; color: #FFFFFF; font-family: 'Oswald', sans-serif;">
+
+  <!-- top bar -->
+  <div style="position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 16px clamp(24px,4vw,64px); background: rgba(10,10,10,0.86); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1);">
+    <div style="display: flex; align-items: baseline; gap: 1px;"><span style="font-size: 20px; font-weight: 700;">AFF</span><span style="font-size: 20px; font-weight: 700; color: {{ accent }};">EX</span></div>
+    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.22em; color: #7A7A78;">SYSTEM&nbsp;MAP · v1</span>
+  </div>
+
+  <div style="max-width: 1180px; margin: 0 auto; padding: clamp(40px,6vw,88px) clamp(24px,4vw,64px) 120px;">
+
+    <!-- HERO -->
+    <div style="margin-bottom: clamp(48px,7vw,96px);">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.24em; color: {{ accent }}; margin-bottom: 20px;">END-TO-END SCREEN SPEC</div>
+      <h1 style="margin: 0; font-size: clamp(46px,8vw,104px); font-weight: 600; line-height: 0.92; letter-spacing: -0.01em;">EVERY SCREEN,<br>ONE SYSTEM.</h1>
+      <p style="margin: 24px 0 0; max-width: 60ch; font-family: 'Heebo', sans-serif; font-size: clamp(14px,1.4vw,17px); line-height: 1.7; color: #9A9A98;" dir="rtl">מפת כל מסכי AffiliateOS על בסיס הקוד האמיתי (Next.js · Supabase · Anthropic). המבנה נעול — זהו הבלופרינט שממנו נעצב מסך‑מסך בשפת השחור/צהוב.</p>
+      <div dir="ltr" style="margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px;">
+        <sc-for list="{{ statChips }}" as="s" hint-placeholder-count="4">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.08em; color: #C9C9C7; border: 1px solid rgba(255,255,255,0.14); padding: 8px 14px;">{{ s }}</span>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- ═══ SECTION: ACCESS ═══ -->
+    <div style="display: flex; align-items: baseline; gap: 16px; margin-bottom: 26px;">
+      <span style="width: 4px; height: 26px; background: {{ accent }};"></span>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6E6E6C;">01</span>
+      <span style="font-size: clamp(24px,3vw,34px); font-weight: 600; letter-spacing: 0.02em;">ACCESS</span>
+      <span dir="rtl" style="font-family: 'Heebo', sans-serif; font-size: 13px; color: #7A7A78; margin-left: auto;">כניסה · הזמנה בלבד · onboarding</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 14px; margin-bottom: clamp(48px,6vw,80px);">
+      <sc-for list="{{ access }}" as="c" hint-placeholder-count="3">
+        <div class="card" style="border: 1px solid rgba(255,255,255,0.09); background: #0E0E0E; padding: 22px 24px;">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px;">
+            <span style="font-size: 22px; font-weight: 600; letter-spacing: 0.02em;">{{ c.en }}</span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: {{ accent }};">{{ c.route }}</span>
+          </div>
+          <div dir="rtl" style="font-family: 'Heebo', sans-serif; font-size: 13.5px; font-weight: 500; color: #E4E4E2; margin-bottom: 8px;">{{ c.he }}</div>
+          <div dir="rtl" style="font-family: 'Heebo', sans-serif; font-size: 12.5px; line-height: 1.6; color: #8A8A88;">{{ c.desc }}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- ═══ SECTION: WORKSPACE ═══ -->
+    <div style="display: flex; align-items: baseline; gap: 16px; margin-bottom: 26px;">
+      <span style="width: 4px; height: 26px; background: {{ accent }};"></span>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6E6E6C;">02</span>
+      <span style="font-size: clamp(24px,3vw,34px); font-weight: 600; letter-spacing: 0.02em;">WORKSPACE</span>
+      <span dir="rtl" style="font-family: 'Heebo', sans-serif; font-size: 13px; color: #7A7A78; margin-left: auto;">הבית של המדיה‑באייר</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px,1fr)); gap: 14px; margin-bottom: clamp(48px,6vw,80px);">
+      <sc-for list="{{ workspace }}" as="c" hint-placeholder-count="5">
+        <div class="card" style="border: 1px solid rgba(255,255,255,0.09); background: #0E0E0E; padding: 24px;">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px;">
+            <span style="font-size: 24px; font-weight: 600; letter-spacing: 0.02em;">{{ c.en }}</span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: {{ accent }};">{{ c.route }}</span>
+          </div>
+          <div dir="rtl" style="font-family: 'Heebo', sans-serif; font-size: 14px; font-weight: 600; color: #F0F0EE; margin-bottom: 10px;">{{ c.he }}</div>
+          <div dir="rtl" style="font-family: 'Heebo', sans-serif; font-size: 12.5px; line-height: 1.65; color: #8A8A88; margin-bottom: 16px;">{{ c.desc }}</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 7px;">
+            <sc-for list="{{ c.tags }}" as="t" hint-placeholder-count="3">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.04em; color: #B0B0AE; border: 1px solid rgba(255,255,255,0.12); padding: 4px 9px;">{{ t }}</span>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- ═══ SECTION: THE OFFER WIZARD ═══ -->
+    <div style="display: flex; align-items: baseline; gap: 16px; margin-bottom: 8px;">
+      <span style="width: 4px; height: 26px; background: {{ accent }};"></span>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6E6E6C;">03</span>
+      <span style="font-size: clamp(24px,3vw,34px); font-weight: 600; letter-spacing: 0.02em;">THE OFFER WIZARD</span>
+      <span dir="rtl" style="font-family: 'Heebo', sans-serif; font-size: 13px; color: #7A7A78; margin-left: auto;">הלב · /offers/[id] · 8 שלבים ננעלים</span>
+    </div>
+    <p dir="rtl" style="font-family: 'Heebo', sans-serif; font-size: 13px; color: #7A7A78; margin: 0 0 26px 20px;">כל שלב מזין את הבא ונפתח רק כשקודמו הושלם. כל פעולת AI צורכת קרדיטים.</p>
+
+    <div style="border: 1px solid rgba(255,255,255,0.09); background: #0C0C0C; margin-bottom: 20px;">
+      <sc-for list="{{ wizard }}" as="w" hint-placeholder-count="8">
+        <div class="card" style="display: grid; grid-template-columns: 64px 1fr; border-bottom: 1px solid rgba(255,255,255,0.07); background: #0C0C0C;">
+          <div style="display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 600; color: {{ w.numColor }}; border-right: 1px solid rgba(255,255,255,0.07); background: {{ w.numBg }};">{{ w.num }}</div>
+          <div style="padding: 18px 24px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+            <div style="min-width: 210px;">
+              <div style="display: flex; align-items: baseline; gap: 12px;">
+                <span style="font-size: 21px; font-weight: 600; letter-spacing: 0.02em;">{{ w.en }}</span>
+                <span dir="rtl" style="font-family: 'Heebo', sans-serif; font-size: 13px; color: {{ accent }};">{{ w.he }}</span>
+              </div>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.06em; color: #6E6E6C; margin-top: 5px;">{{ w.orch }}</div>
+            </div>
+            <div dir="rtl" style="flex: 1; min-width: 220px; font-family: 'Heebo', sans-serif; font-size: 13px; line-height: 1.55; color: #9A9A98;">{{ w.purpose }}</div>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: {{ w.lockColor }}; border: 1px solid {{ w.lockBorder }}; padding: 5px 10px; white-space: nowrap;">{{ w.lock }}</span>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- analysis tabs -->
+    <div dir="rtl" style="font-family: 'Heebo', sans-serif; font-size: 12px; color: #7A7A78; margin: 0 0 12px;">תצוגות ניתוח (נוצרות מכפתור "ניתוח" — לא חלק מרצף ה‑Wizard):</div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px,1fr)); gap: 14px; margin-bottom: clamp(48px,6vw,80px);">
+      <sc-for list="{{ analysis }}" as="c" hint-placeholder-count="3">
+        <div class="card" style="border: 1px solid {{ c.border }}; background: {{ c.bg }}; padding: 22px 24px;">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px;">
+            <span style="font-size: 22px; font-weight: 600; letter-spacing: 0.02em; color: {{ c.title }};">{{ c.en }}</span>
+            <span dir="rtl" style="font-family: 'Heebo', sans-serif; font-size: 13px; color: #B0B0AE;">{{ c.he }}</span>
+          </div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #6E6E6C; margin-bottom: 10px;">{{ c.orch }}</div>
+          <div dir="rtl" style="font-family: 'Heebo', sans-serif; font-size: 12.5px; line-height: 1.65; color: #9A9A98;">{{ c.desc }}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- ═══ SECTION: CRACK SCORE ═══ -->
+    <div style="display: flex; align-items: baseline; gap: 16px; margin-bottom: 8px;">
+      <span style="width: 4px; height: 26px; background: {{ accent }};"></span>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6E6E6C;">04</span>
+      <span style="font-size: clamp(24px,3vw,34px); font-weight: 600; letter-spacing: 0.02em;">CRACK SCORE</span>
+      <span dir="rtl" style="font-family: 'Heebo', sans-serif; font-size: 13px; color: #7A7A78; margin-left: auto;">13 מימדים → ציון משוקלל 0–100</span>
+    </div>
+    <p dir="rtl" style="font-family: 'Heebo', sans-serif; font-size: 13px; color: #7A7A78; margin: 0 0 22px 20px;">הרגע ההירואי. כל מימד 0–100, נמדד ע"י אורקסטרטור החיתום (Sonnet).</p>
+    <div style="border: 1px solid rgba(255,255,255,0.1); display: grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); margin-bottom: clamp(48px,6vw,80px);">
+      <sc-for list="{{ dims }}" as="d" hint-placeholder-count="13">
+        <div style="padding: 15px 18px; border-right: 1px solid rgba(255,255,255,0.07); border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 12px;">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: {{ accent }}; width: 24px;">{{ d.n }}</span>
+          <div>
+            <div style="font-size: 15px; font-weight: 500; letter-spacing: 0.01em;">{{ d.en }}</div>
+            <div dir="rtl" style="font-family: 'Heebo', sans-serif; font-size: 11.5px; color: #7A7A78;">{{ d.he }}</div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- ═══ SECTION: VERDICT LADDER ═══ -->
+    <div style="display: flex; align-items: baseline; gap: 16px; margin-bottom: 8px;">
+      <span style="width: 4px; height: 26px; background: {{ accent }};"></span>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6E6E6C;">05</span>
+      <span style="font-size: clamp(24px,3vw,34px); font-weight: 600; letter-spacing: 0.02em;">VERDICT LADDER</span>
+      <span dir="rtl" style="font-family: 'Heebo', sans-serif; font-size: 13px; color: #7A7A78; margin-left: auto;">8 דרגות · מדחייה עד תקרה‑גבוהה</span>
+    </div>
+    <p dir="rtl" style="font-family: 'Heebo', sans-serif; font-size: 13px; color: #7A7A78; margin: 0 0 22px 20px;">אבחון הרגולציה יכול להגביל (cap) את הפסיקה כלפי מטה.</p>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: clamp(48px,6vw,80px);">
+      <sc-for list="{{ verdicts }}" as="v" hint-placeholder-count="8">
+        <div style="flex: 1; min-width: 150px; border: 1px solid {{ v.border }}; background: {{ v.bg }}; padding: 16px 16px 18px;">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: {{ v.numColor }}; margin-bottom: 8px;">{{ v.n }}</div>
+          <div style="font-size: 16px; font-weight: 600; letter-spacing: 0.01em; color: {{ v.title }}; line-height: 1.1;">{{ v.en }}</div>
+          <div dir="rtl" style="font-family: 'Heebo', sans-serif; font-size: 12px; color: #9A9A98; margin-top: 6px;">{{ v.he }}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- ═══ SECTION: ADMIN ═══ -->
+    <div style="display: flex; align-items: baseline; gap: 16px; margin-bottom: 22px;">
+      <span style="width: 4px; height: 26px; background: #3A3A38;"></span>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6E6E6C;">06</span>
+      <span style="font-size: clamp(24px,3vw,34px); font-weight: 600; letter-spacing: 0.02em; color: #B0B0AE;">ADMIN</span>
+      <span dir="rtl" style="font-family: 'Heebo', sans-serif; font-size: 13px; color: #7A7A78; margin-left: auto;">משני · /admin · לבעלים בלבד</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 10px; margin-bottom: clamp(48px,6vw,80px);">
+      <sc-for list="{{ admin }}" as="a" hint-placeholder-count="8">
+        <div class="card" style="border: 1px solid rgba(255,255,255,0.07); background: #0C0C0C; padding: 16px 18px; display: flex; align-items: baseline; justify-content: space-between; gap: 10px;">
+          <div>
+            <div style="font-size: 16px; font-weight: 500;">{{ a.en }}</div>
+            <div dir="rtl" style="font-family: 'Heebo', sans-serif; font-size: 12px; color: #7A7A78; margin-top: 2px;">{{ a.he }}</div>
+          </div>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #5E5E5C;">{{ a.route }}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- ═══ SECTION: SYSTEM ═══ -->
+    <div style="display: flex; align-items: baseline; gap: 16px; margin-bottom: 22px;">
+      <span style="width: 4px; height: 26px; background: {{ accent }};"></span>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6E6E6C;">07</span>
+      <span style="font-size: clamp(24px,3vw,34px); font-weight: 600; letter-spacing: 0.02em;">SYSTEM RULES</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 14px;">
+      <sc-for list="{{ system }}" as="s" hint-placeholder-count="4">
+        <div style="border-top: 2px solid {{ accent }}; background: #0E0E0E; padding: 20px 22px;">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; color: {{ accent }}; margin-bottom: 10px;">{{ s.k }}</div>
+          <div dir="rtl" style="font-family: 'Heebo', sans-serif; font-size: 13px; line-height: 1.65; color: #B8B8B6;">{{ s.v }}</div>
+        </div>
+      </sc-for>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1180, &quot;height&quot;: 900}, &quot;accent&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;yellow&quot;, &quot;orange&quot;, &quot;lime&quot;], &quot;default&quot;: &quot;yellow&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Brand&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const A = { yellow: '#F5C518', orange: '#FF5B00', lime: '#C6F23E' };
+    const accent = A[this.props.accent] || A.yellow;
+
+    const statChips = ['5 ORCHESTRATORS', '13 DIMENSIONS', '8 VERDICTS', 'CREDIT-METERED', 'RTL · HE / EN'];
+
+    const access = [
+      { en: 'Login', route: '/login', he: 'התחברות', desc: 'אימייל + סיסמה או קישור קסם.' },
+      { en: 'Signup', route: '/signup', he: 'יצירת חשבון', desc: 'בהזמנה בלבד — קוד הזמנה חובה, מעניק בונוס קרדיטים.' },
+      { en: 'Onboarding', route: '/onboarding', he: 'קליטה · 4 שלבים', desc: 'מי אתה · איך אתה קונה · המיקוד שלך · מוכן. מזין את "התאמת‑מפעיל".' },
+    ];
+
+    const workspace = [
+      { en: 'AI Picks', route: '/offers', he: 'ההזדמנויות של היום', desc: 'רשימת ההצעות עם Crack Score, סטטוס וסינון. השורה הראשית של המוצר.', tags: ['CRACK SCORE', 'STATUS', '{n} SCORED'] },
+      { en: 'Add Offer', route: '/offers/new', he: 'הוספת הצעה', desc: 'הדבק שם, URL, תוכנית שותפים והערות‑מפעיל. פותח את הלופ.', tags: ['URL', 'AFFILIATE PROGRAM', 'OPERATOR NOTES'] },
+      { en: 'Campaigns', route: '/campaigns', he: 'קמפיינים', desc: 'קמפיינים אמיתיים שהרצת מול ערכת בדיקה.', tags: ['OFFER', 'CHANNEL', 'STATUS'] },
+      { en: 'Campaign Detail', route: '/campaigns/[id]', he: 'תוצאות + אבחון', desc: 'טופס תוצאות (הוצאה/הכנסה/חשיפות/קליקים/המרות/ימים) → אבחון AI → ניתוח קריאייטיבים V2 (winning hooks).', tags: ['RESULTS', 'DIAGNOSIS', 'WINNING HOOKS'] },
+      { en: 'Billing', route: '/billing', he: 'חיוב וקרדיטים', desc: 'יתרה, מנוי/תוכנית, תמחור לכל פעולה, והיסטוריית ledger.', tags: ['BALANCE', 'PRICING', 'LEDGER'] },
+    ];
+
+    const wizard = [
+      { num: '01', en: 'Overview', he: 'סקירה', orch: 'facts · trending · networks', purpose: 'הצעה, עובדות מאומתות עם ציטוטי מקור, השוואת רשתות, סיגנל trending.', lock: 'OPEN', locked: false, skip: false },
+      { num: '02', en: 'Deep Brief', he: 'בריף מעמיק', orch: 'DeepBriefOrchestrator · Sonnet', purpose: 'בריף שיווקי מלא: זווית, כאבים, הוכחות, מועמדי hooks.', lock: 'OPEN', locked: false, skip: false },
+      { num: '03', en: 'Avatar', he: 'אבטר', orch: 'AvatarBuilderOrchestrator', purpose: 'דיוקן קונה מפורט — דמוגרפיה, פסיכוגרפיה, רצון, התנגדות.', lock: 'LOCKED ← DEEP BRIEF', locked: true, skip: false },
+      { num: '04', en: 'Spy', he: 'ריגול', orch: 'SpyAnalysisOrchestrator', purpose: 'ניתוח מודעות מתחרים חיות — פורמט, hooks, זוויות דומיננטיות.', lock: 'LOCKED ← AVATAR · SKIP', locked: true, skip: true },
+      { num: '05', en: 'Test Kit', he: 'ערכת בדיקה', orch: 'TestKitOrchestrator · Sonnet', purpose: 'ערכת בדיקה רצה: תקציב, geo, kill criteria. יוצרת קמפיין.', lock: 'LOCKED ← AVATAR', locked: true, skip: false },
+      { num: '06', en: 'Copy', he: 'קופי', orch: 'AdCopyOrchestrator', purpose: 'קופי דו‑לשוני לפייסבוק + בחירת hooks. שופט איכות מכויל.', lock: 'LOCKED ← TEST KIT', locked: true, skip: false },
+      { num: '07', en: 'Creatives', he: 'קריאייטיבים', orch: 'CreativeEngineOrchestrator · DALL·E 3', purpose: '7 קונספטי תמונה למודעות, מבוססי ה‑hooks שנבחרו.', lock: 'LOCKED ← COPY', locked: true, skip: false },
+      { num: '08', en: 'Campaign View', he: 'תצוגת קמפיין', orch: 'CampaignView', purpose: 'הרכבת הקמפיין המלא להשקה — הכל במקום אחד.', lock: 'LOCKED ← CREATIVES', locked: true, skip: false },
+    ].map((w) => ({
+      ...w,
+      numColor: w.locked ? '#5E5E5C' : '#0A0A0A',
+      numBg: w.locked ? '#0C0C0C' : accent,
+      lockColor: w.locked ? '#8A7A3A' : accent,
+      lockBorder: w.locked ? 'rgba(245,197,24,0.22)' : 'rgba(245,197,24,0.5)',
+    }));
+
+    const analysis = [
+      { en: 'Crack Score', he: 'Crack Score', orch: 'UnderwritingOrchestrator · Sonnet', desc: '13 מימדים → ציון משוקלל 0–100. מוצג כ‑EvidenceBars.', title: accent, border: 'rgba(245,197,24,0.4)', bg: 'rgba(245,197,24,0.05)' },
+      { en: 'Verdict', he: 'פסיקה', orch: 'UnderwritingOrchestrator · Sonnet', desc: 'פסיקה מסולם 8, סיבות test/avoid, kill & scale criteria, תקציב, geo, ערוץ מומלץ.', title: '#FFFFFF', border: 'rgba(255,255,255,0.12)', bg: '#0E0E0E' },
+      { en: 'Compliance', he: 'רגולציה', orch: 'ComplianceCheck · Haiku', desc: 'סיכוני claims + מסגור בטוח. מגביל (cap) את הפסיקה בהצעות רגישות.', title: '#FFFFFF', border: 'rgba(255,255,255,0.12)', bg: '#0E0E0E' },
+    ];
+
+    const dimRaw = [
+      ['Economics', 'כלכלה'], ['Demand', 'ביקוש'], ['Competition', 'תחרות'], ['Creative Opportunity', 'הזדמנות קריאייטיב'],
+      ['Funnel Fit', 'התאמת פאנל'], ['Compliance', 'רגולציה'], ['Operator Fit', 'התאמת מפעיל'], ['Data Confidence', 'ביטחון נתונים'],
+      ['Offer Trust', 'אמון בהצעה'], ['Scale Potential', 'פוטנציאל סקייל'], ['Cashflow Fit', 'התאמת תזרים'],
+      ['High-Ceiling Potential', 'תקרה גבוהה'], ['Execution Complexity', 'מורכבות ביצוע'],
+    ];
+    const dims = dimRaw.map(([en, he], i) => ({ n: String(i + 1).padStart(2, '0'), en, he }));
+
+    const vRaw = [
+      ['Reject', 'דחייה'], ['Watch', 'מעקב'], ['Organic Only', 'אורגני בלבד'], ['SEO Review Only', 'SEO בלבד'],
+      ['Small Paid Test', 'בדיקה קטנה בתשלום'], ['Strong Test', 'בדיקה חזקה'], ['Strategic Opportunity', 'הזדמנות אסטרטגית'], ['High-Ceiling', 'תקרה גבוהה'],
+    ];
+    const verdicts = vRaw.map(([en, he], i) => {
+      const hot = i >= 6, warm = i >= 4;
+      return {
+        n: String(i + 1).padStart(2, '0'), en, he,
+        title: hot ? accent : (warm ? '#FFFFFF' : '#B0B0AE'),
+        numColor: hot ? accent : '#6E6E6C',
+        border: hot ? 'rgba(245,197,24,0.45)' : (warm ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.08)'),
+        bg: hot ? 'rgba(245,197,24,0.06)' : '#0C0C0C',
+      };
+    });
+
+    const admin = [
+      { en: 'AI Runs', he: 'ריצות AI', route: 'ai-runs' }, { en: 'Prompts', he: 'פרומפטים', route: 'prompts' },
+      { en: 'Eval', he: 'הערכה', route: 'eval' }, { en: 'Discovery', he: 'גילוי', route: 'discovery' },
+      { en: 'Kill Switches', he: 'מתגי חירום', route: 'kill-switches' }, { en: 'Compliance', he: 'כללי רגולציה', route: 'compliance' },
+      { en: 'Invite Codes', he: 'קודי הזמנה', route: 'invite-codes' }, { en: 'Failed (DLQ)', he: 'כשלים', route: 'failed' },
+    ];
+
+    const system = [
+      { k: 'CREDITS', v: 'כל פעולת AI מזמינה/מחייבת קרדיטים; כשל מזוכה אוטומטית; 402 כשאין מספיק. Billing + יתרה בסייד‑בר.' },
+      { k: 'GUARDRAILS', v: 'מתג‑חירום לכל אורקסטרטור · תקרת עלות יומית ב‑USD · שופט LLM · תור dead‑letter עם replay.' },
+      { k: 'I18N · RTL', v: 'עברית RTL עם dir="ltr" על מספרים ומונחי אנגלית. שני locales (he / en) עם תרגום payloadים.' },
+      { k: 'ORCHESTRATORS', v: '5 edge functions (Sonnet 4.6 / Haiku 4.5): Underwriting · SourceExtraction · TestKit · Diagnosis · Compliance.' },
+    ];
+
+    return { accent, statChips, access, workspace, wizard, analysis, dims, verdicts, admin, system };
+  }
+}
+</script>
+</body>
+</html>
