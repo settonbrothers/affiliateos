@@ -13,23 +13,39 @@ function NavItem({ href, label }: NavItemProps) {
   const active = pathname === href || pathname.startsWith(href + '/')
 
   return (
-    <Link
-      href={href}
-      style={{
-        display: 'block',
-        padding: '9px 16px',
-        fontSize: '13px',
-        fontWeight: 500,
-        borderRadius: '8px',
-        textDecoration: 'none',
-        transition: 'var(--transition)',
-        color: active ? 'var(--foreground)' : 'var(--muted-foreground)',
-        background: active ? '#1f1f1f' : 'transparent',
-        borderLeft: active ? '3px solid var(--primary)' : '3px solid transparent',
-      }}
-    >
-      {label}
-    </Link>
+    <div style={{ position: 'relative' }}>
+      {/* Active indicator — separate from the rounded link so border-radius doesn't clip it */}
+      {active && (
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: '7px',
+            bottom: '7px',
+            width: '3px',
+            background: 'var(--primary)',
+            borderRadius: '0 2px 2px 0',
+          }}
+        />
+      )}
+      <Link
+        href={href}
+        className={active ? '' : 'hover:bg-[rgba(255,255,255,0.04)]'}
+        style={{
+          display: 'block',
+          padding: '9px 16px 9px 20px',
+          fontSize: '13px',
+          fontWeight: active ? 500 : 400,
+          textDecoration: 'none',
+          transition: 'var(--transition)',
+          color: active ? 'var(--foreground)' : 'var(--muted-foreground)',
+          background: active ? 'rgba(255,255,255,0.04)' : 'transparent',
+          borderRadius: '0 8px 8px 0',
+        }}
+      >
+        {label}
+      </Link>
+    </div>
   )
 }
 
@@ -39,7 +55,7 @@ interface AppNavProps {
 
 export function AppNav({ items }: AppNavProps) {
   return (
-    <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+    <nav style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
       {items.map((item) => (
         <NavItem key={item.href} href={item.href} label={item.label} />
       ))}

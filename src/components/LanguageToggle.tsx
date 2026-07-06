@@ -1,26 +1,36 @@
 'use client'
 
-import { useLocale, useTranslations } from 'next-intl'
+import { useLocale } from 'next-intl'
 import { useTransition } from 'react'
 
 import { setLocale } from '@/lib/actions/locale'
 
-// Flips between Hebrew and English; the label shows the OTHER language (the one
-// you'd switch to). Choice persists via the `locale` cookie.
 export function LanguageToggle() {
   const locale = useLocale()
-  const t = useTranslations('nav')
   const [isPending, startTransition] = useTransition()
   const next = locale === 'he' ? 'en' : 'he'
+  const label = locale === 'he' ? 'EN' : 'עב'
 
   return (
     <button
       type="button"
       disabled={isPending}
       onClick={() => startTransition(() => setLocale(next))}
-      className="rounded-md border border-[var(--color-border)] px-3 py-2 text-sm hover:bg-[var(--color-muted)] disabled:opacity-50"
+      style={{
+        fontSize: '10px',
+        fontWeight: 600,
+        letterSpacing: '0.05em',
+        color: 'var(--muted-foreground)',
+        background: 'transparent',
+        border: 'none',
+        cursor: 'pointer',
+        padding: '4px 6px',
+        borderRadius: '4px',
+        opacity: isPending ? 0.5 : 1,
+        transition: 'var(--transition)',
+      }}
     >
-      {t('language')}
+      {label}
     </button>
   )
 }

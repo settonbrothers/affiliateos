@@ -19,7 +19,6 @@ export default async function AppLayout({
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // Gate the app until onboarding is done (/onboarding is outside this group).
   if (!(await isOnboarded())) redirect('/onboarding')
 
   const balance = await getCurrentBalance()
@@ -43,11 +42,12 @@ export default async function AppLayout({
           borderRight: '1px solid var(--border)',
           display: 'flex',
           flexDirection: 'column',
-          padding: '20px 0',
+          paddingTop: '24px',
+          paddingBottom: '16px',
         }}
       >
         {/* Logo */}
-        <div style={{ padding: '0 16px 24px', fontSize: '20px', fontWeight: 800, letterSpacing: '-0.02em' }}>
+        <div style={{ padding: '0 20px 28px', fontSize: '18px', fontWeight: 800, letterSpacing: '-0.02em' }}>
           <span style={{ color: 'var(--foreground)' }}>AFF</span>
           <span style={{ color: 'var(--primary)' }}>EX</span>
         </div>
@@ -56,21 +56,46 @@ export default async function AppLayout({
         <AppNav items={navItems} />
 
         {/* Footer */}
-        <div style={{ marginTop: 'auto', padding: '16px' }}>
+        <div
+          style={{
+            marginTop: 'auto',
+            padding: '16px 20px 0',
+            borderTop: '1px solid var(--border)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '8px',
+          }}
+        >
+          {/* Credits pill */}
           <div
             style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px',
               fontSize: '11px',
               color: 'var(--muted-foreground)',
-              padding: '6px 0',
             }}
           >
-            <span>{t('credits')}</span>{' '}
-            <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>{balance ?? '—'}</span>
+            <span
+              style={{
+                display: 'inline-block',
+                width: '6px',
+                height: '6px',
+                borderRadius: '50%',
+                background: 'var(--primary)',
+                opacity: 0.7,
+              }}
+            />
+            <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{balance ?? '—'}</span>
+            <span>credits</span>
           </div>
+
+          {/* Language toggle — minimal */}
           <LanguageToggle />
         </div>
       </aside>
-      <main className="flex-1 p-6">{children}</main>
+      <main className="flex-1 overflow-auto p-8">{children}</main>
     </div>
   )
 }
