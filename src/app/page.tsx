@@ -14,9 +14,11 @@ export default function HomePage() {
     <main className="flex min-h-screen items-center justify-center p-6">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>AffiliateOS</CardTitle>
+          <CardTitle>
+            <span>AFF</span><span style={{ color: 'var(--primary)' }}>EX</span>
+          </CardTitle>
           <CardDescription>
-            Affiliate offer underwriting for media buyers.
+            AI Market Intelligence Terminal for affiliate marketers.
           </CardDescription>
         </CardHeader>
         <CardContent>

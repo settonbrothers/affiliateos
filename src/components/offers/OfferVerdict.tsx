@@ -4,16 +4,15 @@ import {
   type UnderwritingResponse,
 } from '@/types/agents/underwriting'
 
-// Verdict tier → badge color, so "reject" vs "strong_test" reads at a glance.
-const VERDICT_BADGE_CLASS: Record<string, string> = {
-  reject: 'border-red-300 bg-red-100 text-red-800',
-  watch: 'border-amber-300 bg-amber-100 text-amber-800',
-  organic_only: 'border-amber-300 bg-amber-100 text-amber-800',
-  seo_review_only: 'border-amber-300 bg-amber-100 text-amber-800',
-  small_paid_test: 'border-green-300 bg-green-100 text-green-800',
-  strong_test: 'border-green-300 bg-green-100 text-green-800',
-  strategic_opportunity: 'border-emerald-400 bg-emerald-100 text-emerald-900',
-  high_ceiling_opportunity: 'border-emerald-400 bg-emerald-100 text-emerald-900',
+const GRAY_BADGE: React.CSSProperties = {
+  background: 'rgba(255,255,255,0.07)',
+  color: 'var(--muted-foreground)',
+  border: 'none',
+  borderRadius: '8px',
+  padding: '3px 10px',
+  fontSize: '10px',
+  fontWeight: 600,
+  letterSpacing: '0.04em',
 }
 
 export function OfferVerdict({
@@ -21,13 +20,12 @@ export function OfferVerdict({
 }: {
   evaluation: UnderwritingResponse | null
 }) {
-  // Defensive: guard against a non-underwriting payload (no `verdict`).
   const hasVerdict = !!(
     evaluation as { payload?: { verdict?: unknown } } | null
   )?.payload?.verdict
   if (!evaluation || !hasVerdict) {
     return (
-      <p className="text-sm text-[var(--color-muted-foreground)]">
+      <p style={{ fontSize: '13px', color: 'var(--muted-foreground)' }}>
         No verdict yet. Run an analysis first.
       </p>
     )
@@ -38,11 +36,11 @@ export function OfferVerdict({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
-        <Badge className={VERDICT_BADGE_CLASS[p.verdict]}>
+        <Badge style={GRAY_BADGE}>
           {VERDICT_LABELS[p.verdict]}
         </Badge>
         {p.recommended_channel && (
-          <span className="text-sm text-[var(--color-muted-foreground)]">
+          <span style={{ fontSize: '13px', color: 'var(--muted-foreground)' }}>
             Channel: {p.recommended_channel}
           </span>
         )}
@@ -84,8 +82,8 @@ export function OfferVerdict({
               <li key={`${f.statement}-${i}`} className="flex gap-2">
                 <span className="font-medium">{f.statement}</span>
                 {f.source && (
-                  <span className="text-xs text-[var(--color-muted-foreground)]">
-                    — “{f.source}”
+                  <span style={{ fontSize: '11px', color: 'var(--muted-foreground)' }}>
+                    — &quot;{f.source}&quot;
                   </span>
                 )}
               </li>
@@ -96,9 +94,18 @@ export function OfferVerdict({
 
       {evaluation.human_review_required &&
         evaluation.human_review_reasons.length > 0 && (
-          <div className="rounded-md border border-yellow-600/50 bg-yellow-50 p-3 text-sm dark:bg-yellow-950/40">
-            <p className="font-medium">Human review recommended</p>
-            <ul className="mt-1 list-disc pl-5">
+          <div
+            style={{
+              borderRadius: '8px',
+              border: '1px solid var(--amber-border)',
+              background: 'var(--amber-bg)',
+              padding: '12px',
+              fontSize: '13px',
+              color: 'var(--amber-text)',
+            }}
+          >
+            <p style={{ fontWeight: 500, marginBottom: '6px' }}>Human review recommended</p>
+            <ul style={{ paddingLeft: '18px', listStyleType: 'disc' }}>
               {evaluation.human_review_reasons.map((r) => (
                 <li key={r}>{r}</li>
               ))}

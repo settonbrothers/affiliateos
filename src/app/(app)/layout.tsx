@@ -1,8 +1,8 @@
-import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import { redirect } from 'next/navigation'
 
 import { LanguageToggle } from '@/components/LanguageToggle'
+import { AppNav } from '@/components/nav/AppNav'
 import { isCurrentUserAdmin } from '@/lib/auth/role'
 import { getCurrentBalance } from '@/lib/queries/credits'
 import { isOnboarded } from '@/lib/queries/onboarding'
@@ -26,42 +26,47 @@ export default async function AppLayout({
   const isAdmin = await isCurrentUserAdmin()
   const t = await getTranslations('nav')
 
+  const navItems = [
+    { href: '/offers', label: t('offers') },
+    { href: '/campaigns', label: t('campaigns') },
+    { href: '/billing', label: 'Billing' },
+    ...(isAdmin ? [{ href: '/admin', label: t('admin') }] : []),
+  ]
+
   return (
     <div className="flex min-h-screen">
-      <aside className="flex w-56 shrink-0 flex-col border-e border-[var(--color-border)] p-4">
-        <div className="mb-6 text-lg font-semibold">AffiliateOS</div>
-        <nav className="flex flex-col gap-1 text-sm">
-          <Link
-            href="/offers"
-            className="rounded-md px-3 py-2 hover:bg-[var(--color-muted)]"
+      <aside
+        style={{
+          width: 'var(--sidebar-width)',
+          minWidth: 'var(--sidebar-width)',
+          background: 'var(--sidebar-bg)',
+          borderRight: '1px solid var(--border)',
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '20px 0',
+        }}
+      >
+        {/* Logo */}
+        <div style={{ padding: '0 16px 24px', fontSize: '20px', fontWeight: 800, letterSpacing: '-0.02em' }}>
+          <span style={{ color: 'var(--foreground)' }}>AFF</span>
+          <span style={{ color: 'var(--primary)' }}>EX</span>
+        </div>
+
+        {/* Nav */}
+        <AppNav items={navItems} />
+
+        {/* Footer */}
+        <div style={{ marginTop: 'auto', padding: '16px' }}>
+          <div
+            style={{
+              fontSize: '11px',
+              color: 'var(--muted-foreground)',
+              padding: '6px 0',
+            }}
           >
-            {t('offers')}
-          </Link>
-          <Link
-            href="/campaigns"
-            className="rounded-md px-3 py-2 hover:bg-[var(--color-muted)]"
-          >
-            {t('campaigns')}
-          </Link>
-          {isAdmin && (
-            <Link
-              href="/admin"
-              className="rounded-md px-3 py-2 hover:bg-[var(--color-muted)]"
-            >
-              {t('admin')}
-            </Link>
-          )}
-        </nav>
-        <div className="mt-auto flex flex-col gap-2">
-          <Link
-            href="/billing"
-            className="rounded-md border border-[var(--color-border)] px-3 py-2 text-sm hover:bg-[var(--color-muted)]"
-          >
-            <span className="text-[var(--color-muted-foreground)]">
-              {t('credits')}
-            </span>{' '}
-            <span className="font-semibold">{balance ?? '—'}</span>
-          </Link>
+            <span>{t('credits')}</span>{' '}
+            <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>{balance ?? '—'}</span>
+          </div>
           <LanguageToggle />
         </div>
       </aside>

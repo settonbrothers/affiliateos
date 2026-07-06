@@ -34,8 +34,8 @@ export function CampaignWizard({
       {/* Progress bar */}
       <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--color-muted)]">
         <div
-          className="h-full rounded-full bg-green-500 transition-all duration-300"
-          style={{ width: `${progressPercent}%` }}
+          className="h-full rounded-full transition-all duration-300"
+          style={{ width: `${progressPercent}%`, background: 'var(--primary)' }}
         />
       </div>
 
@@ -49,7 +49,7 @@ export function CampaignWizard({
                 'flex items-center gap-1.5 whitespace-nowrap px-2 py-1.5 text-sm',
                 step.isActive && 'font-bold underline underline-offset-4',
                 step.isLocked && 'cursor-not-allowed opacity-40',
-                step.isComplete && !step.isActive && 'text-green-600',
+                step.isComplete && !step.isActive && 'text-[var(--primary)]',
                 !step.isComplete &&
                   !step.isLocked &&
                   !step.isActive &&

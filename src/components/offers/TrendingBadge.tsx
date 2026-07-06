@@ -4,25 +4,30 @@ interface TrendingBadgeProps {
   signal: TrendingSignal
 }
 
+const LABELS: Record<NonNullable<TrendingSignal>, string> = {
+  rising:   '↑ Rising',
+  stable:   '→ Stable',
+  declining: '↓ Declining',
+}
+
 export function TrendingBadge({ signal }: TrendingBadgeProps) {
   if (!signal) return null
 
-  const config = {
-    rising: {
-      label: '📈 עולה',
-      className: 'inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800',
-    },
-    stable: {
-      label: '📊 יציב',
-      className: 'inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700',
-    },
-    declining: {
-      label: '📉 יורד',
-      className: 'inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-800',
-    },
-  } as const
-
-  const { label, className } = config[signal]
-
-  return <span className={className}>{label}</span>
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        borderRadius: '999px',
+        background: 'rgba(255,255,255,0.07)',
+        padding: '3px 10px',
+        fontSize: '10px',
+        fontWeight: 600,
+        color: 'var(--muted-foreground)',
+        letterSpacing: '0.04em',
+      }}
+    >
+      {LABELS[signal]}
+    </span>
+  )
 }

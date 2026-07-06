@@ -202,8 +202,17 @@ export default async function OfferDetailPage({
         {activeTab === 'verdict' && (
           <div className="flex flex-col gap-4">
             {compliance?.suggested_verdict_cap && (
-              <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm dark:bg-red-950/40">
-                <span className="font-medium">
+              <div
+                style={{
+                  borderRadius: '8px',
+                  border: '1px solid var(--amber-border)',
+                  background: 'var(--amber-bg)',
+                  padding: '12px',
+                  fontSize: '13px',
+                  color: 'var(--amber-text)',
+                }}
+              >
+                <span style={{ fontWeight: 500 }}>
                   Compliance cap: verdict limited to &quot;
                   {compliance.suggested_verdict_cap}&quot;.
                 </span>{' '}

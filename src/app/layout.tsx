@@ -12,8 +12,8 @@ const heebo = Heebo({
 })
 
 export const metadata: Metadata = {
-  title: 'AffiliateOS',
-  description: 'Affiliate offer underwriting for media buyers.',
+  title: 'AFFEX',
+  description: 'AI Market Intelligence Terminal for affiliate marketers.',
 }
 
 export default async function RootLayout({
