@@ -2,6 +2,8 @@
 
 @theme inline {
   --font-sans: var(--font-heebo), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-oswald), ui-sans-serif, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -20,32 +22,40 @@
 }
 
 :root {
-  --radius: 0.875rem; /* 14px */
+  --radius: 0; /* AFFEX Lambo: sharp corners (drives shadcn --radius-sm/md/lg) */
 
   /* Backgrounds */
-  --background:  #151515;
-  --sidebar-bg:  #181818;
-  --card:        #1D1D1D;
-  --hover-bg:    #242424;
+  --background:  #0A0A0A;
+  --sidebar-bg:  #0A0A0A;
+  --card:        #0C0C0C;
+  --card-elevated: #0E0E0E;
+  --hover-bg:    #121212;
 
   /* Text */
-  --foreground:         #F4F4F5;
-  --card-foreground:    #F4F4F5;
-  --text-secondary:     #B8BDC7;
-  --muted-foreground:   #7D828A;
-  --muted:              #242424;
+  --foreground:         #FFFFFF;
+  --card-foreground:    #FFFFFF;
+  --text-secondary:     #C9C9C7;
+  --muted-foreground:   #8A8A88;
+  --muted-fainter:      #6E6E6C;
+  --muted-faint:        #5E5E5C;
+  --muted:              #0C0C0C;
 
-  /* Brand */
-  --primary:            #22D67A;
-  --primary-foreground: #0d0d0d;
-  --ring:               #22D67A;
+  /* Brand — Lamborghini Giallo */
+  --primary:            #F5C518;
+  --primary-foreground: #0A0A0A;
+  --ring:               #F5C518;
+
+  /* Accent-on-dark tints */
+  --accent-fill:   rgba(245, 197, 24, 0.06);
+  --accent-border: rgba(245, 197, 24, 0.40);
+  --accent-glow:   rgba(245, 197, 24, 0.55);
 
   /* Structure */
-  --border:      rgba(255, 255, 255, 0.05);
+  --border:      rgba(255, 255, 255, 0.09);
   --shadow:      0 4px 24px rgba(0, 0, 0, 0.45);
-  --transition:  200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition:  180ms cubic-bezier(0.2, 0.9, 0.1, 1);
 
-  /* Amber — warnings only */
+  /* Amber — reserve for compliance cap / human-review only */
   --amber-bg:     rgba(245, 158, 11, 0.07);
   --amber-border: rgba(245, 158, 11, 0.18);
   --amber-text:   #fbbf24;
@@ -60,7 +70,7 @@
   --space-8: 64px;
 
   /* Layout */
-  --sidebar-width:   180px;
+  --nav-height:      62px;
   --space-internal:  24px;
   --space-section:   40px;
 }
@@ -73,5 +83,10 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+  }
+
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px #0A0A0A, 0 0 0 4px var(--primary);
   }
 }
