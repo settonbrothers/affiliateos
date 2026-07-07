@@ -1,4 +1,11 @@
-import type { ScoreDimensions } from '@/types/agents/underwriting'
+'use client'
+
+import { useTranslations } from 'next-intl'
+
+import {
+  SCORE_DIMENSION_LABELS,
+  type ScoreDimensions,
+} from '@/types/agents/underwriting'
 
 interface EvidenceBarsProps {
   scores: ScoreDimensions | null | undefined
@@ -6,22 +13,17 @@ interface EvidenceBarsProps {
   size?: 'full' | 'mini'
 }
 
-const EVIDENCE_BARS = [
-  { label: 'Demand',      key: 'demand',               invert: false },
-  { label: 'Momentum',    key: 'scale_potential',       invert: false },
-  { label: 'History',     key: 'data_confidence',       invert: false },
-  { label: 'Competition', key: 'competition',           invert: false },
-  { label: 'Fatigue',     key: 'creative_opportunity',  invert: true  },
-] as const satisfies ReadonlyArray<{ label: string; key: keyof ScoreDimensions; invert: boolean }>
+// Render order = SCORE_DIMENSION_LABELS key order (13 dims).
+const DIM_KEYS = Object.keys(SCORE_DIMENSION_LABELS) as (keyof ScoreDimensions)[]
 
-function verbalLabel(value: number): string {
-  if (value >= 75) return 'High'
-  if (value >= 50) return 'Strong'
-  if (value >= 30) return 'Low'
-  return 'Very Low'
+function scoreColor(v: number): string {
+  if (v >= 80) return 'var(--primary)'
+  if (v >= 65) return '#FFFFFF'
+  return '#6E6E6C'
 }
 
 export function EvidenceBars({ scores, weightedScore, size = 'full' }: EvidenceBarsProps) {
+  const t = useTranslations('dimensions')
   const isMini = size === 'mini'
 
   if (!scores || weightedScore == null) {
@@ -33,14 +35,13 @@ export function EvidenceBars({ scores, weightedScore, size = 'full' }: EvidenceB
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: isMini ? '12px' : '20px' }}>
-      {/* Score number */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMini ? '16px' : '24px' }}>
       <div>
         <div
           style={{
-            fontSize: '10px',
-            fontWeight: 600,
-            letterSpacing: '0.07em',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '11px',
+            letterSpacing: '0.22em',
             textTransform: 'uppercase',
             color: 'var(--muted-foreground)',
             marginBottom: '4px',
@@ -48,87 +49,90 @@ export function EvidenceBars({ scores, weightedScore, size = 'full' }: EvidenceB
         >
           Crack Score
         </div>
-        <div
-          style={{
-            fontSize: isMini ? '32px' : '64px',
-            fontWeight: 800,
-            lineHeight: 1,
-            color: 'var(--primary)',
-          }}
-        >
-          {weightedScore}
+        <div dir="ltr" style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+          <span
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: isMini ? '48px' : 'clamp(90px,13vw,160px)',
+              fontWeight: 600,
+              lineHeight: 0.8,
+              letterSpacing: '-0.01em',
+              color: scoreColor(weightedScore),
+            }}
+          >
+            {weightedScore}
+          </span>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: isMini ? '16px' : '28px', color: '#4E4E4C' }}>
+            /100
+          </span>
         </div>
       </div>
 
-      {/* Evidence bars */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div>
         <div
           style={{
-            fontSize: '10px',
-            fontWeight: 600,
-            letterSpacing: '0.07em',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '11px',
+            letterSpacing: '0.16em',
             textTransform: 'uppercase',
             color: 'var(--muted-foreground)',
-            marginBottom: '2px',
+            marginBottom: '16px',
           }}
         >
-          Here&apos;s the evidence:
+          THE EVIDENCE · 13 DIMENSIONS
         </div>
-
-        {EVIDENCE_BARS.map(({ label, key, invert }) => {
-          const raw = scores[key]
-          const value = invert ? 100 - raw : raw
-
-          return (
-            <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              {/* Dimension name */}
-              <span
-                style={{
-                  width: '88px',
-                  fontSize: '11px',
-                  color: 'var(--muted-foreground)',
-                  flexShrink: 0,
-                }}
-              >
-                {label}
-              </span>
-
-              {/* Bar track */}
-              <div
-                style={{
-                  flex: 1,
-                  height: '4px',
-                  borderRadius: '2px',
-                  background: 'rgba(255,255,255,0.06)',
-                  overflow: 'hidden',
-                }}
-              >
-                <div
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: isMini ? '1fr' : '1fr 1fr',
+            gap: '12px 26px',
+          }}
+        >
+          {DIM_KEYS.map((key) => {
+            const v = scores[key]
+            const strong = v >= 80
+            return (
+              <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span
                   style={{
-                    width: `${value}%`,
-                    height: '100%',
-                    borderRadius: '2px',
-                    background: 'rgba(255,255,255,0.20)',
-                    transition: 'var(--transition)',
+                    width: '96px',
+                    fontSize: '11.5px',
+                    color: strong ? 'var(--text-secondary)' : 'var(--muted-foreground)',
+                    flexShrink: 0,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
                   }}
-                />
+                >
+                  {t(key)}
+                </span>
+                <div style={{ flex: 1, height: '4px', background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+                  <div
+                    style={{
+                      width: `${v}%`,
+                      height: '100%',
+                      background: strong ? 'var(--primary)' : '#4A4A48',
+                      transition: 'var(--transition)',
+                    }}
+                  />
+                </div>
+                <span
+                  dir="ltr"
+                  style={{
+                    width: '26px',
+                    textAlign: 'left',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '11px',
+                    color: strong ? 'var(--primary)' : 'var(--muted-foreground)',
+                    flexShrink: 0,
+                  }}
+                >
+                  {v}
+                </span>
               </div>
-
-              {/* Verbal label */}
-              <span
-                style={{
-                  width: '60px',
-                  fontSize: '11px',
-                  color: 'var(--muted-foreground)',
-                  textAlign: 'right',
-                  flexShrink: 0,
-                }}
-              >
-                {verbalLabel(value)}
-              </span>
-            </div>
-          )
-        })}
+            )
+          })}
+        </div>
       </div>
     </div>
   )
