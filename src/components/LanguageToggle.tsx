@@ -17,15 +17,13 @@ export function LanguageToggle() {
       disabled={isPending}
       onClick={() => startTransition(() => setLocale(next))}
       style={{
-        fontSize: '10px',
-        fontWeight: 600,
-        letterSpacing: '0.05em',
+        fontFamily: 'var(--font-mono)',
+        fontSize: '10.5px',
         color: 'var(--muted-foreground)',
         background: 'transparent',
-        border: 'none',
+        border: '1px solid rgba(255,255,255,0.16)',
         cursor: 'pointer',
-        padding: '4px 6px',
-        borderRadius: '4px',
+        padding: '3px 8px',
         opacity: isPending ? 0.5 : 1,
         transition: 'var(--transition)',
       }}
