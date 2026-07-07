@@ -64,11 +64,30 @@ export function CampaignResultsForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+          gap: '1px',
+          background: 'rgba(255,255,255,0.09)',
+          border: '1px solid rgba(255,255,255,0.09)',
+        }}
+      >
         {FIELDS.map((f) => (
-          <div key={f.key} className="flex flex-col gap-1.5">
-            <Label htmlFor={f.key}>{t(f.labelKey)}</Label>
+          <div key={f.key} style={{ background: 'var(--background)', padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <Label
+              htmlFor={f.key}
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '9.5px',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                color: 'var(--muted-fainter)',
+              }}
+            >
+              {t(f.labelKey)}
+            </Label>
             <Input
               id={f.key}
               type="number"
@@ -76,13 +95,13 @@ export function CampaignResultsForm({
               {...register(f.key)}
             />
             {errors[f.key] && (
-              <p className="text-sm text-red-600">{errors[f.key]?.message}</p>
+              <p style={{ fontSize: '12px', color: '#E08585' }}>{errors[f.key]?.message}</p>
             )}
           </div>
         ))}
       </div>
-      {serverError && <p className="text-sm text-red-600">{serverError}</p>}
-      {saved && <p className="text-sm text-green-700">{t('saved')}</p>}
+      {serverError && <p style={{ fontSize: '13px', color: '#E08585' }}>{serverError}</p>}
+      {saved && <p style={{ fontSize: '13px', color: '#7BC47F' }}>{t('saved')}</p>}
       <div>
         <Button type="submit" disabled={isPending}>
           {isPending ? t('saving') : t('saveResults')}
