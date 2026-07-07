@@ -1,19 +1,8 @@
-import { Badge } from '@/components/ui/badge'
 import {
   VERDICT_LABELS,
   type UnderwritingResponse,
 } from '@/types/agents/underwriting'
-
-const GRAY_BADGE: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.07)',
-  color: 'var(--muted-foreground)',
-  border: 'none',
-  borderRadius: '8px',
-  padding: '3px 10px',
-  fontSize: '10px',
-  fontWeight: 600,
-  letterSpacing: '0.04em',
-}
+import { verdictTier, verdictChipStyle, verdictDotColor } from '@/lib/offers/verdict-tier'
 
 export function OfferVerdict({
   evaluation,
@@ -36,9 +25,25 @@ export function OfferVerdict({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
-        <Badge style={GRAY_BADGE}>
-          {VERDICT_LABELS[p.verdict]}
-        </Badge>
+        {(() => {
+          const tier = verdictTier(p.verdict)
+          return (
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '9px',
+                padding: '9px 16px',
+                fontSize: '14px',
+                fontWeight: 700,
+                ...verdictChipStyle(tier),
+              }}
+            >
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: verdictDotColor(tier) }} />
+              {VERDICT_LABELS[p.verdict]}
+            </span>
+          )
+        })()}
         {p.recommended_channel && (
           <span style={{ fontSize: '13px', color: 'var(--muted-foreground)' }}>
             Channel: {p.recommended_channel}
