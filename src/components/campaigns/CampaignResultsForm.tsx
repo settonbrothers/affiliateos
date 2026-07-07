@@ -70,12 +70,12 @@ export function CampaignResultsForm({
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
           gap: '1px',
-          background: 'rgba(255,255,255,0.09)',
-          border: '1px solid rgba(255,255,255,0.09)',
+          background: '#DED8CB',
+          border: '1px solid #DED8CB',
         }}
       >
         {FIELDS.map((f) => (
-          <div key={f.key} style={{ background: 'var(--background)', padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div key={f.key} style={{ background: '#F6F4EF', padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <Label
               htmlFor={f.key}
               style={{
@@ -83,7 +83,7 @@ export function CampaignResultsForm({
                 fontSize: '9.5px',
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
-                color: 'var(--muted-fainter)',
+                color: '#6B6459',
               }}
             >
               {t(f.labelKey)}
@@ -92,16 +92,17 @@ export function CampaignResultsForm({
               id={f.key}
               type="number"
               step="any"
+              className="bg-white border-[#D8D2C6] text-[#1F1B16] placeholder:text-[#9A8F73]"
               {...register(f.key)}
             />
             {errors[f.key] && (
-              <p style={{ fontSize: '12px', color: '#E08585' }}>{errors[f.key]?.message}</p>
+              <p style={{ fontSize: '12px', color: '#B4232A' }}>{errors[f.key]?.message}</p>
             )}
           </div>
         ))}
       </div>
-      {serverError && <p style={{ fontSize: '13px', color: '#E08585' }}>{serverError}</p>}
-      {saved && <p style={{ fontSize: '13px', color: '#7BC47F' }}>{t('saved')}</p>}
+      {serverError && <p style={{ fontSize: '13px', color: '#B4232A' }}>{serverError}</p>}
+      {saved && <p style={{ fontSize: '13px', color: '#1F7A3D' }}>{t('saved')}</p>}
       <div>
         <Button type="submit" disabled={isPending}>
           {isPending ? t('saving') : t('saveResults')}

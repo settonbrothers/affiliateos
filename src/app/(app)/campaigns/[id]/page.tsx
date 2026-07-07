@@ -86,13 +86,15 @@ function StatusChip({ status }: { status: string }) {
 function SectionHeading({ label }: { label: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px' }}>
-      <span style={{ width: '4px', height: '22px', background: 'var(--primary)' }} />
+      <span style={{ width: '4px', height: '24px', background: 'var(--primary)', flexShrink: 0 }} />
       <span
         style={{
           fontFamily: 'var(--font-display)',
-          fontSize: 'clamp(20px,2.4vw,28px)',
+          fontSize: 'clamp(24px,3vw,36px)',
           fontWeight: 600,
-          letterSpacing: '0.03em',
+          letterSpacing: '0.02em',
+          color: '#1F1B16',
+          textTransform: 'uppercase',
         }}
       >
         {label}
@@ -128,8 +130,15 @@ export default async function CampaignDetailPage({
   )
 
   return (
-    <div className="flex flex-col gap-8">
-      <div>
+    <div className="flex flex-col" style={{ gap: 0 }}>
+      {/* Band A - dark hero */}
+      <div
+        style={{
+          padding: 'clamp(28px,4vw,52px) clamp(24px,4vw,48px)',
+          background:
+            'radial-gradient(100% 130% at 20% 0%, #17140A 0%, #0D0B09 62%)',
+        }}
+      >
         <div
           dir="ltr"
           style={{
@@ -151,9 +160,10 @@ export default async function CampaignDetailPage({
             style={{
               margin: 0,
               fontFamily: 'var(--font-display)',
-              fontSize: 'clamp(34px,5vw,56px)',
+              fontSize: 'clamp(40px,6vw,64px)',
               fontWeight: 600,
               lineHeight: 0.9,
+              color: '#FFFFFF',
             }}
           >
             {campaign.name}
@@ -176,7 +186,7 @@ export default async function CampaignDetailPage({
           >
             {metaParts.map((part, i) => (
               <span key={i} style={{ display: 'flex', gap: '12px' }}>
-                {i > 0 && <span style={{ color: 'var(--border)' }}>·</span>}
+                {i > 0 && <span style={{ color: 'var(--muted-fainter)' }}>·</span>}
                 <span>{part}</span>
               </span>
             ))}
@@ -184,54 +194,115 @@ export default async function CampaignDetailPage({
         )}
       </div>
 
-      <section className="flex flex-col gap-4">
-        <SectionHeading label={t('resultsHeading')} />
-        <CampaignResultsForm
-          campaignId={campaign.id}
-          initial={results ?? undefined}
-        />
-      </section>
+      {/* Band B - white editorial body */}
+      <div
+        style={{
+          background: '#F6F4EF',
+          color: '#1F1B16',
+          padding: 'clamp(32px,5vw,64px) clamp(24px,4vw,48px)',
+        }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(36px,5vw,56px)' }}>
+          <section className="flex flex-col gap-5" style={{ paddingTop: 'clamp(28px,4vw,40px)', borderTop: '1px solid #DED8CB' }}>
+            <SectionHeading label={t('resultsHeading')} />
+            <CampaignResultsForm
+              campaignId={campaign.id}
+              initial={results ?? undefined}
+            />
+          </section>
 
-      <section className="flex flex-col gap-4">
-        <SectionHeading label={t('diagnosisHeading')} />
-        <DiagnoseButton
-          campaignId={campaign.id}
-          hasResults={!!results}
-          hasDiagnosis={!!diagnosis}
-        />
-        {diagnosis ? (
-          <>
-            <DiagnosisView payload={diagnosisPayload} />
-            {shouldTranslate(locale, diagnosis.payload) && (
-              <TranslationFiller
-                sourceTable="result_diagnoses"
-                sourceId={diagnosis.id}
-                locale={locale}
-              />
+          <section className="flex flex-col gap-5" style={{ paddingTop: 'clamp(28px,4vw,40px)', borderTop: '1px solid #DED8CB' }}>
+            <SectionHeading label={t('diagnosisHeading')} />
+            <DiagnoseButton
+              campaignId={campaign.id}
+              hasResults={!!results}
+              hasDiagnosis={!!diagnosis}
+            />
+            {diagnosis ? (
+              <>
+                <DiagnosisView payload={diagnosisPayload} />
+                {shouldTranslate(locale, diagnosis.payload) && (
+                  <TranslationFiller
+                    sourceTable="result_diagnoses"
+                    sourceId={diagnosis.id}
+                    locale={locale}
+                  />
+                )}
+              </>
+            ) : (
+              <p style={{ fontSize: '14px', color: '#6B6459' }}>
+                {t('diagnosisEmpty')}
+              </p>
             )}
-          </>
-        ) : (
-          <p style={{ fontSize: '14px', color: 'var(--muted-foreground)' }}>
-            {t('diagnosisEmpty')}
-          </p>
-        )}
-      </section>
+          </section>
 
-      <section className="flex flex-col gap-4">
-        <SectionHeading label="ניתוח קריאייטיבים (V2)" />
-        <DiagnoseCreativesForm campaignId={campaign.id} />
-        {diagnosis?.creative_analysis ? (
-          <DiagnoseV2Display
-            creativeAnalysis={diagnosis.creative_analysis}
-            winningHooks={diagnosis.winning_hooks}
-            winnersAddedToLibrary={diagnosis.winners_added_to_library}
+          <section className="flex flex-col gap-5" style={{ paddingTop: 'clamp(28px,4vw,40px)', borderTop: '1px solid #DED8CB' }}>
+            <SectionHeading label="WINNING HOOKS" />
+            <p style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', color: '#6B6459', marginTop: '-8px' }}>
+              ניתוח קריאייטיבים (V2) · הדבק טקסט מודעות שרצו כדי למצוא winning hooks
+            </p>
+            <DiagnoseCreativesForm campaignId={campaign.id} />
+            {diagnosis?.creative_analysis ? (
+              <DiagnoseV2Display
+                creativeAnalysis={diagnosis.creative_analysis}
+                winningHooks={diagnosis.winning_hooks}
+                winnersAddedToLibrary={diagnosis.winners_added_to_library}
+              />
+            ) : (
+              <p style={{ fontSize: '14px', color: '#6B6459' }}>
+                הדבק טקסט מודעות שרצו כדי לנתח קריאייטיבים ולמצוא winning hooks.
+              </p>
+            )}
+          </section>
+        </div>
+      </div>
+
+      {/* Band C - dark closing band */}
+      <div
+        dir="ltr"
+        style={{
+          background: '#0D0B09',
+          padding: 'clamp(20px,3vw,28px) clamp(24px,4vw,48px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '10px',
+        }}
+      >
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '10.5px',
+            letterSpacing: '0.12em',
+            color: 'var(--muted-fainter)',
+          }}
+        >
+          <span
+            className="animate-pulse"
+            style={{
+              width: '6px',
+              height: '6px',
+              borderRadius: '50%',
+              background: 'var(--primary)',
+            }}
           />
-        ) : (
-          <p style={{ fontSize: '14px', color: 'var(--muted-foreground)' }}>
-            הדבק טקסט מודעות שרצו כדי לנתח קריאייטיבים ולמצוא winning hooks.
-          </p>
-        )}
-      </section>
+          AFFEX · CAMPAIGN INTELLIGENCE
+        </span>
+        <span
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '10.5px',
+            letterSpacing: '0.12em',
+            color: 'var(--muted-foreground)',
+          }}
+        >
+          {campaign.status.toUpperCase()}
+        </span>
+      </div>
     </div>
   )
 }

@@ -44,8 +44,8 @@ const EmptyMark = ({ w = 16 }: { w?: number }) => (
     style={{
       display: 'inline-block',
       width: `${w}px`,
-      height: '2px',
-      background: '#767674',
+      height: '1px',
+      background: '#DED8CB',
       verticalAlign: 'middle',
     }}
   />
@@ -64,7 +64,7 @@ export function DiagnoseV2Display({
 
   if (!analysis || !Array.isArray(analysis.creative_analysis)) {
     return (
-      <p style={{ fontSize: '14px', color: 'var(--muted-foreground)' }}>
+      <p style={{ fontSize: '14px', color: '#6B6459' }}>
         אין ניתוח קריאייטיב זמין עדיין.
       </p>
     )
@@ -79,29 +79,28 @@ export function DiagnoseV2Display({
       {/* Overall assessment */}
       <div
         style={{
-          border: '1px solid rgba(255,255,255,0.1)',
-          background: 'var(--card)',
-          padding: '18px 20px',
+          borderInlineStart: '3px solid var(--primary)',
+          paddingInlineStart: '16px',
         }}
       >
-        <p style={{ fontSize: '13.5px', lineHeight: 1.65, color: '#D4D4D2' }}>
+        <p style={{ fontSize: '13.5px', lineHeight: 1.65, color: '#1F1B16' }}>
           {analysis.overall_assessment}
         </p>
       </div>
 
       {/* Winning hooks table */}
       <div>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px', marginBottom: '16px' }}>
-          <span style={{ width: '4px', height: '22px', background: 'var(--primary)' }} />
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '14px', flexWrap: 'wrap' }}>
           <span
             style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 'clamp(20px,2.4vw,28px)',
-              fontWeight: 600,
-              letterSpacing: '0.03em',
+              fontFamily: 'var(--font-mono)',
+              fontSize: '10.5px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              color: '#8A7A55',
             }}
           >
-            WINNING HOOKS
+            Hooks tested
           </span>
           {winnersAddedToLibrary && (
             <span
@@ -110,7 +109,7 @@ export function DiagnoseV2Display({
                 marginInlineStart: 'auto',
                 fontFamily: 'var(--font-mono)',
                 fontSize: '11px',
-                color: 'var(--muted-foreground)',
+                color: '#8A7A55',
               }}
             >
               winners added to Hook Library
@@ -118,7 +117,7 @@ export function DiagnoseV2Display({
           )}
         </div>
 
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.09)' }}>
+        <div style={{ borderTop: '1px solid #DED8CB' }}>
           {analysis.creative_analysis.map((item, i) => {
             const isWin = item.is_winner || hookSet.has(item.hook)
             return (
@@ -131,8 +130,8 @@ export function DiagnoseV2Display({
                   alignItems: 'center',
                   gap: '18px',
                   padding: '16px 12px',
-                  borderBottom: '1px solid rgba(255,255,255,0.06)',
-                  background: isWin ? 'var(--accent-fill)' : 'transparent',
+                  borderBottom: '1px solid #ECE6DA',
+                  background: isWin ? '#FBF3D8' : 'transparent',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
@@ -141,8 +140,8 @@ export function DiagnoseV2Display({
                     style={{
                       fontFamily: 'var(--font-mono)',
                       fontSize: '11px',
-                      color: '#C9C9C7',
-                      border: '1px solid rgba(255,255,255,0.14)',
+                      color: '#1F1B16',
+                      border: '1px solid #DED8CB',
                       padding: '4px 8px',
                       whiteSpace: 'nowrap',
                     }}
@@ -166,14 +165,14 @@ export function DiagnoseV2Display({
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
-                  <span style={{ fontSize: '14px', color: isWin ? '#E4E4E2' : '#9A9A98' }}>
+                  <span style={{ fontSize: '14px', color: isWin ? '#1F1B16' : '#6B6459' }}>
                     {item.hook}
                   </span>
                   <span
                     style={{
                       fontFamily: 'var(--font-mono)',
                       fontSize: '10.5px',
-                      color: 'var(--muted-fainter)',
+                      color: '#9A8F73',
                     }}
                   >
                     {HOOK_TYPE_LABELS[item.hook_type] ?? item.hook_type}
@@ -181,10 +180,10 @@ export function DiagnoseV2Display({
                 </div>
 
                 <div dir="ltr" style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'right' }}>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#7BC47F' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#1F7A3D' }}>
                     {item.what_worked || <EmptyMark />}
                   </span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#E08585' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#B4232A' }}>
                     {item.what_didnt || <EmptyMark />}
                   </span>
                 </div>
@@ -204,15 +203,15 @@ export function DiagnoseV2Display({
                 fontSize: '10.5px',
                 textTransform: 'uppercase',
                 letterSpacing: '0.1em',
-                color: 'var(--muted-fainter)',
+                color: '#8A7A55',
               }}
             >
               המלצות לקמפיין הבא
             </h3>
             <ol style={{ display: 'flex', flexDirection: 'column', gap: '8px', margin: 0, padding: 0, listStyle: 'none' }}>
               {analysis.next_campaign_recommendations.map((rec, i) => (
-                <li key={i} style={{ display: 'flex', gap: '8px', fontSize: '13.5px', color: '#D4D4D2' }}>
-                  <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted-fainter)' }}>
+                <li key={i} style={{ display: 'flex', gap: '8px', fontSize: '13.5px', color: '#1F1B16' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', color: '#9A8F73' }}>
                     {String(i + 1).padStart(2, '0')}
                   </span>
                   {rec}
