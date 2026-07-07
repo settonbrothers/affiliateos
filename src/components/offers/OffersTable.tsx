@@ -18,7 +18,7 @@ function scoreColor(v: number): string {
 
 const GRID = '40px minmax(120px,1.4fr) 96px 106px 150px 150px'
 
-export function OffersTable({ offers }: { offers: Offer[] }) {
+export function OffersTable({ offers, verticalNames }: { offers: Offer[]; verticalNames: Record<string, string> }) {
   const t = useTranslations('offers')
   const [filter, setFilter] = useState<FilterKey>('all')
 
@@ -113,8 +113,7 @@ export function OffersTable({ offers }: { offers: Offer[] }) {
               const score = scoreOf(offer)
               const verdict = offer.evaluation?.payload?.verdict ?? null
               const tier = verdict ? verdictTier(verdict) : null
-              const vertical = (offer as { vertical?: string }).vertical
-              const websiteUrl = (offer as { website_url?: string | null }).website_url
+              const vertical = offer.vertical_id ? verticalNames[offer.vertical_id] : null
               return (
                 <Link
                   key={offer.id}
@@ -161,9 +160,9 @@ export function OffersTable({ offers }: { offers: Offer[] }) {
                         <span dir="ltr" style={{ flexShrink: 0, fontFamily: 'var(--font-mono)', fontSize: '8.5px', letterSpacing: '0.06em', color: 'var(--primary)', border: '1px solid var(--accent-border)', padding: '2px 6px' }}>NEW</span>
                       )}
                     </div>
-                    {websiteUrl && (
+                    {offer.website_url && (
                       <div dir="ltr" style={{ marginTop: '4px', fontFamily: 'var(--font-mono)', fontSize: '10.5px', color: '#6E6E6C', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'right' }}>
-                        {websiteUrl}
+                        {offer.website_url}
                       </div>
                     )}
                   </div>

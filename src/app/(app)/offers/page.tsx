@@ -2,10 +2,12 @@ import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 
 import { OffersTable } from '@/components/offers/OffersTable'
-import { listOffers } from '@/lib/queries/offers'
+import { listOffers, listVerticals } from '@/lib/queries/offers'
 
 export default async function OffersPage() {
   const offers = await listOffers()
+  const verticals = await listVerticals()
+  const verticalNames = Object.fromEntries(verticals.map((v) => [v.id, v.name]))
   const t = await getTranslations('offers')
 
   const scoredCount = offers.filter((o) => o.evaluation?.payload?.weighted_score != null).length
@@ -35,7 +37,7 @@ export default async function OffersPage() {
         </Link>
       </div>
 
-      <OffersTable offers={offers} />
+      <OffersTable offers={offers} verticalNames={verticalNames} />
     </div>
   )
 }
