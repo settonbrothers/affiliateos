@@ -44,7 +44,7 @@ export default async function AppLayout({
           justifyContent: 'space-between',
           height: 'var(--nav-height)',
           padding: '0 clamp(20px,3vw,44px)',
-          background: 'rgba(28,24,20,0.94)',
+          background: 'rgba(42,36,29,0.96)',
           backdropFilter: 'blur(10px)',
           borderBottom: '1px solid var(--border)',
         }}

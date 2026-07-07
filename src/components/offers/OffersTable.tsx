@@ -130,7 +130,7 @@ export function OffersTable({ offers, verticalNames }: { offers: Offer[]; vertic
                     alignItems: 'center',
                     gap: '16px',
                     padding: '18px 12px',
-                    borderBottom: '1px solid rgba(255,255,255,0.10)',
+                    borderBottom: '1px solid rgba(255,255,255,0.16)',
                     textDecoration: 'none',
                     color: 'inherit',
                   }}
