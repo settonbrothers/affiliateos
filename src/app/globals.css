@@ -92,3 +92,7 @@
 }
 
 .navlink:hover { color: #FFFFFF !important; }
+
+.prow { transition: background 0.18s ease; position: relative; }
+.prow:hover { background: #121212 !important; }
+.prow:hover .pedge { transform: scaleY(1) !important; }

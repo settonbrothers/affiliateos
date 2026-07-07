@@ -67,6 +67,10 @@
   "offers": {
     "title": "ההזדמנויות של היום",
     "addOffer": "הוספת הצעה",
+    "filterAll": "הכל",
+    "filterRecommended": "מומלצות",
+    "filterHot": "חמות",
+    "filterNew": "חדשות",
     "newTitle": "הוספת הצעה",
     "editTitle": "עריכת הצעה",
     "empty": "אין הצעות עדיין. הוסף את ההצעה הראשונה כדי להתחיל.",

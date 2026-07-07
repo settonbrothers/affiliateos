@@ -67,6 +67,10 @@
   "offers": {
     "title": "Today's Opportunities",
     "addOffer": "Add Offer",
+    "filterAll": "All",
+    "filterRecommended": "Recommended",
+    "filterHot": "Hot",
+    "filterNew": "New",
     "newTitle": "Add offer",
     "editTitle": "Edit offer",
     "empty": "No offers yet. Add your first offer to get started.",
