@@ -90,3 +90,5 @@
     box-shadow: 0 0 0 2px #0A0A0A, 0 0 0 4px var(--primary);
   }
 }
+
+.navlink:hover { color: #FFFFFF !important; }

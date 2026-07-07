@@ -13,39 +13,33 @@ function NavItem({ href, label }: NavItemProps) {
   const active = pathname === href || pathname.startsWith(href + '/')
 
   return (
-    <div style={{ position: 'relative' }}>
-      {/* Active indicator — separate from the rounded link so border-radius doesn't clip it */}
+    <Link
+      href={href}
+      className="navlink"
+      style={{
+        position: 'relative',
+        display: 'inline-block',
+        padding: '0 0 20px',
+        fontSize: '13.5px',
+        fontWeight: 500,
+        textDecoration: 'none',
+        color: active ? 'var(--foreground)' : '#7A7A78',
+        transition: 'color 0.2s',
+      }}
+    >
+      {label}
       {active && (
-        <div
+        <span
           style={{
             position: 'absolute',
-            left: 0,
-            top: '7px',
-            bottom: '7px',
-            width: '3px',
+            insetInline: 0,
+            bottom: 'calc(-1 * ((var(--nav-height) - 20px) / 2) + 10px)',
+            height: '2px',
             background: 'var(--primary)',
-            borderRadius: '0 2px 2px 0',
           }}
         />
       )}
-      <Link
-        href={href}
-        className={active ? '' : 'hover:bg-[rgba(255,255,255,0.04)]'}
-        style={{
-          display: 'block',
-          padding: '9px 16px 9px 20px',
-          fontSize: '13px',
-          fontWeight: active ? 500 : 400,
-          textDecoration: 'none',
-          transition: 'var(--transition)',
-          color: active ? 'var(--foreground)' : 'var(--muted-foreground)',
-          background: active ? 'rgba(255,255,255,0.04)' : 'transparent',
-          borderRadius: '0 8px 8px 0',
-        }}
-      >
-        {label}
-      </Link>
-    </div>
+    </Link>
   )
 }
 
@@ -55,7 +49,7 @@ interface AppNavProps {
 
 export function AppNav({ items }: AppNavProps) {
   return (
-    <nav style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+    <nav style={{ display: 'flex', alignItems: 'center', gap: 'clamp(16px,2vw,30px)' }}>
       {items.map((item) => (
         <NavItem key={item.href} href={item.href} label={item.label} />
       ))}
