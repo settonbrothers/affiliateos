@@ -24,6 +24,7 @@ import { CreativesDisplay } from '@/components/creative-engine/CreativesDisplay'
 import { CampaignView } from '@/components/campaign-view/CampaignView'
 import { CampaignWizard } from '@/components/wizard/CampaignWizard'
 import type { WizardStep } from '@/components/wizard/CampaignWizard'
+import { EvidenceBars } from '@/components/crack-score/evidence-bars'
 import { NetworkComparisonCard } from '@/components/offers/NetworkComparisonCard'
 import { TrendingBadge } from '@/components/offers/TrendingBadge'
 import { TranslationFiller } from '@/components/i18n/TranslationFiller'
@@ -150,13 +151,18 @@ export default async function OfferDetailPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-start justify-between">
+      <div dir="ltr" style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.1em', color: '#6E6E6C' }}>
+        ‹ AI PICKS&nbsp;<span style={{ color: '#3A3A38' }}>/</span>&nbsp;<span style={{ color: '#9A9A98' }}>{offer.name.toUpperCase()}</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '24px', flexWrap: 'wrap' }}>
         <div>
-          <h1 className="text-2xl font-semibold">{offer.name}</h1>
+          <h1 dir="ltr" style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 'clamp(40px,6vw,72px)', fontWeight: 600, lineHeight: 0.9, letterSpacing: '0.01em', textAlign: 'right' }}>
+            {offer.name}
+          </h1>
           {offer.website_url && (
-            <p className="text-sm text-[var(--color-muted-foreground)]">
+            <div dir="ltr" style={{ marginTop: '12px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#7A7A78' }}>
               {offer.website_url}
-            </p>
+            </div>
           )}
         </div>
         <div className="flex items-center gap-3">
@@ -171,6 +177,12 @@ export default async function OfferDetailPage({
           <AnalyzeButton offerId={offer.id} initialStatus={run?.status ?? null} initialRunId={run?.id ?? null} />
         </div>
       </div>
+
+      {evaluation?.payload && (
+        <div style={{ border: '1px solid rgba(255,255,255,0.1)', background: 'radial-gradient(90% 130% at 22% 0%, #17140A 0%, #0C0C0C 62%)', padding: 'clamp(24px,3vw,40px)' }}>
+          <EvidenceBars scores={evaluation.payload.scores} weightedScore={evaluation.payload.weighted_score} />
+        </div>
+      )}
 
       <CampaignWizard steps={wizardSteps} completedCount={completedCount} totalCount={wizardSteps.length}>
         {activeTab === 'overview' && (
