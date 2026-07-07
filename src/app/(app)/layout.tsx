@@ -46,7 +46,6 @@ export default async function AppLayout({
           padding: '0 clamp(20px,3vw,44px)',
           background: 'rgba(42,36,29,0.96)',
           backdropFilter: 'blur(10px)',
-          borderBottom: '1px solid var(--border)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(20px,3vw,44px)' }}>

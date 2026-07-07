@@ -110,7 +110,7 @@ export function OffersTable({ offers, verticalNames }: { offers: Offer[]; vertic
             <span>VERTICAL</span>
             <span>PAYOUT</span>
             <span>VERDICT</span>
-            <span style={{ color: 'var(--accent-border)' }}>CRACK SCORE</span>
+            <span style={{ color: 'var(--primary)', fontWeight: 600 }}>CRACK SCORE</span>
           </div>
 
           <div style={{ borderTop: '1px solid var(--border)' }}>
