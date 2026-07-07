@@ -40,7 +40,8 @@ export function CampaignWizard({
         {steps.map((step, index) => {
           const stepContent = (
             <div
-              className={cn('step', step.isActive && 'is-active', step.isLocked && 'cursor-not-allowed')}
+              className={cn(step.isLocked && 'cursor-not-allowed')}
+              aria-current={step.isActive ? 'step' : undefined}
               style={{
                 flex: 1,
                 minWidth: '118px',
@@ -68,11 +69,14 @@ export function CampaignWizard({
                 >
                   {step.isComplete ? '✓' : String(index + 1).padStart(2, '0')}
                 </span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: step.isLocked ? '#4E4E4C' : '#6E6E6C' }}>
+                <span aria-hidden style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: step.isLocked ? '#4E4E4C' : '#6E6E6C' }}>
                   {step.isLocked ? '🔒' : step.isComplete ? '' : '›'}
                 </span>
               </div>
               <div style={{ fontSize: '13px', fontWeight: 500, color: step.isLocked ? '#6E6E6C' : '#FFFFFF' }}>{step.label}</div>
+              <span style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}>
+                {step.isLocked ? 'locked' : step.isComplete ? 'complete' : 'available'}
+              </span>
               {step.isActive && <span style={{ position: 'absolute', insetInline: 0, bottom: '-1px', height: '2px', background: 'var(--primary)' }} />}
             </div>
           )
