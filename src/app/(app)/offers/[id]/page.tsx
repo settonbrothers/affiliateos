@@ -179,7 +179,7 @@ export default async function OfferDetailPage({
       </div>
 
       {evaluation?.payload && (
-        <div style={{ border: '1px solid rgba(255,255,255,0.1)', background: 'radial-gradient(90% 130% at 22% 0%, #17140A 0%, #0C0C0C 62%)', padding: 'clamp(24px,3vw,40px)' }}>
+        <div style={{ border: '1px solid rgba(255,255,255,0.1)', background: 'radial-gradient(90% 130% at 22% 0%, #17140A 0%, #161310 62%)', padding: 'clamp(24px,3vw,40px)' }}>
           <EvidenceBars scores={evaluation.payload.scores} weightedScore={evaluation.payload.weighted_score} />
         </div>
       )}

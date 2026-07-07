@@ -106,7 +106,7 @@ export function EvidenceBars({ scores, weightedScore, size = 'full' }: EvidenceB
                 >
                   {t(key)}
                 </span>
-                <div style={{ flex: 1, height: '4px', background: 'rgba(255,255,255,0.13)', overflow: 'hidden' }}>
+                <div style={{ flex: 1, height: '4px', background: 'rgba(255,255,255,0.16)', overflow: 'hidden' }}>
                   <div
                     style={{
                       width: `${v}%`,
