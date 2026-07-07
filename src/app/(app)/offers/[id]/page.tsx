@@ -151,8 +151,8 @@ export default async function OfferDetailPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <div dir="ltr" style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.1em', color: '#6E6E6C' }}>
-        ‹ AI PICKS&nbsp;<span style={{ color: '#3A3A38' }}>/</span>&nbsp;<span style={{ color: '#9A9A98' }}>{offer.name.toUpperCase()}</span>
+      <div dir="ltr" style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.1em', color: '#8E8E8C' }}>
+        ‹ AI PICKS&nbsp;<span style={{ color: '#5A5A58' }}>/</span>&nbsp;<span style={{ color: '#9A9A98' }}>{offer.name.toUpperCase()}</span>
       </div>
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '24px', flexWrap: 'wrap' }}>
         <div>
@@ -160,7 +160,7 @@ export default async function OfferDetailPage({
             {offer.name}
           </h1>
           {offer.website_url && (
-            <div dir="ltr" style={{ marginTop: '12px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#7A7A78' }}>
+            <div dir="ltr" style={{ marginTop: '12px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#9C9C9A' }}>
               {offer.website_url}
             </div>
           )}

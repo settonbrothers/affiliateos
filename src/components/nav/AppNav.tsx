@@ -18,12 +18,14 @@ function NavItem({ href, label }: NavItemProps) {
       className="navlink"
       style={{
         position: 'relative',
-        display: 'inline-block',
-        padding: '0 0 20px',
+        height: 'var(--nav-height)',
+        display: 'inline-flex',
+        alignItems: 'center',
+        padding: '0',
         fontSize: '13.5px',
         fontWeight: 500,
         textDecoration: 'none',
-        color: active ? 'var(--foreground)' : '#7A7A78',
+        color: active ? 'var(--foreground)' : '#9C9C9A',
         transition: 'color 0.2s',
       }}
     >
@@ -33,7 +35,7 @@ function NavItem({ href, label }: NavItemProps) {
           style={{
             position: 'absolute',
             insetInline: 0,
-            bottom: 'calc(-1 * ((var(--nav-height) - 20px) / 2) + 10px)',
+            bottom: 0,
             height: '2px',
             background: 'var(--primary)',
           }}

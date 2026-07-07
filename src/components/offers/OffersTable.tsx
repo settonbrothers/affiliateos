@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { TrendingUp } from 'lucide-react'
 
 import { verdictTier, verdictChipStyle, verdictDotColor } from '@/lib/offers/verdict-tier'
 import { VERDICT_LABELS } from '@/types/agents/underwriting'
@@ -13,10 +14,14 @@ type FilterKey = 'all' | 'rec' | 'hot' | 'new'
 function scoreColor(v: number): string {
   if (v >= 80) return 'var(--primary)'
   if (v >= 65) return '#FFFFFF'
-  return '#6E6E6C'
+  return '#8E8E8C'
 }
 
 const GRID = '40px minmax(120px,1.4fr) 96px 106px 150px 150px'
+
+const EmptyMark = ({ w = 16 }: { w?: number }) => (
+  <span style={{ display: 'inline-block', width: `${w}px`, height: '2px', background: '#5A5A58', verticalAlign: 'middle' }} />
+)
 
 export function OffersTable({ offers, verticalNames }: { offers: Offer[]; verticalNames: Record<string, string> }) {
   const t = useTranslations('offers')
@@ -65,7 +70,7 @@ export function OffersTable({ offers, verticalNames }: { offers: Offer[]; vertic
                 padding: '0 0 14px',
                 fontSize: '14px',
                 fontWeight: 600,
-                color: active ? '#FFFFFF' : '#7A7A78',
+                color: active ? '#FFFFFF' : '#9C9C9A',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '7px',
@@ -97,7 +102,7 @@ export function OffersTable({ offers, verticalNames }: { offers: Offer[]; vertic
               fontFamily: 'var(--font-mono)',
               fontSize: '9.5px',
               letterSpacing: '0.12em',
-              color: '#5E5E5C',
+              color: '#7C7C7A',
             }}
           >
             <span>#</span>
@@ -144,7 +149,7 @@ export function OffersTable({ offers, verticalNames }: { offers: Offer[]; vertic
                       transition: 'transform 0.2s ease',
                     }}
                   />
-                  <span dir="ltr" style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: i === 0 ? 'var(--primary)' : '#5E5E5C', textAlign: 'right' }}>
+                  <span dir="ltr" style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: i === 0 ? 'var(--primary)' : '#7C7C7A', textAlign: 'right' }}>
                     {String(i + 1).padStart(2, '0')}
                   </span>
 
@@ -154,22 +159,22 @@ export function OffersTable({ offers, verticalNames }: { offers: Offer[]; vertic
                         {offer.name}
                       </span>
                       {isRising(offer) && (
-                        <span dir="ltr" style={{ flexShrink: 0, fontFamily: 'var(--font-mono)', fontSize: '8.5px', letterSpacing: '0.06em', color: '#0A0A0A', background: 'var(--primary)', padding: '2px 6px' }}>▲ HOT</span>
+                        <span dir="ltr" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', flexShrink: 0, fontFamily: 'var(--font-mono)', fontSize: '8.5px', letterSpacing: '0.06em', color: '#0A0A0A', background: 'var(--primary)', padding: '2px 6px' }}><TrendingUp size={9} strokeWidth={3} /> HOT</span>
                       )}
                       {score == null && (
                         <span dir="ltr" style={{ flexShrink: 0, fontFamily: 'var(--font-mono)', fontSize: '8.5px', letterSpacing: '0.06em', color: 'var(--primary)', border: '1px solid var(--accent-border)', padding: '2px 6px' }}>NEW</span>
                       )}
                     </div>
                     {offer.website_url && (
-                      <div dir="ltr" style={{ marginTop: '4px', fontFamily: 'var(--font-mono)', fontSize: '10.5px', color: '#6E6E6C', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'right' }}>
+                      <div dir="ltr" style={{ marginTop: '4px', fontFamily: 'var(--font-mono)', fontSize: '10.5px', color: '#8E8E8C', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'right' }}>
                         {offer.website_url}
                       </div>
                     )}
                   </div>
 
-                  <span style={{ fontSize: '13px', color: '#9A9A98' }}>{vertical ?? '—'}</span>
+                  <span style={{ fontSize: '13px', color: '#9A9A98' }}>{vertical ?? <EmptyMark />}</span>
 
-                  <span style={{ color: 'rgba(255,255,255,0.18)', fontSize: '13px' }}>—</span>
+                  <EmptyMark />
 
                   {tier && verdict ? (
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', justifySelf: 'start', fontSize: '12px', fontWeight: 600, padding: '5px 11px', whiteSpace: 'nowrap', ...verdictChipStyle(tier) }}>
@@ -177,14 +182,20 @@ export function OffersTable({ offers, verticalNames }: { offers: Offer[]; vertic
                       {VERDICT_LABELS[verdict]}
                     </span>
                   ) : (
-                    <span style={{ color: 'rgba(255,255,255,0.18)', fontSize: '13px' }}>—</span>
+                    <EmptyMark />
                   )}
 
                   <div dir="ltr" style={{ display: 'flex', alignItems: 'baseline', gap: '3px' }}>
-                    <span style={{ fontFamily: 'var(--font-display)', fontSize: '42px', fontWeight: 600, lineHeight: 0.8, color: score == null ? '#4E4E4C' : scoreColor(score) }}>
-                      {score ?? '—'}
-                    </span>
-                    {score != null && <span style={{ fontFamily: 'var(--font-display)', fontSize: '14px', color: '#4E4E4C' }}>/100</span>}
+                    {score == null ? (
+                      <EmptyMark w={22} />
+                    ) : (
+                      <>
+                        <span style={{ fontFamily: 'var(--font-display)', fontSize: '42px', fontWeight: 600, lineHeight: 0.8, color: scoreColor(score) }}>
+                          {score}
+                        </span>
+                        <span style={{ fontFamily: 'var(--font-display)', fontSize: '14px', color: '#6A6A68' }}>/100</span>
+                      </>
+                    )}
                   </div>
                 </Link>
               )
