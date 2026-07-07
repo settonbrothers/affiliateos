@@ -19,7 +19,7 @@ const DIM_KEYS = Object.keys(SCORE_DIMENSION_LABELS) as (keyof ScoreDimensions)[
 function scoreColor(v: number): string {
   if (v >= 80) return 'var(--primary)'
   if (v >= 65) return '#FFFFFF'
-  return '#8E8E8C'
+  return '#A2A2A0'
 }
 
 export function EvidenceBars({ scores, weightedScore, size = 'full' }: EvidenceBarsProps) {
@@ -62,7 +62,7 @@ export function EvidenceBars({ scores, weightedScore, size = 'full' }: EvidenceB
           >
             {weightedScore}
           </span>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: isMini ? '16px' : '28px', color: '#6A6A68' }}>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: isMini ? '16px' : '28px', color: '#828280' }}>
             /100
           </span>
         </div>
@@ -106,12 +106,12 @@ export function EvidenceBars({ scores, weightedScore, size = 'full' }: EvidenceB
                 >
                   {t(key)}
                 </span>
-                <div style={{ flex: 1, height: '4px', background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+                <div style={{ flex: 1, height: '4px', background: 'rgba(255,255,255,0.13)', overflow: 'hidden' }}>
                   <div
                     style={{
                       width: `${v}%`,
                       height: '100%',
-                      background: strong ? 'var(--primary)' : '#6E6E6C',
+                      background: strong ? 'var(--primary)' : '#828280',
                       transition: 'var(--transition)',
                     }}
                   />

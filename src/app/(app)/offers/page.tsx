@@ -24,11 +24,11 @@ export default async function OffersPage() {
           <h1 style={{ margin: 0, fontSize: 'clamp(34px,5vw,56px)', fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.01em' }}>
             {t('title')}
           </h1>
-          <div dir="ltr" style={{ marginTop: '14px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#9C9C9A', display: 'flex', gap: '14px', justifyContent: 'flex-end' }}>
+          <div dir="ltr" style={{ marginTop: '14px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#B0B0AE', display: 'flex', gap: '14px', justifyContent: 'flex-end' }}>
             <span><span style={{ color: '#C9C9C7' }}>{offers.length}</span> OFFERS</span>
-            <span style={{ color: '#5A5A58' }}>·</span>
+            <span style={{ color: '#767674' }}>·</span>
             <span><span style={{ color: 'var(--primary)' }}>{scoredCount}</span> SCORED</span>
-            <span style={{ color: '#5A5A58' }}>·</span>
+            <span style={{ color: '#767674' }}>·</span>
             <span><span style={{ color: 'var(--primary)' }}>{hotCount}</span> HOT</span>
           </div>
         </div>

@@ -33,7 +33,7 @@ export function CampaignWizard({
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px', marginBottom: '20px' }}>
         <span style={{ width: '4px', height: '22px', background: 'var(--primary)' }} />
         <span style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(20px,2.4vw,28px)', fontWeight: 600, letterSpacing: '0.03em' }}>THE PIPELINE</span>
-        <span dir="ltr" style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#8E8E8C', marginInlineStart: 'auto' }}>{completedCount} / {totalCount} COMPLETE</span>
+        <span dir="ltr" style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#A2A2A0', marginInlineStart: 'auto' }}>{completedCount} / {totalCount} COMPLETE</span>
       </div>
 
       {/* Step indicators */}
@@ -63,18 +63,18 @@ export function CampaignWizard({
                     fontFamily: 'var(--font-mono)',
                     fontSize: '12px',
                     fontWeight: 600,
-                    color: step.isComplete ? '#0A0A0A' : step.isLocked ? '#7C7C7A' : step.isActive ? 'var(--primary)' : '#C9C9C7',
+                    color: step.isComplete ? '#0A0A0A' : step.isLocked ? '#949492' : step.isActive ? 'var(--primary)' : '#C9C9C7',
                     background: step.isComplete ? 'var(--primary)' : 'transparent',
                     border: `1px solid ${step.isComplete || step.isActive ? 'var(--primary)' : 'rgba(255,255,255,0.18)'}`,
                   }}
                 >
                   {step.isComplete ? <Check size={14} strokeWidth={2.5} /> : String(index + 1).padStart(2, '0')}
                 </span>
-                <span aria-hidden style={{ display: 'inline-flex', alignItems: 'center', fontFamily: 'var(--font-mono)', fontSize: '12px', color: step.isLocked ? '#6A6A68' : '#8E8E8C' }}>
+                <span aria-hidden style={{ display: 'inline-flex', alignItems: 'center', fontFamily: 'var(--font-mono)', fontSize: '12px', color: step.isLocked ? '#828280' : '#A2A2A0' }}>
                   {step.isLocked ? <Lock size={12} /> : null}
                 </span>
               </div>
-              <div style={{ fontSize: '13px', fontWeight: 500, color: step.isLocked ? '#8E8E8C' : '#FFFFFF' }}>{step.label}</div>
+              <div style={{ fontSize: '13px', fontWeight: 500, color: step.isLocked ? '#A2A2A0' : '#FFFFFF' }}>{step.label}</div>
               <span style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}>
                 {step.isLocked ? 'locked' : step.isComplete ? 'complete' : 'available'}
               </span>

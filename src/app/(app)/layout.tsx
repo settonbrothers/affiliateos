@@ -44,7 +44,7 @@ export default async function AppLayout({
           justifyContent: 'space-between',
           height: 'var(--nav-height)',
           padding: '0 clamp(20px,3vw,44px)',
-          background: 'rgba(10,10,10,0.9)',
+          background: 'rgba(14,12,10,0.92)',
           backdropFilter: 'blur(10px)',
           borderBottom: '1px solid var(--border)',
         }}
@@ -61,7 +61,7 @@ export default async function AppLayout({
           <div dir="ltr" style={{ display: 'flex', alignItems: 'center', gap: '7px', fontFamily: 'var(--font-mono)' }}>
             <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary)' }} />
             <span style={{ fontSize: '12.5px', fontWeight: 600, color: '#E4E4E2' }}>{balance ?? '—'}</span>
-            <span style={{ fontSize: '10px', letterSpacing: '0.08em', color: '#9C9C9A' }}>CR</span>
+            <span style={{ fontSize: '10px', letterSpacing: '0.08em', color: '#B0B0AE' }}>CR</span>
           </div>
           <LanguageToggle />
         </div>

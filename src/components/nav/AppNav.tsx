@@ -25,7 +25,7 @@ function NavItem({ href, label }: NavItemProps) {
         fontSize: '13.5px',
         fontWeight: 500,
         textDecoration: 'none',
-        color: active ? 'var(--foreground)' : '#9C9C9A',
+        color: active ? 'var(--foreground)' : '#B0B0AE',
         transition: 'color 0.2s',
       }}
     >

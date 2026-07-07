@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import type { UnderwritingResponse } from '@/types/agents/underwriting'
 import type { AiRun, Offer, Vertical } from '@/types/db'
 
 export async function listVerticals(): Promise<Vertical[]> {
@@ -18,7 +19,33 @@ export async function listOffers(): Promise<Offer[]> {
     .select('*')
     .order('created_at', { ascending: false })
   if (error) console.error('[queries/offers] DB error:', error)
-  return (data ?? []) as Offer[]
+  const offers = (data ?? []) as Offer[]
+  if (offers.length === 0) return offers
+
+  // Score/verdict live on the latest UnderwritingOrchestrator run, not on
+  // offers.evaluation — enrich each offer so the list can show its Crack Score.
+  const { data: runs, error: runsError } = await supabase
+    .from('ai_runs')
+    .select('offer_id, output_payload, created_at')
+    .eq('orchestrator_name', 'UnderwritingOrchestrator')
+    .not('output_payload', 'is', null)
+    .in(
+      'offer_id',
+      offers.map((o) => o.id)
+    )
+    .order('created_at', { ascending: false })
+  if (runsError) console.error('[queries/offers] DB error:', runsError)
+
+  const latestByOffer = new Map<string, UnderwritingResponse>()
+  for (const r of runs ?? []) {
+    if (r.offer_id && !latestByOffer.has(r.offer_id)) {
+      latestByOffer.set(r.offer_id, r.output_payload as unknown as UnderwritingResponse)
+    }
+  }
+
+  return offers.map((o) =>
+    o.evaluation ? o : { ...o, evaluation: latestByOffer.get(o.id) ?? null }
+  )
 }
 
 export async function getOfferById(id: string): Promise<Offer | null> {
