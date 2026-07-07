@@ -27,67 +27,62 @@ export function CampaignWizard({
   completedCount,
   totalCount,
 }: CampaignWizardProps) {
-  const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0
-
   return (
     <div className="flex flex-col gap-4">
-      {/* Progress bar */}
-      <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--color-muted)]">
-        <div
-          className="h-full rounded-full transition-all duration-300"
-          style={{ width: `${progressPercent}%`, background: 'var(--primary)' }}
-        />
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px', marginBottom: '20px' }}>
+        <span style={{ width: '4px', height: '22px', background: 'var(--primary)' }} />
+        <span style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(20px,2.4vw,28px)', fontWeight: 600, letterSpacing: '0.03em' }}>THE PIPELINE</span>
+        <span dir="ltr" style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#6E6E6C', marginInlineStart: 'auto' }}>{completedCount} / {totalCount} COMPLETE</span>
       </div>
 
       {/* Step indicators */}
-      <div className="flex items-center gap-1 overflow-x-auto border-b border-[var(--color-border)] pb-3">
+      <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
         {steps.map((step, index) => {
-          const isFirst = index === 0
           const stepContent = (
-            <span
-              className={cn(
-                'flex items-center gap-1.5 whitespace-nowrap px-2 py-1.5 text-sm',
-                step.isActive && 'font-bold underline underline-offset-4',
-                step.isLocked && 'cursor-not-allowed opacity-40',
-                step.isComplete && !step.isActive && 'text-[var(--primary)]',
-                !step.isComplete &&
-                  !step.isLocked &&
-                  !step.isActive &&
-                  'text-[var(--color-muted-foreground)]',
-                step.isSkippable && !step.isComplete && !step.isLocked && 'opacity-70'
-              )}
+            <div
+              className={cn('step', step.isActive && 'is-active', step.isLocked && 'cursor-not-allowed')}
+              style={{
+                flex: 1,
+                minWidth: '118px',
+                border: `1px solid ${step.isActive ? 'var(--accent-border)' : 'var(--border)'}`,
+                background: step.isActive ? 'var(--accent-fill)' : step.isLocked ? '#090909' : '#0C0C0C',
+                padding: '14px 14px 16px',
+                position: 'relative',
+              }}
             >
-              {/* Status icon */}
-              {step.isLocked ? (
-                <span aria-label="locked">🔒</span>
-              ) : step.isComplete ? (
-                <span aria-label="complete">✅</span>
-              ) : step.isSkippable ? (
-                <span aria-label="skippable">⏭️</span>
-              ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <span
-                  aria-label="available"
-                  className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-current text-xs leading-none"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '26px',
+                    height: '26px',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    color: step.isComplete ? '#0A0A0A' : step.isLocked ? '#5E5E5C' : step.isActive ? 'var(--primary)' : '#C9C9C7',
+                    background: step.isComplete ? 'var(--primary)' : 'transparent',
+                    border: `1px solid ${step.isComplete || step.isActive ? 'var(--primary)' : 'rgba(255,255,255,0.18)'}`,
+                  }}
                 >
-                  ○
+                  {step.isComplete ? '✓' : String(index + 1).padStart(2, '0')}
                 </span>
-              )}
-              {step.label}
-            </span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: step.isLocked ? '#4E4E4C' : '#6E6E6C' }}>
+                  {step.isLocked ? '🔒' : step.isComplete ? '' : '›'}
+                </span>
+              </div>
+              <div style={{ fontSize: '13px', fontWeight: 500, color: step.isLocked ? '#6E6E6C' : '#FFFFFF' }}>{step.label}</div>
+              {step.isActive && <span style={{ position: 'absolute', insetInline: 0, bottom: '-1px', height: '2px', background: 'var(--primary)' }} />}
+            </div>
           )
 
           return (
-            <div key={step.key} className="flex items-center">
-              {/* Separator */}
-              {!isFirst && (
-                <span className="mx-0.5 text-xs text-[var(--color-muted-foreground)]">
-                  ›
-                </span>
-              )}
+            <div key={step.key} style={{ display: 'flex', flex: 1 }}>
               {step.isLocked ? (
                 stepContent
               ) : (
-                <Link href={step.href}>{stepContent}</Link>
+                <Link href={step.href} style={{ display: 'flex', flex: 1 }}>{stepContent}</Link>
               )}
             </div>
           )
