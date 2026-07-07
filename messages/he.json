@@ -128,6 +128,21 @@
     "testKitNeedsVerdict": "הרץ ניתוח קודם — ערכת הבדיקה נבנית מהפסיקה.",
     "deleteConfirm": "למחוק את {name} ואת כל המקורות / העובדות / הריצות שלה?"
   },
+  "dimensions": {
+    "economics": "כלכלה",
+    "demand": "ביקוש",
+    "competition": "תחרות",
+    "creative_opportunity": "הזדמנות קריאייטיב",
+    "funnel_fit": "התאמת פאנל",
+    "compliance": "רגולציה",
+    "operator_fit": "התאמת מפעיל",
+    "data_confidence": "ביטחון נתונים",
+    "offer_trust": "אמון בהצעה",
+    "scale_potential": "פוטנציאל סקייל",
+    "cashflow_fit": "התאמת תזרים",
+    "high_ceiling_potential": "תקרה גבוהה",
+    "execution_complexity": "מורכבות ביצוע"
+  },
   "campaigns": {
     "title": "קמפיינים",
     "subtitle": "קמפיינים אמיתיים שהרצת מול ערכת בדיקה. הזן תוצאות, ואז קבל אבחון.",

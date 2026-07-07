@@ -128,6 +128,21 @@
     "testKitNeedsVerdict": "Run an analysis first — the test kit is built from the verdict.",
     "deleteConfirm": "Delete {name} and all of its sources / facts / runs?"
   },
+  "dimensions": {
+    "economics": "Economics",
+    "demand": "Demand",
+    "competition": "Competition",
+    "creative_opportunity": "Creative Opportunity",
+    "funnel_fit": "Funnel Fit",
+    "compliance": "Compliance",
+    "operator_fit": "Operator Fit",
+    "data_confidence": "Data Confidence",
+    "offer_trust": "Offer Trust",
+    "scale_potential": "Scale Potential",
+    "cashflow_fit": "Cashflow Fit",
+    "high_ceiling_potential": "High-Ceiling Potential",
+    "execution_complexity": "Execution Complexity"
+  },
   "campaigns": {
     "title": "Campaigns",
     "subtitle": "Real campaigns you ran against a test kit. Enter results, then get a diagnosis.",
