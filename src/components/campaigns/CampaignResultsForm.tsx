@@ -68,7 +68,7 @@ export function CampaignResultsForm({
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
           gap: '1px',
           background: '#DED8CB',
           border: '1px solid #DED8CB',

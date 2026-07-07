@@ -135,15 +135,15 @@ export function DiagnoseCreativesForm({ campaignId }: { campaignId: string }) {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3">
       {/* Tabs */}
-      <div className="flex gap-1 rounded-md border border-[var(--color-border)] p-1 w-fit">
+      <div className="flex gap-1 border border-[#D8D2C6] p-1 w-fit">
         <button
           type="button"
           onClick={() => setActiveTab('text')}
           disabled={isRunning}
-          className={`rounded px-3 py-1 text-sm transition-colors disabled:opacity-50 ${
+          className={`px-4 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ${
             activeTab === 'text'
               ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)]'
-              : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
+              : 'text-[#6B6459] hover:text-[#1F1B16]'
           }`}
         >
           טקסט
@@ -152,10 +152,10 @@ export function DiagnoseCreativesForm({ campaignId }: { campaignId: string }) {
           type="button"
           onClick={() => setActiveTab('images')}
           disabled={isRunning}
-          className={`rounded px-3 py-1 text-sm transition-colors disabled:opacity-50 ${
+          className={`px-4 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ${
             activeTab === 'images'
               ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)]'
-              : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
+              : 'text-[#6B6459] hover:text-[#1F1B16]'
           }`}
         >
           תמונות
@@ -170,7 +170,7 @@ export function DiagnoseCreativesForm({ campaignId }: { campaignId: string }) {
           placeholder="הדבק את טקסט המודעות שרצו"
           rows={8}
           disabled={isRunning}
-          className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm placeholder:text-[var(--color-muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)] disabled:opacity-50"
+          className="w-full border border-[#D8D2C6] bg-white text-[#1F1B16] px-3 py-2 text-sm placeholder:text-[#9A8F73] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)] disabled:opacity-50"
         />
       )}
 
@@ -179,7 +179,7 @@ export function DiagnoseCreativesForm({ campaignId }: { campaignId: string }) {
         <div className="flex flex-col gap-3">
           {images.length < MAX_IMAGES && (
             <label
-              className={`flex flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed border-[var(--color-border)] p-6 text-center cursor-pointer transition-colors hover:border-[var(--color-ring)] ${isRunning ? 'pointer-events-none opacity-50' : ''}`}
+              className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed border-[#D8D2C6] p-6 text-center cursor-pointer transition-colors hover:border-[var(--color-ring)] ${isRunning ? 'pointer-events-none opacity-50' : ''}`}
             >
               <input
                 type="file"
@@ -189,7 +189,7 @@ export function DiagnoseCreativesForm({ campaignId }: { campaignId: string }) {
                 onChange={handleFileChange}
                 className="sr-only"
               />
-              <span className="text-sm text-[var(--color-muted-foreground)]">
+              <span className="text-sm text-[#6B6459]">
                 {`גרור תמונות לכאן או לחץ לבחירה · PNG, JPG, WEBP · עד ${MAX_IMAGES} תמונות`}
               </span>
             </label>
@@ -203,7 +203,7 @@ export function DiagnoseCreativesForm({ campaignId }: { campaignId: string }) {
                   <img
                     src={src}
                     alt={`Creative ${i + 1}`}
-                    className="h-32 w-32 rounded-md border border-[var(--color-border)] object-cover"
+                    className="h-32 w-32 border border-[#D8D2C6] object-cover"
                   />
                   <button
                     type="button"
@@ -220,7 +220,7 @@ export function DiagnoseCreativesForm({ campaignId }: { campaignId: string }) {
           )}
 
           {images.length >= MAX_IMAGES && (
-            <p className="text-xs text-[var(--color-muted-foreground)]">
+            <p className="text-xs text-[#6B6459]">
               {`הגעת למקסימום (${MAX_IMAGES} תמונות). הסר תמונה כדי להוסיף אחרת.`}
             </p>
           )}
@@ -232,7 +232,7 @@ export function DiagnoseCreativesForm({ campaignId }: { campaignId: string }) {
           {isRunning ? 'מנתח קריאייטיבים...' : 'נתח קריאייטיבים'}
         </Button>
         {isRunning && (
-          <span className="text-sm text-[var(--color-muted-foreground)]">
+          <span className="text-sm text-[#6B6459]">
             מעבד...
           </span>
         )}

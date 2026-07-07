@@ -130,7 +130,18 @@ export default async function CampaignDetailPage({
   )
 
   return (
-    <div className="flex flex-col" style={{ gap: 0 }}>
+    <div
+      className="flex flex-col"
+      style={{
+        gap: 0,
+        // Full-bleed: cancel the app layout's <main> padding so the bands span
+        // edge-to-edge (Selezione full-width editorial look).
+        marginTop: 'calc(-1 * clamp(28px,4vw,52px))',
+        marginBottom: '-40px',
+        marginInlineStart: 'calc(-1 * clamp(20px,4vw,64px))',
+        marginInlineEnd: 'calc(-1 * clamp(20px,4vw,64px))',
+      }}
+    >
       {/* Band A - dark hero */}
       <div
         style={{
