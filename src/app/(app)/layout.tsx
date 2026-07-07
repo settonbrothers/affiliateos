@@ -33,69 +33,42 @@ export default async function AppLayout({
   ]
 
   return (
-    <div className="flex min-h-screen">
-      <aside
+    <div className="flex min-h-screen flex-col">
+      <header
         style={{
-          width: 'var(--sidebar-width)',
-          minWidth: 'var(--sidebar-width)',
-          background: 'var(--sidebar-bg)',
-          borderRight: '1px solid var(--border)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 20,
           display: 'flex',
-          flexDirection: 'column',
-          paddingTop: '24px',
-          paddingBottom: '16px',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          height: 'var(--nav-height)',
+          padding: '0 clamp(20px,3vw,44px)',
+          background: 'rgba(10,10,10,0.9)',
+          backdropFilter: 'blur(10px)',
+          borderBottom: '1px solid var(--border)',
         }}
       >
-        {/* Logo */}
-        <div style={{ padding: '0 20px 28px', fontSize: '18px', fontWeight: 800, letterSpacing: '-0.02em' }}>
-          <span style={{ color: 'var(--foreground)' }}>AFF</span>
-          <span style={{ color: 'var(--primary)' }}>EX</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(20px,3vw,44px)' }}>
+          <div dir="ltr" style={{ display: 'flex', alignItems: 'baseline', gap: '1px' }}>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: '21px', fontWeight: 700 }}>AFF</span>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: '21px', fontWeight: 700, color: 'var(--primary)' }}>EX</span>
+          </div>
+          <AppNav items={navItems} />
         </div>
 
-        {/* Nav */}
-        <AppNav items={navItems} />
-
-        {/* Footer */}
-        <div
-          style={{
-            marginTop: 'auto',
-            padding: '16px 20px 0',
-            borderTop: '1px solid var(--border)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '8px',
-          }}
-        >
-          {/* Credits pill */}
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '5px',
-              fontSize: '11px',
-              color: 'var(--muted-foreground)',
-            }}
-          >
-            <span
-              style={{
-                display: 'inline-block',
-                width: '6px',
-                height: '6px',
-                borderRadius: '50%',
-                background: 'var(--primary)',
-                opacity: 0.7,
-              }}
-            />
-            <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{balance ?? '—'}</span>
-            <span>credits</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(14px,2vw,22px)' }}>
+          <div dir="ltr" style={{ display: 'flex', alignItems: 'center', gap: '7px', fontFamily: 'var(--font-mono)' }}>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary)' }} />
+            <span style={{ fontSize: '12.5px', fontWeight: 600, color: '#E4E4E2' }}>{balance ?? '—'}</span>
+            <span style={{ fontSize: '10px', letterSpacing: '0.08em', color: '#7A7A78' }}>CR</span>
           </div>
-
-          {/* Language toggle — minimal */}
           <LanguageToggle />
         </div>
-      </aside>
-      <main className="flex-1 overflow-auto p-8">{children}</main>
+      </header>
+      <main className="flex-1 overflow-auto" style={{ padding: 'clamp(28px,4vw,52px) clamp(20px,4vw,64px) 40px' }}>
+        <div style={{ maxWidth: '1500px', margin: '0 auto', width: '100%' }}>{children}</div>
+      </main>
     </div>
   )
 }
