@@ -1,117 +1,64 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { EditorialCard } from '@/components/brand/editorial/EditorialCard'
+import { EditorialSlab } from '@/components/brand/editorial/EditorialSlab'
 import type { AvatarBuilderPayload } from '@/types/agents/avatarBuilder'
+
+function ListCard({ title, items }: { title: string; items: string[] }) {
+  return (
+    <EditorialCard title={title}>
+      <ul style={{ margin: 0, paddingInlineStart: '18px', listStyle: 'disc', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        {items.map((item, i) => (
+          <li key={item + '-' + i}>{item}</li>
+        ))}
+      </ul>
+    </EditorialCard>
+  )
+}
 
 export function AvatarDisplay({ payload }: { payload: unknown }) {
   const p = payload as AvatarBuilderPayload | null
   if (!p) {
     return (
-      <p className="text-sm text-red-600">
+      <p style={{ fontSize: '14px', color: '#B23A24' }}>
         Avatar payload is malformed — re-run the generation.
       </p>
     )
   }
 
+  const topCards: [string, string][] = [
+    ['מצב חיים', p.life_situation],
+    ['הטרנספורמציה', p.transformation],
+    ['הטריגר הרגשי', p.emotional_trigger],
+  ]
+
   return (
-    <div className="flex flex-col gap-5">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Card>
-          <CardHeader className="p-4 pb-1">
-            <CardTitle className="text-sm">מי הלקוח</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0 text-sm">{p.who}</CardContent>
-        </Card>
+    <div className="flex flex-col gap-5" dir="rtl">
+      <EditorialSlab label="WHO · מי הלקוח">
+        <p
+          style={{
+            margin: 0,
+            fontFamily: 'var(--font-display)',
+            fontSize: 'clamp(18px,2.4vw,26px)',
+            fontWeight: 500,
+            lineHeight: 1.25,
+          }}
+        >
+          {p.who}
+        </p>
+      </EditorialSlab>
 
-        <Card>
-          <CardHeader className="p-4 pb-1">
-            <CardTitle className="text-sm">מצב חיים</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0 text-sm">{p.life_situation}</CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="p-4 pb-1">
-            <CardTitle className="text-sm">הטרנספורמציה</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0 text-sm">{p.transformation}</CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="p-4 pb-1">
-            <CardTitle className="text-sm">הטריגר הרגשי</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0 text-sm">{p.emotional_trigger}</CardContent>
-        </Card>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {topCards.map(([title, val]) => (
+          <EditorialCard key={title} title={title}>
+            {val}
+          </EditorialCard>
+        ))}
       </div>
 
-      <Card>
-        <CardHeader className="p-4 pb-1">
-          <CardTitle className="text-sm">נקודות כאב</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 pt-0">
-          <ul className="list-disc pl-4 text-sm text-[var(--color-muted-foreground)]">
-            {(p.pain_points ?? []).map((item, i) => (
-              <li key={item + '-' + i}>{item}</li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="p-4 pb-1">
-          <CardTitle className="text-sm">התנגדויות</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 pt-0">
-          <ul className="list-disc pl-4 text-sm text-[var(--color-muted-foreground)]">
-            {(p.objections ?? []).map((item, i) => (
-              <li key={item + '-' + i}>{item}</li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="p-4 pb-1">
-          <CardTitle className="text-sm">רצונות</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 pt-0">
-          <ul className="list-disc pl-4 text-sm text-[var(--color-muted-foreground)]">
-            {(p.desires ?? []).map((item, i) => (
-              <li key={item + '-' + i}>{item}</li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="p-4 pb-1">
-          <CardTitle className="text-sm">קול הלקוח</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 pt-0">
-          <ul className="list-disc pl-4 text-sm text-[var(--color-muted-foreground)]">
-            {(p.voice_of_customer ?? []).map((item, i) => (
-              <li key={item + '-' + i}>{item}</li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="p-4 pb-1">
-          <CardTitle className="text-sm">אותות אמון</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 pt-0">
-          <ul className="list-disc pl-4 text-sm text-[var(--color-muted-foreground)]">
-            {(p.trust_signals ?? []).map((item, i) => (
-              <li key={item + '-' + i}>{item}</li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
+      <ListCard title="נקודות כאב" items={p.pain_points ?? []} />
+      <ListCard title="התנגדויות" items={p.objections ?? []} />
+      <ListCard title="רצונות" items={p.desires ?? []} />
+      <ListCard title="קול הלקוח" items={p.voice_of_customer ?? []} />
+      <ListCard title="אותות אמון" items={p.trust_signals ?? []} />
     </div>
   )
 }

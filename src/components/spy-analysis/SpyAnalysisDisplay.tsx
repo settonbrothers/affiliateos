@@ -1,9 +1,4 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { EditorialCard } from '@/components/brand/editorial/EditorialCard'
 import type { SpyAnalysisResponse } from '@/types/agents/spyAnalysis'
 
 const STYLE_LABELS: Record<SpyAnalysisResponse['style'], string> = {
@@ -15,10 +10,13 @@ const STYLE_LABELS: Record<SpyAnalysisResponse['style'], string> = {
   mixed: 'מעורב',
 }
 
-const STRENGTH_COLORS: Record<SpyAnalysisResponse['hook_analysis']['hook_strength'], string> = {
-  strong: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
-  medium: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300',
-  weak: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
+const STRENGTH_COLORS: Record<
+  SpyAnalysisResponse['hook_analysis']['hook_strength'],
+  { bg: string; fg: string }
+> = {
+  strong: { bg: '#DCF0DC', fg: '#2E6B34' },
+  medium: { bg: '#FBEFC9', fg: '#8A6D16' },
+  weak: { bg: '#F6D9D2', fg: '#B23A24' },
 }
 
 const STRENGTH_LABELS: Record<SpyAnalysisResponse['hook_analysis']['hook_strength'], string> = {
@@ -27,151 +25,94 @@ const STRENGTH_LABELS: Record<SpyAnalysisResponse['hook_analysis']['hook_strengt
   weak: 'חלש',
 }
 
+function ListCard({ title, items, color }: { title: string; items: string[]; color?: string }) {
+  return (
+    <EditorialCard title={title}>
+      <ul style={{ margin: 0, paddingInlineStart: '18px', listStyle: 'disc', display: 'flex', flexDirection: 'column', gap: '4px', color: color ?? '#1F1B16' }}>
+        {items.map((item, i) => (
+          <li key={i}>{item}</li>
+        ))}
+      </ul>
+    </EditorialCard>
+  )
+}
+
 export function SpyAnalysisDisplay({ payload }: { payload: unknown }) {
   const p = payload as SpyAnalysisResponse | null
   if (!p) {
     return (
-      <p className="text-sm text-red-600">
+      <p style={{ fontSize: '14px', color: '#B23A24' }}>
         Spy analysis payload is malformed — re-run the analysis.
       </p>
     )
   }
 
+  const strength = STRENGTH_COLORS[p.hook_analysis.hook_strength]
+
   return (
     <div className="flex flex-col gap-5" dir="rtl">
-      {/* מה ראינו */}
-      <Card>
-        <CardHeader className="p-4 pb-1">
-          <CardTitle className="text-sm">מה ראינו</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 pt-0 text-sm">{p.input_summary}</CardContent>
-      </Card>
+      <EditorialCard title="מה ראינו">{p.input_summary}</EditorialCard>
 
-      {/* ניתוח הוק */}
-      <Card>
-        <CardHeader className="p-4 pb-1">
-          <CardTitle className="text-sm">ניתוח הוק</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 pt-0 flex flex-col gap-3">
+      <EditorialCard title="ניתוח הוק">
+        <div className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs text-[var(--color-muted-foreground)]">סוג:</span>
-            <span className="text-sm font-medium">{p.hook_analysis.hook_type}</span>
+            <span style={{ fontSize: '12px', color: '#8A8375' }}>סוג:</span>
+            <span style={{ fontSize: '14px', fontWeight: 500 }}>{p.hook_analysis.hook_type}</span>
             <span
-              className={`rounded-full px-2 py-0.5 text-xs font-medium ${STRENGTH_COLORS[p.hook_analysis.hook_strength]}`}
+              style={{
+                borderRadius: '9999px',
+                padding: '2px 10px',
+                fontSize: '12px',
+                fontWeight: 500,
+                background: strength.bg,
+                color: strength.fg,
+              }}
             >
               {STRENGTH_LABELS[p.hook_analysis.hook_strength]}
             </span>
           </div>
           {p.hook_analysis.hooks_found.length > 0 && (
-            <ul className="list-disc pr-4 text-sm text-[var(--color-muted-foreground)]">
+            <ul style={{ margin: 0, paddingInlineStart: '18px', listStyle: 'disc', display: 'flex', flexDirection: 'column', gap: '4px', color: '#6B6459' }}>
               {p.hook_analysis.hooks_found.map((hook, i) => (
                 <li key={i}>{hook}</li>
               ))}
             </ul>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </EditorialCard>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {/* ניתוח הגוף */}
-        <Card>
-          <CardHeader className="p-4 pb-1">
-            <CardTitle className="text-sm">ניתוח הגוף</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0 text-sm">{p.meat_analysis}</CardContent>
-        </Card>
-
-        {/* ניתוח CTA */}
-        <Card>
-          <CardHeader className="p-4 pb-1">
-            <CardTitle className="text-sm">ניתוח CTA</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0 text-sm">{p.cta_analysis}</CardContent>
-        </Card>
-
-        {/* מבנה template */}
-        <Card>
-          <CardHeader className="p-4 pb-1">
-            <CardTitle className="text-sm">מבנה Template</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0 text-sm">{p.template_structure}</CardContent>
-        </Card>
-
-        {/* סגנון דומיננטי */}
-        <Card>
-          <CardHeader className="p-4 pb-1">
-            <CardTitle className="text-sm">סגנון דומיננטי</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <span className="rounded-full bg-[var(--color-muted)] px-3 py-1 text-sm font-medium">
-              {STYLE_LABELS[p.style]}
-            </span>
-          </CardContent>
-        </Card>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <EditorialCard title="ניתוח הגוף">{p.meat_analysis}</EditorialCard>
+        <EditorialCard title="ניתוח CTA">{p.cta_analysis}</EditorialCard>
+        <EditorialCard title="מבנה Template">{p.template_structure}</EditorialCard>
+        <EditorialCard title="סגנון דומיננטי">
+          <span
+            style={{
+              display: 'inline-block',
+              borderRadius: '9999px',
+              padding: '4px 12px',
+              fontSize: '13px',
+              fontWeight: 500,
+              background: '#EFEBE1',
+              color: '#1F1B16',
+            }}
+          >
+            {STYLE_LABELS[p.style]}
+          </span>
+        </EditorialCard>
       </div>
 
-      {/* טריגרים פסיכולוגיים */}
       {p.psychological_triggers.length > 0 && (
-        <Card>
-          <CardHeader className="p-4 pb-1">
-            <CardTitle className="text-sm">טריגרים פסיכולוגיים</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <ul className="list-disc pr-4 text-sm text-[var(--color-muted-foreground)]">
-              {p.psychological_triggers.map((trigger, i) => (
-                <li key={i}>{trigger}</li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
+        <ListCard title="טריגרים פסיכולוגיים" items={p.psychological_triggers} color="#6B6459" />
       )}
-
-      {/* מה נראה מנצח */}
       {p.winning_elements.length > 0 && (
-        <Card>
-          <CardHeader className="p-4 pb-1">
-            <CardTitle className="text-sm">מה נראה מנצח</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <ul className="list-disc pr-4 text-sm text-[var(--color-muted-foreground)]">
-              {p.winning_elements.map((el, i) => (
-                <li key={i}>{el}</li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
+        <ListCard title="מה נראה מנצח" items={p.winning_elements} color="#2E6B34" />
       )}
-
-      {/* מה לא לעשות */}
       {p.what_not_to_copy.length > 0 && (
-        <Card className="border-red-200 dark:border-red-900">
-          <CardHeader className="p-4 pb-1">
-            <CardTitle className="text-sm text-red-700 dark:text-red-400">מה לא לעשות</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <ul className="list-disc pr-4 text-sm text-red-700 dark:text-red-400">
-              {p.what_not_to_copy.map((item, i) => (
-                <li key={i}>{item}</li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
+        <ListCard title="מה לא לעשות" items={p.what_not_to_copy} color="#B23A24" />
       )}
-
-      {/* הזדמנויות */}
       {p.gaps_opportunities.length > 0 && (
-        <Card className="border-green-200 dark:border-green-900">
-          <CardHeader className="p-4 pb-1">
-            <CardTitle className="text-sm text-green-700 dark:text-green-400">הזדמנויות</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <ul className="list-disc pr-4 text-sm text-green-700 dark:text-green-400">
-              {p.gaps_opportunities.map((item, i) => (
-                <li key={i}>{item}</li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
+        <ListCard title="הזדמנויות" items={p.gaps_opportunities} color="#2E6B34" />
       )}
     </div>
   )
