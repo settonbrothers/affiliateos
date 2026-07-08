@@ -1,32 +1,31 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useState, useTransition } from 'react'
 
-import { Button } from '@/components/ui/button'
 import {
   createCheckoutSession,
   createPortalSession,
 } from '@/lib/actions/stripe'
-import { CREDIT_PACK, PRO_PLAN } from '@/lib/stripe/products'
+import { CREDIT_PACK } from '@/lib/stripe/products'
 
+/**
+ * AFFEX-styled billing actions. `slot` picks which controls render so the page
+ * can place the primary "top up" CTA inside the balance card and the
+ * subscription controls inside the plan card (per the Billing mock).
+ */
 export function BillingActions({
   configured,
   hasCustomer,
+  slot,
 }: {
   configured: boolean
   hasCustomer: boolean
+  slot: 'buy' | 'manage'
 }) {
+  const t = useTranslations('billing')
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
-
-  if (!configured) {
-    return (
-      <p className="text-sm text-[var(--color-muted-foreground)]">
-        Billing isn&apos;t configured yet (Stripe keys missing). Add{' '}
-        <code>STRIPE_SECRET_KEY</code> to enable checkout.
-      </p>
-    )
-  }
 
   function go(run: () => Promise<{ url: string } | { error: string }>) {
     setError(null)
@@ -37,33 +36,126 @@ export function BillingActions({
     })
   }
 
-  return (
-    <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap gap-2">
-        <Button
-          disabled={isPending}
-          onClick={() => go(() => createCheckoutSession('subscription'))}
-        >
-          Subscribe — {PRO_PLAN.name} (${PRO_PLAN.amount_cents / 100}/{PRO_PLAN.interval}, {PRO_PLAN.credits_per_period} credits)
-        </Button>
-        <Button
-          variant="outline"
+  if (!configured) {
+    if (slot === 'manage') return null
+    return (
+      <p
+        style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: '11px',
+          letterSpacing: '0.06em',
+          color: 'var(--muted-faint)',
+        }}
+      >
+        STRIPE NOT CONFIGURED
+      </p>
+    )
+  }
+
+  if (slot === 'buy') {
+    return (
+      <div className="flex flex-col gap-2" style={{ marginTop: '26px' }}>
+        <button
           disabled={isPending}
           onClick={() => go(() => createCheckoutSession('credits'))}
+          className="affex-cta"
+          style={{
+            alignSelf: 'flex-start',
+            fontFamily: 'var(--font-sans)',
+            fontSize: '15px',
+            fontWeight: 700,
+            color: 'var(--primary-foreground)',
+            background: 'var(--primary)',
+            border: 'none',
+            padding: '13px 26px',
+            cursor: isPending ? 'default' : 'pointer',
+            opacity: isPending ? 0.6 : 1,
+          }}
         >
-          Buy {CREDIT_PACK.credits} credits (${CREDIT_PACK.amount_cents / 100})
-        </Button>
-        {hasCustomer && (
-          <Button
-            variant="outline"
-            disabled={isPending}
-            onClick={() => go(() => createPortalSession())}
-          >
-            Manage billing
-          </Button>
+          {t('topUp')} ‹
+        </button>
+        <span
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '10.5px',
+            letterSpacing: '0.06em',
+            color: 'var(--muted-faint)',
+          }}
+        >
+          {CREDIT_PACK.credits} CR · ${CREDIT_PACK.amount_cents / 100}
+        </span>
+        {error && (
+          <p style={{ fontSize: '13px', color: '#F06A6A' }}>{error}</p>
         )}
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+    )
+  }
+
+  // slot === 'manage'
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: '18px', flexWrap: 'wrap' }}>
+        {hasCustomer ? (
+          <>
+            <button
+              disabled={isPending}
+              onClick={() => go(() => createPortalSession())}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: 0,
+                fontFamily: 'var(--font-sans)',
+                fontSize: '13px',
+                color: 'var(--foreground)',
+                borderBottom: '1px solid var(--border)',
+                paddingBottom: '3px',
+                cursor: isPending ? 'default' : 'pointer',
+              }}
+            >
+              {t('manageSub')}
+            </button>
+            <button
+              disabled={isPending}
+              onClick={() => go(() => createPortalSession())}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: 0,
+                fontFamily: 'var(--font-sans)',
+                fontSize: '13px',
+                color: 'var(--muted-foreground)',
+                cursor: isPending ? 'default' : 'pointer',
+              }}
+            >
+              {t('invoices')}
+            </button>
+          </>
+        ) : (
+          <button
+            disabled={isPending}
+            onClick={() => go(() => createCheckoutSession('subscription'))}
+            className="affex-cta"
+            style={{
+              fontFamily: 'var(--font-sans)',
+              fontSize: '14px',
+              fontWeight: 700,
+              color: 'var(--primary-foreground)',
+              background: 'var(--primary)',
+              border: 'none',
+              padding: '11px 22px',
+              cursor: isPending ? 'default' : 'pointer',
+              opacity: isPending ? 0.6 : 1,
+            }}
+          >
+            {t('upgradePro')} ‹
+          </button>
+        )}
+      </div>
+      {error && (
+        <p style={{ fontSize: '13px', color: '#F06A6A', marginTop: '8px' }}>
+          {error}
+        </p>
+      )}
     </div>
   )
 }

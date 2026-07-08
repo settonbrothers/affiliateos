@@ -2,8 +2,6 @@ import { getTranslations } from 'next-intl/server'
 
 import { BillingActions } from '@/components/billing/BillingActions'
 import { GrantCreditsButton } from '@/components/billing/GrantCreditsButton'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { isCurrentUserAdmin } from '@/lib/auth/role'
 import {
   getBalance,
@@ -16,6 +14,55 @@ import { createClient } from '@/lib/supabase/server'
 
 function fmtAmount(n: number) {
   return n > 0 ? `+${n}` : `${n}`
+}
+
+function fmtWhen(iso: string) {
+  const d = new Date(iso)
+  return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  })}`
+}
+
+function SectionHeading({ label, note }: { label: string; note?: string }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'baseline',
+        gap: '14px',
+        marginBottom: '16px',
+      }}
+    >
+      <span
+        style={{ width: '4px', height: '20px', background: 'var(--primary)' }}
+      />
+      <span
+        dir="ltr"
+        style={{
+          fontFamily: 'var(--font-display)',
+          fontSize: '22px',
+          fontWeight: 600,
+          letterSpacing: '0.03em',
+          color: 'var(--foreground)',
+        }}
+      >
+        {label}
+      </span>
+      {note && (
+        <span
+          style={{
+            fontFamily: 'var(--font-sans)',
+            fontSize: '12px',
+            color: 'var(--muted-faint)',
+            marginInlineStart: 'auto',
+          }}
+        >
+          {note}
+        </span>
+      )}
+    </div>
+  )
 }
 
 export default async function BillingPage() {
@@ -47,107 +94,323 @@ export default async function BillingPage() {
     : { data: null }
 
   const t = await getTranslations('billing')
+  const configured = isStripeConfigured()
+  const hasCustomer = !!customer?.stripe_customer_id
+  const subActive =
+    !!subscription &&
+    ['active', 'trialing', 'past_due'].includes(
+      subscription.status.toLowerCase()
+    )
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">{t('title')}</h1>
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          {t('subtitle')}
-        </p>
+    <div style={{ maxWidth: '1160px', width: '100%', margin: '0 auto' }}>
+      {/* header */}
+      <div
+        dir="ltr"
+        style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: '11px',
+          letterSpacing: '0.22em',
+          color: 'var(--primary)',
+          marginBottom: '14px',
+        }}
+      >
+        BILLING &amp; CREDITS
       </div>
+      <h1
+        style={{
+          margin: '0 0 8px',
+          fontFamily: 'var(--font-sans)',
+          fontSize: 'clamp(34px,5vw,56px)',
+          fontWeight: 800,
+          lineHeight: 0.95,
+        }}
+      >
+        {t('title')}
+      </h1>
+      <p
+        style={{
+          margin: '0 0 32px',
+          fontSize: '14px',
+          color: 'var(--muted-foreground)',
+        }}
+      >
+        {t('subtitle')}
+      </p>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm text-[var(--color-muted-foreground)]">
-            {t('currentBalance')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex items-end justify-between gap-4">
-          <span className="text-4xl font-bold">{balance}</span>
-          {isAdmin && <GrantCreditsButton />}
-        </CardContent>
-      </Card>
+      {/* balance + plan */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-[1.3fr_1fr]" style={{ marginBottom: '40px' }}>
+        {/* balance card */}
+        <div
+          style={{
+            border: '1px solid rgba(245,197,24,0.40)',
+            background:
+              'radial-gradient(90% 130% at 22% 0%, #17140A 0%, #0D0B09 62%)',
+            padding: 'clamp(24px,3vw,36px)',
+          }}
+        >
+          <div
+            dir="ltr"
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '10px',
+              letterSpacing: '0.14em',
+              color: 'var(--muted-faint)',
+            }}
+          >
+            CURRENT BALANCE · {t('currentBalance')}
+          </div>
+          <div
+            dir="ltr"
+            style={{
+              display: 'flex',
+              alignItems: 'baseline',
+              gap: '10px',
+              marginTop: '10px',
+            }}
+          >
+            <span
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 'clamp(72px,10vw,124px)',
+                fontWeight: 600,
+                lineHeight: 0.8,
+                color: 'var(--primary)',
+              }}
+            >
+              {balance.toLocaleString('en-US')}
+            </span>
+            <span style={{ fontSize: '16px', color: 'var(--muted-faint)' }}>
+              {t('creditsUnit')}
+            </span>
+          </div>
+          <BillingActions
+            configured={configured}
+            hasCustomer={hasCustomer}
+            slot="buy"
+          />
+          {isAdmin && (
+            <div style={{ marginTop: '18px' }}>
+              <GrantCreditsButton />
+            </div>
+          )}
+        </div>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">{t('plan')}</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3">
-          {subscription ? (
-            <p className="text-sm">
-              <Badge>{subscription.status}</Badge>{' '}
-              <span className="text-[var(--color-muted-foreground)]">
-                {subscription.plan}
-                {subscription.current_period_end
-                  ? ` · ${t('renews', { date: new Date(subscription.current_period_end).toLocaleDateString() })}`
-                  : ''}
-              </span>
-            </p>
+        {/* plan card */}
+        <div
+          style={{
+            border: '1px solid var(--border)',
+            background: 'var(--card)',
+            padding: 'clamp(24px,3vw,36px)',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <div
+            dir="ltr"
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '10px',
+              letterSpacing: '0.14em',
+              color: 'var(--muted-faint)',
+            }}
+          >
+            PLAN · {t('plan')}
+          </div>
+          {subActive && subscription ? (
+            <>
+              <div
+                style={{
+                  marginTop: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                }}
+              >
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    fontFamily: 'var(--font-sans)',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    color: 'var(--primary-foreground)',
+                    background: 'var(--primary)',
+                    padding: '5px 11px',
+                  }}
+                >
+                  {subscription.status}
+                </span>
+                <span
+                  dir="ltr"
+                  style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: '20px',
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {subscription.plan}
+                </span>
+              </div>
+              {subscription.current_period_end && (
+                <div
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '11.5px',
+                    color: 'var(--muted-foreground)',
+                    marginTop: '10px',
+                  }}
+                >
+                  {t('renews', {
+                    date: new Date(
+                      subscription.current_period_end
+                    ).toLocaleDateString(),
+                  })}
+                </div>
+              )}
+            </>
           ) : (
-            <p className="text-sm text-[var(--color-muted-foreground)]">
+            <p
+              style={{
+                marginTop: '14px',
+                fontSize: '13px',
+                color: 'var(--muted-foreground)',
+              }}
+            >
               {t('noSubscription')}
             </p>
           )}
-          <BillingActions
-            configured={isStripeConfigured()}
-            hasCustomer={!!customer?.stripe_customer_id}
-          />
-        </CardContent>
-      </Card>
-
-      <div>
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-muted-foreground)]">
-          {t('pricing')}
-        </h2>
-        <div className="flex flex-wrap gap-2 text-sm">
-          {pricing.map((p) => (
-            <Badge key={p.action}>
-              {p.action}: {p.credits}
-            </Badge>
-          ))}
+          <div style={{ marginTop: 'auto', paddingTop: '18px' }}>
+            <BillingActions
+              configured={configured}
+              hasCustomer={hasCustomer}
+              slot="manage"
+            />
+          </div>
         </div>
       </div>
 
-      <div>
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-muted-foreground)]">
-          {t('history')}
-        </h2>
-        {ledger.length === 0 ? (
-          <p className="text-sm text-[var(--color-muted-foreground)]">
-            {t('noActivity')}
-          </p>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-[var(--color-border)] text-start">
-                <th className="py-2 font-medium">{t('colWhen')}</th>
-                <th className="py-2 font-medium">{t('colType')}</th>
-                <th className="py-2 font-medium">{t('colDetail')}</th>
-                <th className="py-2 text-end font-medium">{t('colAmount')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ledger.map((e) => (
-                <tr key={e.id} className="border-b border-[var(--color-border)]">
-                  <td className="py-2 text-[var(--color-muted-foreground)]">
-                    {new Date(e.created_at).toLocaleString()}
-                  </td>
-                  <td className="py-2">{e.entry_type}</td>
-                  <td className="py-2 text-[var(--color-muted-foreground)]">
-                    {e.action ?? e.reason ?? '—'}
-                  </td>
-                  <td
-                    className={`py-2 text-right tabular-nums ${e.amount < 0 ? 'text-red-700' : 'text-green-700'}`}
-                  >
-                    {fmtAmount(e.amount)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+      {/* pricing */}
+      <SectionHeading label="PRICING" note={t('pricingNote')} />
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(150px,1fr))',
+          gap: '1px',
+          background: 'rgba(255,255,255,0.12)',
+          border: '1px solid var(--border)',
+          marginBottom: '40px',
+        }}
+      >
+        {pricing.map((p) => (
+          <div
+            key={p.action}
+            style={{
+              background: 'var(--background)',
+              padding: '16px 18px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '10px',
+            }}
+          >
+            <span style={{ fontSize: '13px', color: 'var(--muted-foreground)' }}>
+              {p.action}
+            </span>
+            <span
+              dir="ltr"
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: '20px',
+                fontWeight: 600,
+                color: 'var(--primary)',
+              }}
+            >
+              {p.credits}
+            </span>
+          </div>
+        ))}
       </div>
+
+      {/* history */}
+      <SectionHeading label="HISTORY" />
+      {ledger.length === 0 ? (
+        <p style={{ fontSize: '14px', color: 'var(--muted-foreground)' }}>
+          {t('noActivity')}
+        </p>
+      ) : (
+        <div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '150px minmax(0,1fr) 140px 90px',
+              gap: '16px',
+              padding: '14px 12px',
+              fontFamily: 'var(--font-mono)',
+              fontSize: '9.5px',
+              letterSpacing: '0.12em',
+              color: 'var(--muted-faint)',
+              borderBottom: '1px solid var(--border)',
+            }}
+          >
+            <span>{t('colWhen')}</span>
+            <span>{t('colDetail')}</span>
+            <span>{t('colType')}</span>
+            <span style={{ textAlign: 'left' }}>{t('colAmount')}</span>
+          </div>
+          {ledger.map((e) => (
+            <div
+              key={e.id}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '150px minmax(0,1fr) 140px 90px',
+                gap: '16px',
+                padding: '14px 12px',
+                borderBottom: '1px solid rgba(255,255,255,0.08)',
+                alignItems: 'center',
+              }}
+            >
+              <span
+                dir="ltr"
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '11.5px',
+                  color: 'var(--muted-foreground)',
+                  textAlign: 'end',
+                }}
+              >
+                {fmtWhen(e.created_at)}
+              </span>
+              <span style={{ fontSize: '13.5px', color: 'var(--foreground)' }}>
+                {e.action ?? e.reason ?? '·'}
+              </span>
+              <span
+                dir="ltr"
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '11px',
+                  color: 'var(--muted-faint)',
+                }}
+              >
+                {e.entry_type}
+              </span>
+              <span
+                dir="ltr"
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: e.amount > 0 ? 'var(--primary)' : 'var(--muted-foreground)',
+                  textAlign: 'left',
+                }}
+              >
+                {fmtAmount(e.amount)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

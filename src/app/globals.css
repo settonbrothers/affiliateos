@@ -98,3 +98,6 @@
 .prow { transition: background 0.18s ease; position: relative; }
 .prow:hover { background: #2A241D !important; }
 .prow:hover .pedge { transform: scaleY(1) !important; }
+
+.affex-cta { transition: background 0.18s ease; }
+.affex-cta:hover:not(:disabled) { background: #D9A800 !important; }
