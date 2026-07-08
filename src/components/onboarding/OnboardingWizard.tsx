@@ -3,9 +3,8 @@
 import { useTranslations } from 'next-intl'
 import { useState, useTransition } from 'react'
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { EditorialSection } from '@/components/brand/editorial/EditorialSection'
+import { EditorialSurface } from '@/components/brand/editorial/EditorialSurface'
 import { saveOnboarding } from '@/lib/actions/onboarding'
 import {
   CASHFLOW_TOLERANCES,
@@ -14,7 +13,6 @@ import {
 } from '@/lib/validations/onboarding'
 import { TRAFFIC_CHANNELS } from '@/types/agents/testKit'
 import type { Vertical } from '@/types/db'
-import { cn } from '@/lib/utils'
 
 function Choice({
   active,
@@ -29,16 +27,42 @@ function Choice({
     <button
       type="button"
       onClick={onClick}
-      className={cn(
-        'rounded-md border px-3 py-2 text-sm capitalize',
-        active
-          ? 'border-[var(--color-foreground)] bg-[var(--color-muted)] font-medium'
-          : 'border-[var(--color-border)]'
-      )}
+      style={{
+        border: `1px solid ${active ? '#1F1B16' : '#DED8CB'}`,
+        background: active ? '#1F1B16' : '#FFFFFF',
+        color: active ? '#FFFFFF' : '#1F1B16',
+        padding: '8px 14px',
+        fontSize: '13px',
+        fontWeight: active ? 500 : 400,
+        textTransform: 'capitalize',
+        cursor: 'pointer',
+      }}
     >
       {String(children).replace(/_/g, ' ')}
     </button>
   )
+}
+
+const navSecondary: React.CSSProperties = {
+  fontFamily: 'var(--font-sans)',
+  fontWeight: 600,
+  fontSize: '14px',
+  color: '#FFFFFF',
+  background: 'transparent',
+  border: '1px solid var(--border)',
+  padding: '10px 18px',
+  cursor: 'pointer',
+}
+
+const navPrimary: React.CSSProperties = {
+  fontFamily: 'var(--font-sans)',
+  fontWeight: 700,
+  fontSize: '14px',
+  color: '#0A0A0A',
+  background: 'var(--primary)',
+  border: 'none',
+  padding: '10px 18px',
+  cursor: 'pointer',
 }
 
 export function OnboardingWizard({ verticals }: { verticals: Vertical[] }) {
@@ -87,143 +111,181 @@ export function OnboardingWizard({ verticals }: { verticals: Vertical[] }) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex gap-2 text-xs">
-        {steps.map((s, i) => (
-          <span
-            key={s}
-            className={cn(
-              'rounded-full px-2 py-0.5',
-              i === step
-                ? 'bg-[var(--color-foreground)] text-[var(--color-background)]'
-                : 'bg-[var(--color-muted)] text-[var(--color-muted-foreground)]'
-            )}
-          >
-            {i + 1}. {s}
-          </span>
-        ))}
+    <div style={{ minHeight: '100vh', background: '#0D0B09' }}>
+      {/* Band A - dark hero */}
+      <div
+        style={{
+          padding: 'clamp(28px,4vw,52px) clamp(24px,4vw,48px)',
+          background: 'radial-gradient(100% 130% at 20% 0%, #17140A 0%, #0D0B09 62%)',
+        }}
+      >
+        <div
+          dir="ltr"
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '11px',
+            letterSpacing: '0.2em',
+            color: 'var(--muted-fainter)',
+            marginBottom: '16px',
+          }}
+        >
+          {t('kicker')}
+        </div>
+        <h1
+          style={{
+            margin: 0,
+            fontFamily: 'var(--font-display)',
+            fontSize: 'clamp(34px,5vw,56px)',
+            fontWeight: 600,
+            lineHeight: 0.95,
+            color: '#FFFFFF',
+          }}
+        >
+          {t('welcomeTitle')}
+        </h1>
+        <p style={{ margin: '12px 0 0', fontSize: '14px', color: 'var(--muted-foreground)', maxWidth: '60ch' }}>
+          {t('welcomeSubtitle')}
+        </p>
+        <div
+          dir="ltr"
+          style={{ marginTop: '20px', display: 'flex', gap: '10px', fontFamily: 'var(--font-mono)', fontSize: '13px' }}
+        >
+          {steps.map((s, i) => (
+            <span
+              key={s}
+              style={{ color: i === step ? 'var(--primary)' : i < step ? '#B2B2B0' : '#5E5E5C' }}
+            >
+              {i + 1}
+              {i < steps.length - 1 ? ' ·' : ''}
+            </span>
+          ))}
+        </div>
       </div>
 
-      {step === 0 && (
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label>{t('experienceLabel')}</Label>
-            <div className="flex flex-wrap gap-2">
-              {EXPERIENCE_LEVELS.map((e) => (
-                <Choice key={e} active={experience === e} onClick={() => setExperience(e)}>
-                  {e}
-                </Choice>
-              ))}
+      {/* Band B - white body */}
+      <EditorialSurface>
+        <EditorialSection label={steps[step] ?? ''}>
+          {step === 0 && (
+            <div className="flex flex-col gap-5">
+              <div className="flex flex-col gap-2">
+                <label className="affex-light-label">{t('experienceLabel')}</label>
+                <div className="flex flex-wrap gap-2">
+                  {EXPERIENCE_LEVELS.map((e) => (
+                    <Choice key={e} active={experience === e} onClick={() => setExperience(e)}>
+                      {e}
+                    </Choice>
+                  ))}
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="affex-light-label">{t('cashflowLabel')}</label>
+                <div className="flex flex-wrap gap-2">
+                  {CASHFLOW_TOLERANCES.map((c) => (
+                    <Choice key={c} active={cashflow === c} onClick={() => setCashflow(c)}>
+                      {c}
+                    </Choice>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label>{t('cashflowLabel')}</Label>
-            <div className="flex flex-wrap gap-2">
-              {CASHFLOW_TOLERANCES.map((c) => (
-                <Choice key={c} active={cashflow === c} onClick={() => setCashflow(c)}>
-                  {c}
-                </Choice>
-              ))}
+          )}
+
+          {step === 1 && (
+            <div className="flex flex-col gap-5">
+              <div className="flex flex-col gap-2">
+                <label className="affex-light-label">{t('channelsLabel')}</label>
+                <div className="flex flex-wrap gap-2">
+                  {TRAFFIC_CHANNELS.map((c) => (
+                    <Choice key={c} active={channels.includes(c)} onClick={() => toggleChannel(c)}>
+                      {c}
+                    </Choice>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="bmin" className="affex-light-label">{t('budgetMinLabel')}</label>
+                  <input id="bmin" type="number" className="affex-light-field" style={{ width: '140px' }} value={budgetMin} onChange={(e) => setBudgetMin(e.target.value)} />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="bmax" className="affex-light-label">{t('budgetMaxLabel')}</label>
+                  <input id="bmax" type="number" className="affex-light-field" style={{ width: '140px' }} value={budgetMax} onChange={(e) => setBudgetMax(e.target.value)} />
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
-      {step === 1 && (
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label>{t('channelsLabel')}</Label>
-            <div className="flex flex-wrap gap-2">
-              {TRAFFIC_CHANNELS.map((c) => (
-                <Choice key={c} active={channels.includes(c)} onClick={() => toggleChannel(c)}>
-                  {c}
-                </Choice>
-              ))}
+          {step === 2 && (
+            <div className="flex flex-col gap-2">
+              <label htmlFor="vertical" className="affex-light-label">{t('verticalLabel')}</label>
+              <select
+                id="vertical"
+                className="affex-light-select"
+                style={{ maxWidth: '24rem' }}
+                value={verticalId}
+                onChange={(e) => setVerticalId(e.target.value)}
+              >
+                <option value="">{t('noPreference')}</option>
+                {verticals.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.name}
+                  </option>
+                ))}
+              </select>
             </div>
-          </div>
-          <div className="flex gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="bmin">{t('budgetMinLabel')}</Label>
-              <Input
-                id="bmin"
-                type="number"
-                className="w-32"
-                value={budgetMin}
-                onChange={(e) => setBudgetMin(e.target.value)}
-              />
+          )}
+
+          {step === 3 && (
+            <div className="flex flex-col gap-2">
+              <p style={{ fontSize: '15px', color: '#1F1B16' }}>{t('readyLine')}</p>
+              <p style={{ fontSize: '14px', color: '#6B6459' }}>
+                {experience || '·'} · {cashflow || '·'} cashflow ·{' '}
+                {channels.length ? channels.join(', ') : 'no channels'} ·{' '}
+                {budgetMin || budgetMax ? `$${budgetMin || '0'}–${budgetMax || '?'}` : 'no budget'}
+              </p>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="bmax">{t('budgetMaxLabel')}</Label>
-              <Input
-                id="bmax"
-                type="number"
-                className="w-32"
-                value={budgetMax}
-                onChange={(e) => setBudgetMax(e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+          )}
+        </EditorialSection>
+        {error && <p style={{ marginTop: '16px', fontSize: '13px', color: '#B23A24' }}>{error}</p>}
+      </EditorialSurface>
 
-      {step === 2 && (
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="vertical">{t('verticalLabel')}</Label>
-          <select
-            id="vertical"
-            className="flex h-10 w-full max-w-sm rounded-md border border-[var(--color-border)] bg-[var(--color-background)] px-3 text-sm"
-            value={verticalId}
-            onChange={(e) => setVerticalId(e.target.value)}
-          >
-            <option value="">{t('noPreference')}</option>
-            {verticals.map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      {step === 3 && (
-        <div className="flex flex-col gap-2 text-sm">
-          <p>{t('readyLine')}</p>
-          <p className="text-[var(--color-muted-foreground)]">
-            {experience || '—'} · {cashflow || '—'} cashflow ·{' '}
-            {channels.length ? channels.join(', ') : 'no channels'} ·{' '}
-            {budgetMin || budgetMax ? `$${budgetMin || '0'}–${budgetMax || '?'}` : 'no budget'}
-          </p>
-        </div>
-      )}
-
-      {error && <p className="text-sm text-red-600">{error}</p>}
-
-      <div className="flex items-center justify-between">
-        <Button
+      {/* Band C - dark closing nav */}
+      <div
+        style={{
+          background: '#0D0B09',
+          padding: 'clamp(20px,3vw,28px) clamp(24px,4vw,48px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          flexWrap: 'wrap',
+        }}
+      >
+        <button
           type="button"
-          variant="outline"
           disabled={step === 0 || isPending}
           onClick={() => setStep((s) => Math.max(0, s - 1))}
+          style={{ ...navSecondary, opacity: step === 0 || isPending ? 0.4 : 1 }}
         >
           {t('back')}
-        </Button>
+        </button>
         <div className="flex gap-2">
-          <Button
+          <button
             type="button"
-            variant="outline"
             disabled={isPending}
             onClick={finish}
+            style={navSecondary}
           >
             {t('skip')}
-          </Button>
+          </button>
           {step < steps.length - 1 ? (
-            <Button type="button" onClick={() => setStep((s) => s + 1)}>
+            <button type="button" className="affex-cta" onClick={() => setStep((s) => s + 1)} style={navPrimary}>
               {t('next')}
-            </Button>
+            </button>
           ) : (
-            <Button type="button" disabled={isPending} onClick={finish}>
+            <button type="button" className="affex-cta" disabled={isPending} onClick={finish} style={{ ...navPrimary, opacity: isPending ? 0.6 : 1 }}>
               {isPending ? t('saving') : t('finish')}
-            </Button>
+            </button>
           )}
         </div>
       </div>

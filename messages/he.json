@@ -50,6 +50,7 @@
     "signInLink": "התחברות"
   },
   "onboarding": {
+    "kicker": "AFFEX · הגדרת פרופיל מפעיל",
     "welcomeTitle": "ברוכים הבאים ל-AffiliateOS",
     "welcomeSubtitle": "כמה שאלות קצרות כדי שהמנתח יוכל לשפוט הצעות לפי אופן הפעולה שלך. אפשר לדלג ולערוך מאוחר יותר.",
     "stepWhoYouAre": "מי אתה",

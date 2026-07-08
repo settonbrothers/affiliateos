@@ -50,6 +50,7 @@
     "signInLink": "Sign in"
   },
   "onboarding": {
+    "kicker": "AFFEX · OPERATOR PROFILE SETUP",
     "welcomeTitle": "Welcome to AffiliateOS",
     "welcomeSubtitle": "A few quick questions so the analyzer can judge offers for how you operate. You can skip and edit later.",
     "stepWhoYouAre": "Who you are",
