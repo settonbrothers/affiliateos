@@ -26,6 +26,12 @@
     "failed": "כשלים (DLQ)"
   },
   "auth": {
+    "kicker": "AFFEX · UNDERWRITING TERMINAL",
+    "statementSignIn": "לזהות את המנצח לפני שמישהו אחר.",
+    "statementSignUp": "לחתום עסקאות על בסיס ראיות, לא תחושות.",
+    "trustEvidence": "כל ציון מגובה בראיות",
+    "trustSpeed": "אנדררייטינג בדקות",
+    "trustPrivate": "הנתונים שלך נשארים שלך",
     "signInTitle": "התחברות",
     "signInSubtitle": "ברוך שובך ל-AffiliateOS.",
     "signupTitle": "יצירת חשבון",

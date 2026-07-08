@@ -7,9 +7,6 @@ import { useSearchParams } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { useForm } from 'react-hook-form'
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { login, sendMagicLink } from '@/lib/actions/auth'
 import { LoginSchema, type LoginInput } from '@/lib/validations/auth'
 
@@ -59,59 +56,51 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="email">{t('email')}</Label>
-        <Input
-          id="email"
-          type="email"
-          autoComplete="email"
-          {...register('email')}
-        />
-        {errors.email && (
-          <p className="text-sm text-red-600">{errors.email.message}</p>
-        )}
+      <div>
+        <h2 style={{ margin: '0 0 4px', fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: 600, color: '#1F1B16' }}>
+          {t('signInTitle')}
+        </h2>
+        <p style={{ margin: 0, fontSize: '13px', color: '#6B6459' }}>{t('signInSubtitle')}</p>
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="password">{t('password')}</Label>
-        <Input
-          id="password"
-          type="password"
-          autoComplete="current-password"
-          {...register('password')}
-        />
-        {errors.password && (
-          <p className="text-sm text-red-600">{errors.password.message}</p>
-        )}
+        <label htmlFor="email" className="affex-light-label">{t('email')}</label>
+        <input id="email" type="email" autoComplete="email" className="affex-light-field" {...register('email')} />
+        {errors.email && <p style={{ fontSize: '13px', color: '#B23A24' }}>{errors.email.message}</p>}
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="password" className="affex-light-label">{t('password')}</label>
+        <input id="password" type="password" autoComplete="current-password" className="affex-light-field" {...register('password')} />
+        {errors.password && <p style={{ fontSize: '13px', color: '#B23A24' }}>{errors.password.message}</p>}
       </div>
 
       {serverMessage && (
-        <p
-          className={
-            serverMessage.type === 'error'
-              ? 'text-sm text-red-600'
-              : 'text-sm text-[var(--color-muted-foreground)]'
-          }
-        >
+        <p style={{ fontSize: '13px', color: serverMessage.type === 'error' ? '#B23A24' : '#6B6459' }}>
           {serverMessage.text}
         </p>
       )}
 
-      <Button type="submit" disabled={isPending}>
+      <button
+        type="submit"
+        disabled={isPending}
+        className="affex-cta"
+        style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: '#0A0A0A', background: '#F5C518', border: 'none', padding: '12px 18px', cursor: isPending ? 'default' : 'pointer', opacity: isPending ? 0.6 : 1 }}
+      >
         {isPending ? t('signingIn') : t('signInBtn')}
-      </Button>
-      <Button
+      </button>
+      <button
         type="button"
-        variant="outline"
         onClick={onMagicLink}
         disabled={isPending}
+        style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, color: '#1F1B16', background: 'transparent', border: '1px solid #DED8CB', padding: '12px 18px', cursor: isPending ? 'default' : 'pointer' }}
       >
         {t('sendMagicLink')}
-      </Button>
+      </button>
 
-      <p className="text-center text-sm text-[var(--color-muted-foreground)]">
+      <p style={{ textAlign: 'center', fontSize: '13px', color: '#6B6459' }}>
         {t('noAccount')}{' '}
-        <Link href="/signup" className="underline">
+        <Link href="/signup" style={{ color: '#9A6B00', textDecoration: 'underline' }}>
           {t('signUpLink')}
         </Link>
       </p>

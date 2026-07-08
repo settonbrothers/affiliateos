@@ -26,6 +26,12 @@
     "failed": "Failed (DLQ)"
   },
   "auth": {
+    "kicker": "AFFEX · UNDERWRITING TERMINAL",
+    "statementSignIn": "Spot the winner before anyone else.",
+    "statementSignUp": "Underwrite on evidence, not gut feel.",
+    "trustEvidence": "Every score backed by evidence",
+    "trustSpeed": "Underwriting in minutes",
+    "trustPrivate": "Your data stays yours",
     "signInTitle": "Sign in",
     "signInSubtitle": "Welcome back to AffiliateOS.",
     "signupTitle": "Create your account",
