@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 
+import { ScanPanel } from '@/components/ai/ScanPanel'
 import { Button } from '@/components/ui/button'
 import { useAiRunStatus } from '@/hooks/useAiRunStatus'
 import { triggerGenerateCreatives } from '@/lib/actions/creativeEngine'
@@ -52,6 +53,12 @@ export function GenerateCreativesButton({
         </Button>
         {error && <p className="text-sm text-red-600">{error}</p>}
       </div>
+      {isRunning && (
+        <ScanPanel
+          title="CREATIVES"
+          steps={['reading selected hooks', 'designing concepts', 'generating images', 'finalizing 7 creatives']}
+        />
+      )}
     </div>
   )
 }

@@ -1,5 +1,6 @@
 'use client'
 
+import { ScanPanel } from '@/components/ai/ScanPanel'
 import { Button } from '@/components/ui/button'
 import { useAiRunStatus } from '@/hooks/useAiRunStatus'
 import { triggerGenerateAvatar } from '@/lib/actions/avatarBuilder'
@@ -46,6 +47,12 @@ export function GenerateAvatarButton({
             : 'Generate Avatar'}
       </Button>
       {error && <p className="text-sm text-red-600">{error}</p>}
+      {isRunning && (
+        <ScanPanel
+          title="AVATAR"
+          steps={['reading the offer', 'profiling the buyer', 'mapping pains & desires', 'writing voice-of-customer']}
+        />
+      )}
     </div>
   )
 }

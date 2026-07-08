@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
+import { ScanPanel } from '@/components/ai/ScanPanel'
 import { Button } from '@/components/ui/button'
 import { triggerDiagnose } from '@/lib/actions/campaigns'
 import { createClient } from '@/lib/supabase/client'
@@ -104,6 +105,12 @@ export function DiagnoseButton({
         </p>
       )}
       {error && <p className="text-sm text-red-600">{error}</p>}
+      {isRunning && (
+        <ScanPanel
+          title="DIAGNOSIS"
+          steps={['reading your results', 'metrics vs expected', 'finding the bottleneck', 'writing recommendations']}
+        />
+      )}
     </div>
   )
 }

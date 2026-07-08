@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 
+import { ScanPanel } from '@/components/ai/ScanPanel'
 import { Button } from '@/components/ui/button'
 import { useAiRunStatus } from '@/hooks/useAiRunStatus'
 import { triggerGenerateTestKit } from '@/lib/actions/testKit'
@@ -54,6 +55,12 @@ export function GenerateTestKitButton({
             : t('generateTestKit')}
       </Button>
       {error && <p className="text-sm text-red-600">{error}</p>}
+      {isRunning && (
+        <ScanPanel
+          title="TEST KIT"
+          steps={['reading the brief', 'planning channels & budget', 'writing angles & hooks', 'setting KPI targets']}
+        />
+      )}
     </div>
   )
 }

@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 
+import { ScanPanel } from '@/components/ai/ScanPanel'
 import { Button } from '@/components/ui/button'
 import { useAiRunStatus } from '@/hooks/useAiRunStatus'
 import { triggerCheckCompliance } from '@/lib/actions/compliance'
@@ -39,6 +40,12 @@ export function CheckComplianceButton({
             : t('checkCompliance')}
       </Button>
       {error && <p className="text-sm text-red-600">{error}</p>}
+      {isRunning && (
+        <ScanPanel
+          title="COMPLIANCE"
+          steps={['reading claims', 'checking rules', 'flagging risks', 'suggesting safe framings']}
+        />
+      )}
     </div>
   )
 }

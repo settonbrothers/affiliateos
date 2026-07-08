@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 
+import { ScanPanel } from '@/components/ai/ScanPanel'
 import { Button } from '@/components/ui/button'
 import { useAiRunStatus } from '@/hooks/useAiRunStatus'
 import { triggerGenerateAdCopy } from '@/lib/actions/adCopy'
@@ -82,6 +83,12 @@ export function ExecuteCopyButton({
         </Button>
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
+      {isRunning && (
+        <ScanPanel
+          title="AD COPY"
+          steps={['reading the verdict', 'drafting hooks', 'writing variants', 'running the judge']}
+        />
+      )}
     </div>
   )
 }

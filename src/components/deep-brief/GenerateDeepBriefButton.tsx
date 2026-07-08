@@ -1,5 +1,6 @@
 'use client'
 
+import { ScanPanel } from '@/components/ai/ScanPanel'
 import { Button } from '@/components/ui/button'
 import { useAiRunStatus } from '@/hooks/useAiRunStatus'
 import { triggerGenerateDeepBrief } from '@/lib/actions/deepBrief'
@@ -46,6 +47,12 @@ export function GenerateDeepBriefButton({
             : 'Generate Deep Brief'}
       </Button>
       {error && <p className="text-sm text-red-600">{error}</p>}
+      {isRunning && (
+        <ScanPanel
+          title="DEEP BRIEF"
+          steps={['reading the page', 'gap-fill research', 'framing the angle', 'drafting the brief']}
+        />
+      )}
     </div>
   )
 }
