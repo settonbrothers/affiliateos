@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { AffexMark } from '@/components/brand/AffexMark'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { AppNav } from '@/components/nav/AppNav'
+import { MobileNav } from '@/components/nav/MobileNav'
 import { isCurrentUserAdmin } from '@/lib/auth/role'
 import { getCurrentBalance } from '@/lib/queries/credits'
 import { isOnboarded } from '@/lib/queries/onboarding'
@@ -50,7 +51,8 @@ export default async function AppLayout({
           backdropFilter: 'blur(10px)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(20px,3vw,44px)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(16px,3vw,44px)' }}>
+          <MobileNav items={navItems} balance={balance} />
           <Link href="/offers" dir="ltr" style={{ display: 'flex', alignItems: 'center', gap: '9px', textDecoration: 'none', color: 'inherit' }}>
             <AffexMark size={26} />
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '1px' }}>
@@ -58,7 +60,9 @@ export default async function AppLayout({
               <span style={{ fontFamily: 'var(--font-display)', fontSize: '21px', fontWeight: 700, color: 'var(--primary)' }}>EX</span>
             </div>
           </Link>
-          <AppNav items={navItems} />
+          <div className="affex-desktop-only">
+            <AppNav items={navItems} />
+          </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(14px,2vw,22px)' }}>
