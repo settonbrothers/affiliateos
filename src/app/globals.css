@@ -101,3 +101,16 @@
 
 .affex-cta { transition: background 0.18s ease; }
 .affex-cta:hover:not(:disabled) { background: #D9A800 !important; }
+
+/* Light form controls for the white "Selezione" editorial surfaces. */
+.affex-light-label { font-family: var(--font-sans); font-size: 13px; font-weight: 500; color: #1F1B16; }
+.affex-light-field,
+.affex-light-select {
+  font-family: var(--font-sans); font-size: 14px; color: #1F1B16;
+  background: #FFFFFF; border: 1px solid #DED8CB; border-radius: 0;
+  padding: 10px 12px; width: 100%;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.affex-light-field:focus,
+.affex-light-select:focus { outline: none; border-color: #F5C518; box-shadow: 0 0 0 2px rgba(245,197,24,0.35); }
+.affex-doc a { color: #9A6B00; text-decoration: underline; }
