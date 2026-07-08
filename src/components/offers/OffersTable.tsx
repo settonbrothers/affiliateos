@@ -105,6 +105,7 @@ export function OffersTable({ offers, verticalNames }: { offers: Offer[]; vertic
         )
       ) : (
         <>
+          <div className="affex-desktop-only">
           <div
             style={{
               display: 'grid',
@@ -209,6 +210,78 @@ export function OffersTable({ offers, verticalNames }: { offers: Offer[]; vertic
                         <span style={{ fontFamily: 'var(--font-display)', fontSize: '14px', color: '#828280' }}>/100</span>
                       </>
                     )}
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+          </div>
+
+          <div className="affex-mobile-only" style={{ flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
+            {list.map((offer, i) => {
+              const score = scoreOf(offer)
+              const verdict = offer.evaluation?.payload?.verdict ?? null
+              const tier = verdict ? verdictTier(verdict) : null
+              const vertical = offer.vertical_id ? verticalNames[offer.vertical_id] : null
+              const hi = i === 0
+              return (
+                <Link
+                  key={offer.id}
+                  href={`/offers/${offer.id}`}
+                  style={{
+                    display: 'block',
+                    border: `1px solid ${hi ? 'var(--accent-border)' : 'rgba(255,255,255,0.1)'}`,
+                    background: hi ? 'rgba(245,197,24,0.05)' : '#0C0C0C',
+                    padding: '16px',
+                    textDecoration: 'none',
+                    color: 'inherit',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span dir="ltr" style={{ fontFamily: 'var(--font-display)', fontSize: '19px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {offer.name}
+                        </span>
+                        {isRising(offer) && (
+                          <span dir="ltr" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', flexShrink: 0, fontFamily: 'var(--font-mono)', fontSize: '8px', color: '#0A0A0A', background: 'var(--primary)', padding: '2px 5px' }}>
+                            <TrendingUp size={9} strokeWidth={3} /> HOT
+                          </span>
+                        )}
+                        {score == null && (
+                          <span dir="ltr" style={{ flexShrink: 0, fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'var(--primary)', border: '1px solid var(--accent-border)', padding: '2px 5px' }}>NEW</span>
+                        )}
+                      </div>
+                      {offer.website_url && (
+                        <div dir="ltr" style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#6E6E6C', marginTop: '4px', textAlign: 'right', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {offer.website_url}
+                        </div>
+                      )}
+                    </div>
+                    <div dir="ltr" style={{ display: 'flex', alignItems: 'baseline', gap: '2px', flexShrink: 0 }}>
+                      {score == null ? (
+                        <EmptyMark w={22} />
+                      ) : (
+                        <>
+                          <span style={{ fontFamily: 'var(--font-display)', fontSize: '38px', fontWeight: 600, lineHeight: 0.8, color: scoreColor(score) }}>{score}</span>
+                          <span style={{ fontFamily: 'var(--font-display)', fontSize: '12px', color: '#4E4E4C' }}>/100</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', marginTop: '14px' }}>
+                    {tier && verdict ? (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', fontWeight: 600, padding: '4px 10px', whiteSpace: 'nowrap', ...verdictChipStyle(tier) }}>
+                        <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: verdictDotColor(tier) }} />
+                        {VERDICT_LABELS[verdict]}
+                      </span>
+                    ) : (
+                      <EmptyMark />
+                    )}
+                    <span dir="ltr" style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#6E6E6C' }}>
+                      {vertical ?? ''}
+                    </span>
                   </div>
                 </Link>
               )
