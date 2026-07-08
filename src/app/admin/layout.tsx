@@ -2,7 +2,7 @@ import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
-import { LanguageToggle } from '@/components/LanguageToggle'
+import { AdminNav } from '@/components/admin/AdminNav'
 import { createClient } from '@/lib/supabase/server'
 
 // /admin/* is auth-gated by middleware; this layout adds the admin-role check.
@@ -38,31 +38,52 @@ export default async function AdminLayout({
   ]
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="flex w-56 shrink-0 flex-col border-e border-[var(--color-border)] p-4">
-        <div className="mb-6 text-lg font-semibold">{t('adminTitle')}</div>
-        <nav className="flex flex-col gap-1 text-sm">
-          {links.map(([href, label]) => (
-            <Link
-              key={href}
-              href={href}
-              className="rounded-none px-3 py-2 hover:bg-[var(--color-muted)]"
-            >
-              {label}
-            </Link>
-          ))}
-          <Link
-            href="/offers"
-            className="rounded-none px-3 py-2 text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]"
-          >
-            {t('backToApp')}
+    <div style={{ minHeight: '100vh', background: 'var(--background)', color: 'var(--foreground)', display: 'flex', flexDirection: 'column' }}>
+      {/* Admin top bar */}
+      <div
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 20,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          height: '62px',
+          padding: '0 clamp(20px,3vw,44px)',
+          background: 'rgba(42,36,29,0.96)',
+          backdropFilter: 'blur(10px)',
+          borderBottom: '1px solid rgba(255,255,255,0.09)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <Link href="/offers" dir="ltr" style={{ display: 'flex', alignItems: 'baseline', gap: '1px', textDecoration: 'none', color: 'inherit' }}>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: '21px', fontWeight: 700 }}>AFF</span>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: '21px', fontWeight: 700, color: 'var(--primary)' }}>EX</span>
           </Link>
-        </nav>
-        <div className="mt-auto">
-          <LanguageToggle />
+          <span
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '11px',
+              letterSpacing: '0.18em',
+              color: '#B0B0AE',
+              borderInlineStart: '1px solid rgba(255,255,255,0.14)',
+              paddingInlineStart: '14px',
+            }}
+          >
+            {t('adminTitle')}
+          </span>
         </div>
-      </aside>
-      <main className="flex-1 p-6">{children}</main>
+        <Link href="/offers" style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', color: '#B0B0AE', textDecoration: 'none' }}>
+          ← {t('backToApp')}
+        </Link>
+      </div>
+
+      {/* Sub tabs */}
+      <AdminNav items={links.map(([href, label]) => ({ href, label }))} />
+
+      <main style={{ flex: 1, padding: 'clamp(24px,3vw,40px) clamp(20px,4vw,64px) 56px', maxWidth: '1280px', width: '100%', margin: '0 auto' }}>
+        {children}
+      </main>
     </div>
   )
 }
