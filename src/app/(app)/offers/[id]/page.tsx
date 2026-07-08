@@ -47,6 +47,15 @@ import {
 } from '@/lib/queries/offers'
 import type { UnderwritingResponse } from '@/types/agents/underwriting'
 
+// White "Selezione" document surface for deliverable tabs (Deep Brief, Avatar,
+// Spy, Test Kit, Ad Copy, Creatives). Mirrors EditorialSurface without breaking
+// out of the nested wizard content column.
+const docSurface = {
+  background: '#F6F4EF',
+  color: '#1F1B16',
+  padding: 'clamp(28px,4vw,52px) clamp(24px,4vw,48px)',
+} as const
+
 export default async function OfferDetailPage({
   params,
   searchParams,
@@ -242,7 +251,7 @@ export default async function OfferDetailPage({
           </div>
         )}
         {activeTab === 'test-kit' && (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6" style={docSurface}>
             <GenerateTestKitButton
               offerId={offer.id}
               initialStatus={testKitRun?.status ?? null}
@@ -264,7 +273,7 @@ export default async function OfferDetailPage({
               </>
             ) : (
               !!deepBrief && (
-                <p className="text-sm text-[var(--color-muted-foreground)]">
+                <p className="text-sm" style={{ color: '#6B6459' }}>
                   No test kit yet. Generate one using the Deep Brief.
                 </p>
               )
@@ -272,7 +281,7 @@ export default async function OfferDetailPage({
           </div>
         )}
         {activeTab === 'copy' && (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6" style={docSurface}>
             <ExecuteCopyButton
               offerId={offer.id}
               initialStatus={adCopyRun?.status ?? null}
@@ -288,7 +297,7 @@ export default async function OfferDetailPage({
               />
             ) : (
               !!testKit && (
-                <p className="text-sm text-[var(--color-muted-foreground)]">
+                <p className="text-sm" style={{ color: '#6B6459' }}>
                   {t('copyEmpty')}
                 </p>
               )
@@ -321,7 +330,7 @@ export default async function OfferDetailPage({
           </div>
         )}
         {activeTab === 'deep-brief' && (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6" style={docSurface}>
             <GenerateDeepBriefButton
               offerId={offer.id}
               initialStatus={deepBriefRun?.status ?? null}
@@ -331,14 +340,14 @@ export default async function OfferDetailPage({
             {deepBrief ? (
               <DeepBriefDisplay payload={deepBrief.payload} />
             ) : (
-              <p className="text-sm text-[var(--color-muted-foreground)]">
+              <p className="text-sm" style={{ color: '#6B6459' }}>
                 No deep brief yet. Generate one to get a full marketing brief for this offer.
               </p>
             )}
           </div>
         )}
         {activeTab === 'avatar' && (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6" style={docSurface}>
             <GenerateAvatarButton
               offerId={offer.id}
               initialStatus={avatarRun?.status ?? null}
@@ -348,14 +357,14 @@ export default async function OfferDetailPage({
             {avatar ? (
               <AvatarDisplay payload={avatar.payload} />
             ) : (
-              <p className="text-sm text-[var(--color-muted-foreground)]">
+              <p className="text-sm" style={{ color: '#6B6459' }}>
                 No avatar yet. Generate one to build a detailed buyer portrait for this offer.
               </p>
             )}
           </div>
         )}
         {activeTab === 'spy' && (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6" style={docSurface}>
             <SpyInputForm
               offerId={offer.id}
               hasExistingAnalysis={!!spyAnalysis}
@@ -366,7 +375,7 @@ export default async function OfferDetailPage({
           </div>
         )}
         {activeTab === 'creatives' && (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6" style={docSurface}>
             <GenerateCreativesButton
               offerId={offer.id}
               initialStatus={creativesRun?.status ?? null}
@@ -376,7 +385,7 @@ export default async function OfferDetailPage({
             {creatives ? (
               <CreativesDisplay payload={creatives.payload} />
             ) : (
-              <p className="text-sm text-[var(--color-muted-foreground)]">
+              <p className="text-sm" style={{ color: '#6B6459' }}>
                 No creatives yet. Generate 7 ad image concepts powered by DALL-E 3.
               </p>
             )}
