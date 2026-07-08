@@ -3,16 +3,18 @@
 import { useId } from 'react'
 
 /**
- * AFFEX symbol mark — a yellow square with a black "A" (Oswald 700) sliced by a
- * diagonal "crack" (skewX -16°). The crack is the brand's signature motif
- * (echoing the Crack Score). Geometry taken from the AFFEX Logo Guidelines.
+ * AFFEX symbol mark — a yellow square with a heavy geometric "A" sliced by a
+ * diagonal "crack" (skewX -16°). The A is a vector PATH (not live text) so the
+ * mark renders identically everywhere regardless of font loading. The crack is
+ * the brand's signature motif (echoing the Crack Score). Geometry per the AFFEX
+ * Logo Guidelines.
  *
  * Variants:
- *  - `primary`   — yellow square + ink A + ink crack (default; use on light or dark)
- *  - `mono-white`— knockout A (crack removed) in white, no square (dark backgrounds)
- *  - `mono-ink`  — knockout A (crack removed) in ink, no square (light backgrounds)
+ *  - `primary`   — yellow square + ink A + ink crack (default; light or dark)
+ *  - `mono-white`— knockout A (crack removed) in white, no square (dark bg)
+ *  - `mono-ink`  — knockout A (crack removed) in ink, no square (light bg)
  *
- * Below ~20px the crack is dropped (illegible), per the guidelines' 16px minimum.
+ * Below ~20px the crack is dropped (illegible), per the 16px minimum.
  */
 export type AffexMarkVariant = 'primary' | 'mono-white' | 'mono-ink'
 
@@ -26,6 +28,9 @@ interface AffexMarkProps {
 const INK = '#0A0A0A'
 const GIALLO = '#F5C518'
 
+// Heavy geometric "A": outer silhouette + counter hole (evenodd).
+const A_PATH = 'M50,12 L86,88 L64,88 L58,70 L42,70 L36,88 L14,88 Z M50,33 L58,58 L42,58 Z'
+
 export function AffexMark({
   size = 32,
   variant = 'primary',
@@ -35,22 +40,8 @@ export function AffexMark({
   const maskId = useId()
   const showCrack = size >= 20
 
-  const letter = (fill: string, mask?: string) => (
-    <text
-      x="50"
-      y="78"
-      textAnchor="middle"
-      fontSize={76}
-      fill={fill}
-      mask={mask}
-      style={{ fontFamily: 'var(--font-display), sans-serif', fontWeight: 700 }}
-    >
-      A
-    </text>
-  )
-
-  const crackRect = (fill: string) => (
-    <rect x="64" y="-2" width="6.5" height="104" fill={fill} transform="skewX(-16)" />
+  const crack = (fill: string) => (
+    <rect x="74" y="-2" width="7.5" height="104" fill={fill} transform="skewX(-16)" />
   )
 
   if (variant === 'primary') {
@@ -64,8 +55,8 @@ export function AffexMark({
         className={className}
       >
         <rect width="100" height="100" fill={GIALLO} />
-        {letter(INK)}
-        {showCrack && crackRect(INK)}
+        <path d={A_PATH} fill={INK} fillRule="evenodd" />
+        {showCrack && crack(INK)}
       </svg>
     )
   }
@@ -86,11 +77,16 @@ export function AffexMark({
         <defs>
           <mask id={maskId}>
             <rect width="100" height="100" fill="white" />
-            {crackRect('black')}
+            {crack('black')}
           </mask>
         </defs>
       )}
-      {letter(color, showCrack ? `url(#${maskId})` : undefined)}
+      <path
+        d={A_PATH}
+        fill={color}
+        fillRule="evenodd"
+        mask={showCrack ? `url(#${maskId})` : undefined}
+      />
     </svg>
   )
 }
