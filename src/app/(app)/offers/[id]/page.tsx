@@ -186,7 +186,7 @@ export default async function OfferDetailPage({
               {t('manageSources')}
             </Link>
           )}
-          <AnalyzeButton offerId={offer.id} initialStatus={run?.status ?? null} initialRunId={run?.id ?? null} />
+          <AnalyzeButton offerId={offer.id} offerName={offer.name} offerUrl={offer.website_url} initialStatus={run?.status ?? null} initialRunId={run?.id ?? null} />
         </div>
       </div>
 

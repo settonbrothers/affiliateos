@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
+import { useEffect, useState } from 'react'
 
 import {
   SCORE_DIMENSION_LABELS,
@@ -11,6 +12,8 @@ interface EvidenceBarsProps {
   scores: ScoreDimensions | null | undefined
   weightedScore: number | null | undefined
   size?: 'full' | 'mini'
+  /** Animate the score count-up + bar shoot-in on mount (the "crack" reveal). */
+  reveal?: boolean
 }
 
 // Render order = SCORE_DIMENSION_LABELS key order (13 dims).
@@ -22,9 +25,32 @@ function scoreColor(v: number): string {
   return '#A2A2A0'
 }
 
-export function EvidenceBars({ scores, weightedScore, size = 'full' }: EvidenceBarsProps) {
+export function EvidenceBars({ scores, weightedScore, size = 'full', reveal = true }: EvidenceBarsProps) {
   const t = useTranslations('dimensions')
   const isMini = size === 'mini'
+
+  const [display, setDisplay] = useState(reveal ? 0 : (weightedScore ?? 0))
+
+  useEffect(() => {
+    if (weightedScore == null) return
+    const reduced =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (!reveal || reduced) {
+      setDisplay(weightedScore)
+      return
+    }
+    let raf = 0
+    const dur = 900
+    const start = performance.now()
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - start) / dur)
+      setDisplay(Math.round((1 - Math.pow(1 - p, 3)) * weightedScore))
+      if (p < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [reveal, weightedScore])
 
   if (!scores || weightedScore == null) {
     return (
@@ -60,7 +86,7 @@ export function EvidenceBars({ scores, weightedScore, size = 'full' }: EvidenceB
               color: scoreColor(weightedScore),
             }}
           >
-            {weightedScore}
+            {display}
           </span>
           <span style={{ fontFamily: 'var(--font-display)', fontSize: isMini ? '16px' : '28px', color: '#828280' }}>
             /100
@@ -88,7 +114,7 @@ export function EvidenceBars({ scores, weightedScore, size = 'full' }: EvidenceB
             gap: '12px 26px',
           }}
         >
-          {DIM_KEYS.map((key) => {
+          {DIM_KEYS.map((key, i) => {
             const v = scores[key]
             const strong = v >= 80
             return (
@@ -112,7 +138,8 @@ export function EvidenceBars({ scores, weightedScore, size = 'full' }: EvidenceB
                       width: `${v}%`,
                       height: '100%',
                       background: strong ? 'var(--primary)' : '#828280',
-                      transition: 'var(--transition)',
+                      transformOrigin: 'right',
+                      animation: reveal ? `affexShoot 0.6s cubic-bezier(0.2,0.9,0.1,1) ${(0.1 + i * 0.035).toFixed(2)}s both` : undefined,
                     }}
                   />
                 </div>
