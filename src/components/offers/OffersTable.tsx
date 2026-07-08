@@ -3,7 +3,9 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { TrendingUp } from 'lucide-react'
+import { Plus, TrendingUp } from 'lucide-react'
+
+import { StateView } from '@/components/brand/StateView'
 
 import { verdictTier, verdictChipStyle, verdictDotColor } from '@/lib/offers/verdict-tier'
 import { VERDICT_LABELS } from '@/types/agents/underwriting'
@@ -87,9 +89,20 @@ export function OffersTable({ offers, verticalNames }: { offers: Offer[]; vertic
       </div>
 
       {list.length === 0 ? (
-        <div style={{ padding: '48px 0', textAlign: 'center' }}>
-          <p style={{ fontSize: '13px', color: 'var(--muted-foreground)' }}>{t('empty')}</p>
-        </div>
+        offers.length === 0 ? (
+          <StateView
+            icon={<Plus size={26} strokeWidth={2} />}
+            eyebrow="AI PICKS · EMPTY"
+            title={t('emptyTitle')}
+            body={t('emptyBody')}
+            ctaLabel={`${t('newTitle')} +`}
+            ctaHref="/offers/new"
+          />
+        ) : (
+          <div style={{ padding: '48px 0', textAlign: 'center' }}>
+            <p style={{ fontSize: '13px', color: 'var(--muted-foreground)' }}>{t('noMatches')}</p>
+          </div>
+        )
       ) : (
         <>
           <div

@@ -1,6 +1,8 @@
+import { Flag } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 
+import { StateView } from '@/components/brand/StateView'
 import { Badge } from '@/components/ui/badge'
 import { listCampaigns } from '@/lib/queries/campaigns'
 
@@ -18,9 +20,14 @@ export default async function CampaignsPage() {
       </div>
 
       {campaigns.length === 0 ? (
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          {t('empty')}
-        </p>
+        <StateView
+          icon={<Flag size={24} strokeWidth={2} />}
+          eyebrow="CAMPAIGNS · EMPTY"
+          title={t('emptyTitle')}
+          body={t('emptyBody')}
+          ctaLabel={`${t('backToOffers')} ›`}
+          ctaHref="/offers"
+        />
       ) : (
         <table className="w-full text-sm">
           <thead>
