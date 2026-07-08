@@ -80,20 +80,17 @@ export async function AuthEditorialShell({
         </div>
       </EditorialSurface>
       <div
+        className="affex-doc affex-auth-form"
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: 'clamp(28px,4vw,52px)',
-          background: '#0D0B09',
+          padding: 'clamp(28px,4vw,52px) clamp(24px,4vw,48px)',
+          background: '#F6F4EF',
+          borderInlineStart: '1px solid #DED8CB',
         }}
       >
-        <div
-          className="affex-doc"
-          style={{ width: '100%', maxWidth: '380px', background: '#F6F4EF', padding: 'clamp(24px,3vw,36px)' }}
-        >
-          {form}
-        </div>
+        <div style={{ width: '100%', maxWidth: '400px' }}>{form}</div>
       </div>
     </main>
   )

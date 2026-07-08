@@ -48,12 +48,15 @@ import {
 import type { UnderwritingResponse } from '@/types/agents/underwriting'
 
 // White "Selezione" document surface for deliverable tabs (Deep Brief, Avatar,
-// Spy, Test Kit, Ad Copy, Creatives). Mirrors EditorialSurface without breaking
-// out of the nested wizard content column.
+// Spy, Test Kit, Ad Copy, Creatives). Full-bleed: the negative inline margins
+// cancel the app <main> padding so the white band spans edge-to-edge (like the
+// campaign page) instead of reading as a white box inside the dark page.
 const docSurface = {
   background: '#F6F4EF',
   color: '#1F1B16',
   padding: 'clamp(28px,4vw,52px) clamp(24px,4vw,48px)',
+  marginInlineStart: 'calc(-1 * clamp(20px,4vw,64px))',
+  marginInlineEnd: 'calc(-1 * clamp(20px,4vw,64px))',
 } as const
 
 export default async function OfferDetailPage({
