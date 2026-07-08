@@ -2,7 +2,6 @@ import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
-import { AffexMark } from '@/components/brand/AffexMark'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { AppNav } from '@/components/nav/AppNav'
 import { isCurrentUserAdmin } from '@/lib/auth/role'
@@ -52,7 +51,6 @@ export default async function AppLayout({
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(20px,3vw,44px)' }}>
           <Link href="/offers" dir="ltr" style={{ display: 'flex', alignItems: 'center', gap: '9px', textDecoration: 'none', color: 'inherit' }}>
-            <AffexMark size={26} />
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '1px' }}>
               <span style={{ fontFamily: 'var(--font-display)', fontSize: '21px', fontWeight: 700 }}>AFF</span>
               <span style={{ fontFamily: 'var(--font-display)', fontSize: '21px', fontWeight: 700, color: 'var(--primary)' }}>EX</span>
