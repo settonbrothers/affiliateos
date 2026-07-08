@@ -1,12 +1,7 @@
 import { getTranslations } from 'next-intl/server'
 
-import { Badge } from '@/components/ui/badge'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { AdminCard } from '@/components/admin/AdminCard'
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
 import { createClient } from '@/lib/supabase/server'
 
 type RuleRow = {
@@ -40,40 +35,28 @@ export default async function CompliancePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">{t('complianceTitle')}</h1>
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          {t('complianceSubtitle')}
-        </p>
-      </div>
+      <AdminPageHeader title="COMPLIANCE" subtitle={t('complianceSubtitle')} />
 
       {rows.length === 0 ? (
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          {t('complianceEmpty')}
-        </p>
+        <p style={{ fontSize: '14px', color: 'var(--muted-foreground)' }}>{t('complianceEmpty')}</p>
       ) : (
         [...byVertical.entries()].map(([vertical, rules]) => (
-          <Card key={vertical}>
-            <CardHeader>
-              <CardTitle className="text-base">{vertical}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
+          <AdminCard key={vertical} title={vertical}>
+            <div className="flex flex-col gap-3">
               {rules.map((r) => (
                 <div key={r.id} className="flex flex-col gap-0.5">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">{r.title}</span>
-                    <Badge>{r.severity}</Badge>
-                    <span className="text-xs text-[var(--color-muted-foreground)]">
-                      {r.rule_type}
+                    <span style={{ fontSize: '14px', fontWeight: 500, color: '#FFFFFF' }}>{r.title}</span>
+                    <span style={{ display: 'inline-block', background: '#EFEBE1', color: '#1F1B16', fontSize: '11px', fontWeight: 500, padding: '2px 8px' }}>
+                      {r.severity}
                     </span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#7A7A78' }}>{r.rule_type}</span>
                   </div>
-                  <p className="text-sm text-[var(--color-muted-foreground)]">
-                    {r.detail}
-                  </p>
+                  <p style={{ margin: 0, fontSize: '13px', color: '#8A8A88' }}>{r.detail}</p>
                 </div>
               ))}
-            </CardContent>
-          </Card>
+            </div>
+          </AdminCard>
         ))
       )}
     </div>

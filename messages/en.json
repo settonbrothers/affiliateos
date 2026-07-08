@@ -206,6 +206,7 @@
   },
   "discoveryAdmin": {
     "title": "Discovery",
+    "discoverySubtitle": "Transparent funnel: web search → triage (Haiku) → deep analysis (Sonnet) → approval. Every stage is kill-switch guarded.",
     "vertical": "Vertical",
     "breadth": "Breadth",
     "startScan": "Start scan",

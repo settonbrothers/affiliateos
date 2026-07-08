@@ -1,8 +1,12 @@
 import { getTranslations } from 'next-intl/server'
-import Link from 'next/link'
 
-import { Badge } from '@/components/ui/badge'
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
+import { AdminRow, AdminTable } from '@/components/admin/AdminTable'
 import { createClient } from '@/lib/supabase/server'
+
+const COLS = 'minmax(0,1.3fr) 120px 110px 80px 90px 130px'
+const mono = (color: string) =>
+  ({ fontFamily: 'var(--font-mono)', fontSize: '12px', color, textAlign: 'right' as const })
 
 type PromptRow = {
   id: string
@@ -32,63 +36,38 @@ export default async function PromptsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">{t('promptsTitle')}</h1>
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          {t('promptsSubtitle')}
-        </p>
-      </div>
+      <AdminPageHeader title="PROMPTS" subtitle={t('promptsSubtitle')} />
 
       {rows.length === 0 ? (
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          {t('promptsEmpty')}
-        </p>
+        <p style={{ fontSize: '14px', color: 'var(--muted-foreground)' }}>{t('promptsEmpty')}</p>
       ) : (
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-[var(--color-border)] text-start">
-              <th className="py-2 font-medium">{t('colOrchestrator')}</th>
-              <th className="py-2 font-medium">{t('colType')}</th>
-              <th className="py-2 font-medium">{t('colVertical')}</th>
-              <th className="py-2 font-medium">{t('colVersion')}</th>
-              <th className="py-2 font-medium">{t('colStatus')}</th>
-              <th className="py-2 font-medium">{t('colCreated')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((p) => (
-              <tr
-                key={p.id}
-                className="border-b border-[var(--color-border)]"
-              >
-                <td className="py-2">
-                  <Link href={`/admin/prompts/${p.id}`} className="underline">
-                    {p.orchestrator_name}
-                  </Link>
-                </td>
-                <td className="py-2 text-[var(--color-muted-foreground)]">
-                  {p.prompt_type}
-                </td>
-                <td className="py-2 text-[var(--color-muted-foreground)]">
-                  {p.verticals?.slug ?? 'global'}
-                </td>
-                <td className="py-2 font-medium">{p.version}</td>
-                <td className="py-2">
-                  {p.is_active ? (
-                    <Badge>active</Badge>
-                  ) : (
-                    <span className="text-xs text-[var(--color-muted-foreground)]">
-                      —
-                    </span>
-                  )}
-                </td>
-                <td className="py-2 text-[var(--color-muted-foreground)]">
-                  {new Date(p.created_at).toLocaleString()}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <AdminTable
+          cols={COLS}
+          columns={[
+            { label: 'ORCHESTRATOR', ltr: true },
+            { label: 'TYPE', ltr: true },
+            { label: 'VERTICAL', ltr: true },
+            { label: 'VERSION', ltr: true },
+            { label: 'STATUS' },
+            { label: 'CREATED', ltr: true },
+          ]}
+        >
+          {rows.map((p) => (
+            <AdminRow key={p.id} cols={COLS} href={`/admin/prompts/${p.id}`}>
+              <span dir="ltr" style={mono('#E4E4E2')}>{p.orchestrator_name}</span>
+              <span dir="ltr" style={mono('#8A8A88')}>{p.prompt_type}</span>
+              <span dir="ltr" style={mono('#8A8A88')}>{p.verticals?.slug ?? 'global'}</span>
+              <span dir="ltr" style={mono('#C9C9C7')}>{p.version}</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '12px', color: p.is_active ? 'var(--primary)' : '#7A7A78' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: p.is_active ? 'var(--primary)' : '#4E4E4C' }} />
+                {p.is_active ? 'active' : '—'}
+              </span>
+              <span dir="ltr" style={mono('#7A7A78')}>
+                {new Date(p.created_at).toLocaleDateString()}
+              </span>
+            </AdminRow>
+          ))}
+        </AdminTable>
       )}
     </div>
   )

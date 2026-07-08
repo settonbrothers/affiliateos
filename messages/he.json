@@ -206,6 +206,7 @@
   },
   "discoveryAdmin": {
     "title": "גילוי",
+    "discoverySubtitle": "משפך שקוף: חיפוש-רשת ← טריאז' (Haiku) ← ניתוח עומק (Sonnet) ← אישור. כל שלב חסום ב-kill-switch.",
     "vertical": "וורטיקל",
     "breadth": "רוחב",
     "startScan": "התחל סריקה",

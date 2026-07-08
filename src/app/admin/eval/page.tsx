@@ -1,9 +1,13 @@
 import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
+import { AdminRow, AdminTable } from '@/components/admin/AdminTable'
 import { createClient } from '@/lib/supabase/server'
+
+const COLS = '130px minmax(0,1fr) 90px 70px 80px 90px 90px'
+const mono = (color: string) =>
+  ({ fontFamily: 'var(--font-mono)', fontSize: '12px', color, textAlign: 'right' as const })
 
 type EvalRow = {
   id: string
@@ -44,70 +48,46 @@ export default async function EvalListPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">{t('evalTitle')}</h1>
-          <p className="text-sm text-[var(--color-muted-foreground)]">
-            {t('evalSubtitle')}
-          </p>
-        </div>
-        <Link href="/admin/eval/golden">
-          <Button variant="outline">{t('manageGoldenSet')}</Button>
+      <AdminPageHeader title="EVALS" subtitle={t('evalSubtitle')} />
+
+      <div>
+        <Link
+          href="/admin/eval/golden"
+          style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', color: '#B0B0AE', border: '1px solid rgba(255,255,255,0.16)', padding: '9px 16px', textDecoration: 'none' }}
+        >
+          {t('manageGoldenSet')} ←
         </Link>
       </div>
 
       {rows.length === 0 ? (
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          {t('evalEmpty')}
-        </p>
+        <p style={{ fontSize: '14px', color: 'var(--muted-foreground)' }}>{t('evalEmpty')}</p>
       ) : (
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-[var(--color-border)] text-start">
-              <th className="py-2 font-medium">{t('colWhen')}</th>
-              <th className="py-2 font-medium">{t('colPrompt')}</th>
-              <th className="py-2 font-medium">{t('colTrigger')}</th>
-              <th className="py-2 font-medium">{t('colTotal')}</th>
-              <th className="py-2 font-medium">{t('colMatched')}</th>
-              <th className="py-2 font-medium">{t('colAccuracy')}</th>
-              <th className="py-2 font-medium">{t('colCost')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr
-                key={r.id}
-                className="border-b border-[var(--color-border)]"
-              >
-                <td className="py-2 text-[var(--color-muted-foreground)]">
-                  <Link href={`/admin/eval/${r.id}`} className="underline">
-                    {new Date(r.started_at).toLocaleString()}
-                  </Link>
-                </td>
-                <td className="py-2">
-                  {r.prompts
-                    ? `${r.prompts.orchestrator_name} ${r.prompts.version}`
-                    : '—'}
-                </td>
-                <td className="py-2 text-[var(--color-muted-foreground)]">
-                  {r.trigger_type}
-                </td>
-                <td className="py-2 text-[var(--color-muted-foreground)]">
-                  {r.total_offers}
-                </td>
-                <td className="py-2 text-[var(--color-muted-foreground)]">
-                  {r.matched_verdict_count}
-                </td>
-                <td className="py-2">
-                  <Badge>{fmtAccuracy(r.accuracy_pct)}</Badge>
-                </td>
-                <td className="py-2 text-[var(--color-muted-foreground)]">
-                  {fmtCost(r.total_cost_usd)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <AdminTable
+          cols={COLS}
+          columns={[
+            { label: 'WHEN', ltr: true },
+            { label: 'PROMPT', ltr: true },
+            { label: 'TRIGGER', ltr: true },
+            { label: 'TOTAL', ltr: true },
+            { label: 'MATCHED', ltr: true },
+            { label: 'ACCURACY', ltr: true },
+            { label: 'COST', ltr: true },
+          ]}
+        >
+          {rows.map((r) => (
+            <AdminRow key={r.id} cols={COLS} href={`/admin/eval/${r.id}`}>
+              <span dir="ltr" style={mono('#7A7A78')}>{new Date(r.started_at).toLocaleDateString()}</span>
+              <span dir="ltr" style={mono('#E4E4E2')}>
+                {r.prompts ? `${r.prompts.orchestrator_name} ${r.prompts.version}` : '—'}
+              </span>
+              <span dir="ltr" style={mono('#8A8A88')}>{r.trigger_type}</span>
+              <span dir="ltr" style={mono('#8A8A88')}>{r.total_offers}</span>
+              <span dir="ltr" style={mono('#8A8A88')}>{r.matched_verdict_count}</span>
+              <span dir="ltr" style={{ ...mono('var(--primary)'), fontWeight: 600 }}>{fmtAccuracy(r.accuracy_pct)}</span>
+              <span dir="ltr" style={mono('#C9C9C7')}>{fmtCost(r.total_cost_usd)}</span>
+            </AdminRow>
+          ))}
+        </AdminTable>
       )}
     </div>
   )
