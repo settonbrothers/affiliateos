@@ -115,6 +115,16 @@
 .affex-light-select:focus { outline: none; border-color: #F5C518; box-shadow: 0 0 0 2px rgba(245,197,24,0.35); }
 .affex-doc a { color: #9A6B00; text-decoration: underline; }
 
+/* Dark terminal form fields (Add / Edit Offer), per the mock. */
+.affex-fld {
+  background: #0C0C0C; border: 1px solid rgba(255,255,255,0.12); color: #FFFFFF;
+  font-family: var(--font-sans); font-size: 14.5px; padding: 14px 16px; width: 100%;
+  outline: none; transition: border-color 0.2s;
+}
+.affex-fld:focus { border-color: var(--primary); }
+.affex-fld::placeholder { color: #5E5E5C; }
+.affex-fld-label { display: block; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; color: #8A8A88; margin-bottom: 9px; }
+
 /* Auth split: dark statement | light form; collapses to one column on narrow
    screens (dark statement on top, light form below). */
 .affex-auth-grid { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,0.9fr); min-height: 100vh; background: #0D0B09; }

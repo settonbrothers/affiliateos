@@ -2,13 +2,10 @@
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
+import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useForm } from 'react-hook-form'
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { createOffer, updateOffer } from '@/lib/actions/offers'
 import {
   OfferCreateSchema,
@@ -31,6 +28,8 @@ const NOTES_PLACEHOLDER = `Anything you know that an extractor wouldn't pick up 
 - vendor history (payment reliability, chargebacks, churn)
 - compliance context (non-profit, regulated, etc.)`
 
+const errText = { fontSize: '13px', color: '#F06A6A' } as const
+
 export function OfferForm({ verticals, mode, initial }: Props) {
   const t = useTranslations('offers')
   const [isPending, startTransition] = useTransition()
@@ -39,6 +38,8 @@ export function OfferForm({ verticals, mode, initial }: Props) {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<OfferCreateInput>({
     resolver: zodResolver(OfferCreateSchema),
@@ -51,6 +52,8 @@ export function OfferForm({ verticals, mode, initial }: Props) {
     },
   })
 
+  const verticalId = watch('vertical_id')
+
   function onSubmit(values: OfferCreateInput) {
     setServerError(null)
     startTransition(async () => {
@@ -62,84 +65,111 @@ export function OfferForm({ verticals, mode, initial }: Props) {
     })
   }
 
-  const submitLabel =
-    mode.kind === 'create' ? t('createOffer') : t('saveChanges')
+  const submitLabel = mode.kind === 'create' ? t('createOffer') : t('saveChanges')
   const pendingLabel = mode.kind === 'create' ? t('creating') : t('saving')
+  const cancelHref = mode.kind === 'create' ? '/offers' : `/offers/${mode.offerId}`
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="name">{t('name')}</Label>
-        <Input id="name" {...register('name')} />
-        {errors.name && (
-          <p className="text-sm text-red-600">{errors.name.message}</p>
-        )}
+    <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div>
+        <label htmlFor="name" className="affex-fld-label">{t('name')} *</label>
+        <input id="name" className="affex-fld" placeholder="Reely — AI Video Repurposer" {...register('name')} />
+        {errors.name && <p style={errText}>{errors.name.message}</p>}
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="vertical_id">{t('vertical')}</Label>
-        <select
-          id="vertical_id"
-          className="flex h-10 w-full rounded-none border border-[var(--color-border)] bg-[var(--color-background)] px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
-          {...register('vertical_id')}
-        >
-          <option value="">{t('selectVertical')}</option>
-          {verticals.map((vertical) => (
-            <option key={vertical.id} value={vertical.id}>
-              {vertical.name}
-            </option>
-          ))}
-        </select>
-        {errors.vertical_id && (
-          <p className="text-sm text-red-600">{errors.vertical_id.message}</p>
-        )}
+      <div className="grid gap-[18px] sm:grid-cols-2">
+        <div>
+          <label htmlFor="website_url" className="affex-fld-label">{t('websiteUrl')} *</label>
+          <input id="website_url" type="url" dir="ltr" className="affex-fld" style={{ textAlign: 'right' }} placeholder="reely.io" {...register('website_url')} />
+          {errors.website_url && <p style={errText}>{errors.website_url.message}</p>}
+        </div>
+        <div>
+          <label htmlFor="affiliate_program_url" className="affex-fld-label">{t('affiliateProgramUrl')}</label>
+          <input id="affiliate_program_url" type="url" dir="ltr" className="affex-fld" style={{ textAlign: 'right' }} placeholder="reely.io/partners" {...register('affiliate_program_url')} />
+          {errors.affiliate_program_url && <p style={errText}>{errors.affiliate_program_url.message}</p>}
+        </div>
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="website_url">{t('websiteUrl')}</Label>
-        <Input id="website_url" type="url" {...register('website_url')} />
-        {errors.website_url && (
-          <p className="text-sm text-red-600">{errors.website_url.message}</p>
-        )}
+      <div>
+        <label className="affex-fld-label">{t('vertical')}</label>
+        <input type="hidden" {...register('vertical_id')} />
+        <div style={{ display: 'flex', gap: '9px', flexWrap: 'wrap' }}>
+          {verticals.map((v) => {
+            const on = verticalId === v.id
+            return (
+              <button
+                type="button"
+                key={v.id}
+                onClick={() => setValue('vertical_id', v.id, { shouldValidate: true })}
+                style={{
+                  border: `1px solid ${on ? 'var(--primary)' : 'rgba(255,255,255,0.16)'}`,
+                  background: on ? 'var(--primary)' : 'transparent',
+                  color: on ? '#0A0A0A' : '#B0B0AE',
+                  padding: '9px 16px',
+                  fontSize: '13.5px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                }}
+              >
+                {v.name}
+              </button>
+            )
+          })}
+        </div>
+        {errors.vertical_id && <p style={errText}>{errors.vertical_id.message}</p>}
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="affiliate_program_url">
-          {t('affiliateProgramUrl')}
-        </Label>
-        <Input
-          id="affiliate_program_url"
-          type="url"
-          {...register('affiliate_program_url')}
-        />
-        {errors.affiliate_program_url && (
-          <p className="text-sm text-red-600">
-            {errors.affiliate_program_url.message}
-          </p>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="operator_notes">{t('operatorNotes')}</Label>
-        <p className="text-xs text-[var(--color-muted-foreground)]">
-          {t('operatorNotesHint')}
-        </p>
-        <Textarea
+      <div>
+        <label htmlFor="operator_notes" className="affex-fld-label">{t('operatorNotes')}</label>
+        <textarea
           id="operator_notes"
-          rows={8}
+          rows={5}
+          className="affex-fld"
+          style={{ resize: 'vertical', lineHeight: 1.6 }}
           placeholder={NOTES_PLACEHOLDER}
           {...register('operator_notes')}
         />
-        {errors.operator_notes && (
-          <p className="text-sm text-red-600">{errors.operator_notes.message}</p>
-        )}
+        <p style={{ margin: '9px 0 0', fontSize: '12px', color: '#6E6E6C', lineHeight: 1.5 }}>
+          {t('operatorNotesHint')}
+        </p>
+        {errors.operator_notes && <p style={errText}>{errors.operator_notes.message}</p>}
       </div>
 
-      {serverError && <p className="text-sm text-red-600">{serverError}</p>}
+      {serverError && <p style={errText}>{serverError}</p>}
 
-      <Button type="submit" disabled={isPending}>
-        {isPending ? pendingLabel : submitLabel}
-      </Button>
+      <div
+        style={{
+          marginTop: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '16px',
+          borderTop: '1px solid rgba(255,255,255,0.09)',
+          paddingTop: '24px',
+        }}
+      >
+        <Link href={cancelHref} style={{ fontSize: '14px', color: '#7A7A78', textDecoration: 'none' }}>
+          {t('cancel')}
+        </Link>
+        <button
+          type="submit"
+          disabled={isPending}
+          className="affex-cta"
+          style={{
+            fontFamily: 'var(--font-sans)',
+            fontSize: '15px',
+            fontWeight: 700,
+            color: '#0A0A0A',
+            background: 'var(--primary)',
+            border: 'none',
+            padding: '14px 30px',
+            cursor: isPending ? 'default' : 'pointer',
+            opacity: isPending ? 0.6 : 1,
+          }}
+        >
+          {isPending ? pendingLabel : `${submitLabel} ‹`}
+        </button>
+      </div>
     </form>
   )
 }

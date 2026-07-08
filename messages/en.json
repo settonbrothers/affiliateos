@@ -79,6 +79,8 @@
     "filterHot": "Hot",
     "filterNew": "New",
     "newTitle": "Add offer",
+    "newSubtitle": "Paste an offer — AFFEX scans the sources, analyzes, and returns a Crack Score in minutes.",
+    "cancel": "Cancel",
     "editTitle": "Edit offer",
     "empty": "No offers yet. Add your first offer to get started.",
     "colName": "Offer",
