@@ -2,12 +2,11 @@ import { Check, Lock, TrendingUp } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 import type { ReactNode } from 'react'
 
-import { EditorialSurface } from '@/components/brand/editorial/EditorialSurface'
-
 /**
- * The auth "Selezione" split: a white editorial statement panel beside the
- * form on a light card. Statement copy is passed in so /login and /signup
- * share one shell.
+ * The auth split: a dark editorial statement panel (the dramatic "hero", like
+ * the campaign hero band) beside the form on a light off-white panel. Dark +
+ * light combined for weight — not a flat all-white page. Statement copy is
+ * passed in so /login and /signup share one shell.
  */
 export async function AuthEditorialShell({
   statement,
@@ -24,25 +23,28 @@ export async function AuthEditorialShell({
   ]
   return (
     <main className="affex-auth-grid">
-      <EditorialSurface
+      {/* Left — dark statement panel */}
+      <div
         style={{
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
           gap: '28px',
+          padding: 'clamp(28px,4vw,56px) clamp(24px,4vw,52px)',
+          background: 'radial-gradient(100% 130% at 20% 0%, #17140A 0%, #0D0B09 62%)',
         }}
       >
         <div dir="ltr" style={{ display: 'flex', alignItems: 'baseline', gap: '1px' }}>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 700, color: '#1F1B16' }}>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 700, color: '#FFFFFF' }}>
             AFF
           </span>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 700, color: '#9A6B00' }}>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 700, color: 'var(--primary)' }}>
             EX
           </span>
         </div>
         <div
           dir="ltr"
-          style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.2em', color: '#8A8375' }}
+          style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.2em', color: 'var(--muted-fainter)' }}
         >
           {t('kicker')}
         </div>
@@ -53,7 +55,7 @@ export async function AuthEditorialShell({
             fontSize: 'clamp(34px,4.5vw,56px)',
             fontWeight: 600,
             lineHeight: 1.02,
-            color: '#1F1B16',
+            color: '#FFFFFF',
             maxWidth: '18ch',
           }}
         >
@@ -61,7 +63,7 @@ export async function AuthEditorialShell({
         </h1>
         <div
           style={{
-            borderTop: '1px solid #DED8CB',
+            borderTop: '1px solid var(--border)',
             paddingTop: '20px',
             display: 'flex',
             flexDirection: 'column',
@@ -71,23 +73,24 @@ export async function AuthEditorialShell({
           {trust.map(({ Icon, label }) => (
             <div
               key={label}
-              style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13.5px', color: '#6B6459' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13.5px', color: 'var(--muted-foreground)' }}
             >
-              <Icon size={16} strokeWidth={2} color="#9A6B00" />
+              <Icon size={16} strokeWidth={2} color="#F5C518" />
               {label}
             </div>
           ))}
         </div>
-      </EditorialSurface>
+      </div>
+
+      {/* Right — light form panel */}
       <div
-        className="affex-doc affex-auth-form"
+        className="affex-doc"
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           padding: 'clamp(28px,4vw,52px) clamp(24px,4vw,48px)',
           background: '#F6F4EF',
-          borderInlineStart: '1px solid #DED8CB',
         }}
       >
         <div style={{ width: '100%', maxWidth: '400px' }}>{form}</div>
