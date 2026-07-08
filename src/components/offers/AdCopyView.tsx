@@ -1,14 +1,32 @@
 import { getTranslations } from 'next-intl/server'
 
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AdCopyEditor } from '@/components/offers/AdCopyEditor'
 import { HooksList } from '@/components/offers/HooksList'
 import { HookSelectorPanel } from '@/components/offers/HookSelectorPanel'
 import type { AdCopyResponse } from '@/types/agents/adCopy'
 
-const OK_BADGE = 'border-green-300 bg-green-50 text-green-700 dark:bg-green-950/40'
-const BAD_BADGE = 'border-red-300 bg-red-50 text-red-700 dark:bg-red-950/40'
+function Pill({
+  children,
+  tone = 'neutral',
+}: {
+  children: React.ReactNode
+  tone?: 'neutral' | 'ok' | 'bad'
+}) {
+  const c =
+    tone === 'ok'
+      ? { bg: '#DCF0DC', fg: '#2E6B34' }
+      : tone === 'bad'
+        ? { bg: '#F6D9D2', fg: '#B23A24' }
+        : { bg: '#EFEBE1', fg: '#1F1B16' }
+  return (
+    <span style={{ display: 'inline-block', background: c.bg, color: c.fg, fontSize: '12px', fontWeight: 500, padding: '3px 9px' }}>
+      {children}
+    </span>
+  )
+}
+
+const cardStyle: React.CSSProperties = { background: '#FFFFFF', border: '1px solid #DED8CB', padding: '16px 18px' }
+const cardTitleStyle: React.CSSProperties = { margin: 0, fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 600, color: '#1F1B16' }
 
 export async function AdCopyView({
   payload,
@@ -25,50 +43,44 @@ export async function AdCopyView({
   const env = payload as AdCopyResponse | null
   const p = env?.payload
   if (!p) {
-    return <p className="text-sm text-red-600">{t('copyMalformed')}</p>
+    return <p style={{ fontSize: '14px', color: '#B23A24' }}>{t('copyMalformed')}</p>
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6" style={{ color: '#1F1B16' }}>
       {/* Judge — advisory until calibrated against the human Taste Corpus. */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            {t('copyJudgeTitle')}
-            <Badge className={p.judge.calibrated ? OK_BADGE : undefined}>
-              {p.judge.calibrated ? t('copyJudgeCalibrated') : t('copyJudgeAdvisory')}
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-2">
+      <div style={cardStyle}>
+        <div className="flex items-center gap-2" style={{ marginBottom: '12px' }}>
+          <h3 style={cardTitleStyle}>{t('copyJudgeTitle')}</h3>
+          <Pill tone={p.judge.calibrated ? 'ok' : 'neutral'}>
+            {p.judge.calibrated ? t('copyJudgeCalibrated') : t('copyJudgeAdvisory')}
+          </Pill>
+        </div>
+        <div className="flex flex-col gap-2">
           {p.judge.principles.map((pr) => (
-            <div key={pr.principle} className="flex items-start gap-2 text-sm">
-              <Badge className={pr.verdict === 'pass' ? OK_BADGE : BAD_BADGE}>
-                {pr.verdict}
-              </Badge>
-              <span className="font-medium">{pr.principle}</span>
-              <span className="text-[var(--color-muted-foreground)]">{pr.reason}</span>
+            <div key={pr.principle} className="flex items-start gap-2" style={{ fontSize: '14px' }}>
+              <Pill tone={pr.verdict === 'pass' ? 'ok' : 'bad'}>{pr.verdict}</Pill>
+              <span style={{ fontWeight: 500 }}>{pr.principle}</span>
+              <span style={{ color: '#6B6459' }}>{pr.reason}</span>
             </div>
           ))}
-          <p className="text-sm">
+          <p style={{ fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             {t('copyCompliance')}:{' '}
-            <Badge className={p.judge.compliance_ok ? OK_BADGE : BAD_BADGE}>
+            <Pill tone={p.judge.compliance_ok ? 'ok' : 'bad'}>
               {p.judge.compliance_ok ? 'ok' : 'review'}
-            </Badge>
+            </Pill>
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Hooks — with recommended highlight and multi-select for creative engine. */}
       {p.hooks.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">{t('copyHooksTitle')}</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
+        <div style={cardStyle}>
+          <h3 style={{ ...cardTitleStyle, marginBottom: '14px' }}>{t('copyHooksTitle')}</h3>
+          <div className="flex flex-col gap-4">
             <HooksList hooks={p.hooks} />
-            <div className="border-t pt-4">
-              <p className="mb-3 text-sm font-medium text-[var(--color-muted-foreground)]">
+            <div style={{ borderTop: '1px solid #DED8CB', paddingTop: '16px' }}>
+              <p style={{ marginBottom: '12px', fontSize: '14px', fontWeight: 500, color: '#6B6459' }}>
                 בחר hooks לשימוש ב-Creative Engine:
               </p>
               <HookSelectorPanel
@@ -77,38 +89,31 @@ export async function AdCopyView({
                 initialSelectedIndices={initialSelectedIndices}
               />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Variants — bilingual, each with its Edit-Loop control. */}
       {p.variants.map((v, i) => (
-        <Card key={`${v.lang}-${i}`}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Badge>{v.lang.toUpperCase()}</Badge>
-              {v.headline}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
+        <div key={`${v.lang}-${i}`} style={cardStyle}>
+          <div className="flex items-center gap-2" style={{ marginBottom: '12px' }}>
+            <Pill>{v.lang.toUpperCase()}</Pill>
+            <h3 style={cardTitleStyle}>{v.headline}</h3>
+          </div>
+          <div className="flex flex-col gap-3">
             {v.subheadline && (
-              <p className="text-sm font-medium text-[var(--color-muted-foreground)]">
-                {v.subheadline}
-              </p>
+              <p style={{ fontSize: '14px', fontWeight: 500, color: '#6B6459' }}>{v.subheadline}</p>
             )}
-            <p
-              dir={v.lang === 'he' ? 'rtl' : 'ltr'}
-              className="whitespace-pre-wrap text-sm"
-            >
+            <p dir={v.lang === 'he' ? 'rtl' : 'ltr'} style={{ whiteSpace: 'pre-wrap', fontSize: '14px' }}>
               {v.primary_text}
             </p>
-            <p className="text-sm text-[var(--color-muted-foreground)]">
+            <p style={{ fontSize: '14px', color: '#6B6459' }}>
               {t('copyHook')}: {v.hook}
             </p>
             {v.cta_button && (
-              <p className="text-sm">
-                <span className="font-medium text-[var(--color-muted-foreground)]">CTA: </span>
-                <Badge>{v.cta_button}</Badge>
+              <p style={{ fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontWeight: 500, color: '#6B6459' }}>CTA: </span>
+                <Pill>{v.cta_button}</Pill>
               </p>
             )}
             <AdCopyEditor
@@ -117,8 +122,8 @@ export async function AdCopyView({
               variantIndex={i}
               originalText={v.primary_text}
             />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       ))}
     </div>
   )

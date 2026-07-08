@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { Badge } from '@/components/ui/badge'
 
 type Hook = { lang: string; text: string; is_recommended?: boolean }
 
@@ -35,10 +34,13 @@ export function HooksList({ hooks }: { hooks: Hook[] }) {
           onDragStart={() => onDragStart(i)}
           onDragOver={(e) => onDragOver(e, i)}
           onDragEnd={onDragEnd}
-          className={`flex items-start gap-2 text-sm cursor-grab active:cursor-grabbing rounded p-1 transition-opacity ${dragIndex === i ? 'opacity-50' : ''}`}
+          className={`flex items-start gap-2 text-sm cursor-grab active:cursor-grabbing p-1 transition-opacity ${dragIndex === i ? 'opacity-50' : ''}`}
+          style={{ color: '#1F1B16' }}
         >
-          <span className="mt-0.5 text-[var(--color-muted-foreground)] select-none">⠿</span>
-          <Badge>{h.lang.toUpperCase()}</Badge>
+          <span className="mt-0.5 select-none" style={{ color: '#8A8375' }}>⠿</span>
+          <span style={{ display: 'inline-block', background: '#EFEBE1', color: '#1F1B16', fontSize: '12px', fontWeight: 500, padding: '2px 8px' }}>
+            {h.lang.toUpperCase()}
+          </span>
           <span>{h.text}</span>
           {h.is_recommended && (
             <span className="shrink-0 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">

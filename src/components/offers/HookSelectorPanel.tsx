@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { saveSelectedHooks } from '@/lib/actions/selectedHooks'
@@ -88,10 +87,9 @@ export function HookSelectorPanel({
               key={idx}
               className={cn(
                 'flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors',
-                isChecked
-                  ? 'border-blue-400 bg-blue-50 dark:border-blue-600 dark:bg-blue-950/30'
-                  : 'border-border hover:bg-muted/50'
+                isChecked ? 'border-blue-400 bg-blue-50' : 'border-[#DED8CB] hover:bg-[#EFEBE1]'
               )}
+              style={{ color: '#1F1B16' }}
             >
               <input
                 type="checkbox"
@@ -100,7 +98,9 @@ export function HookSelectorPanel({
                 onChange={() => toggle(idx)}
               />
               <div className="flex flex-1 flex-wrap items-start gap-2">
-                <Badge className="shrink-0">{hook.lang.toUpperCase()}</Badge>
+                <span style={{ flexShrink: 0, display: 'inline-block', background: '#EFEBE1', color: '#1F1B16', fontSize: '12px', fontWeight: 500, padding: '2px 8px' }}>
+                  {hook.lang.toUpperCase()}
+                </span>
                 <span
                   className="text-sm"
                   dir={hook.lang === 'he' ? 'rtl' : 'ltr'}
@@ -109,7 +109,7 @@ export function HookSelectorPanel({
                 </span>
                 {hook.is_recommended && (
                   <span className="shrink-0 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
-                    ⭐ מומלץ
+                    מומלץ
                   </span>
                 )}
               </div>
@@ -128,17 +128,17 @@ export function HookSelectorPanel({
         </Button>
 
         {saved && !isPending && (
-          <span className="text-sm font-medium text-green-700 dark:text-green-400">
-            ✅ {selected.size} hooks נבחרו — Creative Engine פתוח!
+          <span className="text-sm font-medium" style={{ color: '#2E6B34' }}>
+            {selected.size} hooks נבחרו — Creative Engine פתוח
           </span>
         )}
 
         {saveError && (
-          <span className="text-sm text-red-600">{saveError}</span>
+          <span className="text-sm" style={{ color: '#B23A24' }}>{saveError}</span>
         )}
 
         {noneSelected && (
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm" style={{ color: '#6B6459' }}>
             יש לבחור לפחות hook אחד
           </span>
         )}
