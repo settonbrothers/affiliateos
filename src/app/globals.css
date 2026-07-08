@@ -125,6 +125,10 @@
 .affex-fld::placeholder { color: #5E5E5C; }
 .affex-fld-label { display: block; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; color: #8A8A88; margin-bottom: 9px; }
 
+/* Admin data-table row hover. */
+.affex-trow { transition: background 0.15s ease; }
+.affex-trow:hover { background: #141210 !important; }
+
 /* Auth split: dark statement | light form; collapses to one column on narrow
    screens (dark statement on top, light form below). */
 .affex-auth-grid { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,0.9fr); min-height: 100vh; background: #0D0B09; }

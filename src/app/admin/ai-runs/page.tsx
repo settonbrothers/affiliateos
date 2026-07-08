@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
 import { AiRunsTable, type AdminAiRunRow } from '@/components/admin/AiRunsTable'
 import { createClient } from '@/lib/supabase/server'
 
@@ -33,12 +34,10 @@ export default async function AdminAiRunsPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">{t('aiRunsTitle')}</h1>
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          {t('aiRunsPage', { total, page: pageNum, pages: totalPages })}
-        </p>
-      </div>
+      <AdminPageHeader
+        title="AI RUNS"
+        subtitle={t('aiRunsPage', { total, page: pageNum, pages: totalPages })}
+      />
 
       <AiRunsTable rows={data ?? []} />
 

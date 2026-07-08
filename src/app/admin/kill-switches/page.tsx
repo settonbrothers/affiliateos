@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server'
 
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
 import { KillSwitchToggle } from '@/components/admin/KillSwitchToggle'
 import { createClient } from '@/lib/supabase/server'
 
@@ -15,14 +16,9 @@ export default async function KillSwitchesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">{t('killSwitchesTitle')}</h1>
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          {t('killSwitchesSubtitle')}
-        </p>
-      </div>
+      <AdminPageHeader title="KILL SWITCHES" subtitle={t('killSwitchesSubtitle')} />
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-[10px]">
         {rows.map((row) => (
           <KillSwitchToggle key={row.orchestrator_name} row={row} />
         ))}
