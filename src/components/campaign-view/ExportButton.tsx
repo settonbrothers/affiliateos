@@ -58,14 +58,14 @@ export function ExportButton({ offerId }: { offerId: string }) {
       <button
         onClick={handleExport}
         disabled={loading}
-        className="rounded-md bg-[var(--color-foreground)] px-4 py-2 text-sm font-medium text-[var(--color-background)] disabled:opacity-50"
+        className="rounded-none bg-[var(--color-foreground)] px-4 py-2 text-sm font-medium text-[var(--color-background)] disabled:opacity-50"
       >
         {loading ? 'מוריד...' : 'הורד Campaign Export'}
       </button>
       <button
         onClick={handlePdfExport}
         disabled={pdfLoading}
-        className="rounded-md border border-[var(--color-border)] px-4 py-2 text-sm font-medium text-[var(--color-foreground)] disabled:opacity-50"
+        className="rounded-none border border-[var(--color-border)] px-4 py-2 text-sm font-medium text-[var(--color-foreground)] disabled:opacity-50"
       >
         {pdfLoading ? 'מכין PDF...' : 'ייצוא PDF'}
       </button>

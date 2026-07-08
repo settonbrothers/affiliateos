@@ -50,7 +50,7 @@ export default async function DiscoverySourcesPage() {
                   />
                   <button
                     type="submit"
-                    className="rounded-md border border-[var(--color-border)] px-2 py-1 text-xs"
+                    className="rounded-none border border-[var(--color-border)] px-2 py-1 text-xs"
                   >
                     {s.enabled ? t('disable') : t('enable')}
                   </button>

@@ -101,7 +101,7 @@ export function OfferVerdict({
         evaluation.human_review_reasons.length > 0 && (
           <div
             style={{
-              borderRadius: '8px',
+              borderRadius: '0',
               border: '1px solid var(--amber-border)',
               background: 'var(--amber-bg)',
               padding: '12px',

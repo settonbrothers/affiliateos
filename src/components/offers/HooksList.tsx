@@ -43,7 +43,7 @@ export function HooksList({ hooks }: { hooks: Hook[] }) {
           </span>
           <span>{h.text}</span>
           {h.is_recommended && (
-            <span className="shrink-0 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
+            <span className="shrink-0 rounded-none bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
               ⭐ מומלץ
             </span>
           )}

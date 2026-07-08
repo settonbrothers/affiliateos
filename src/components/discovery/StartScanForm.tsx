@@ -18,7 +18,7 @@ export function StartScanForm({ verticals }: { verticals: VerticalOption[] }) {
   const [isPending, startTransition] = useTransition()
 
   return (
-    <div className="flex flex-wrap items-end gap-3 rounded-md border border-[var(--color-border)] p-4">
+    <div className="flex flex-wrap items-end gap-3 rounded-none border border-[var(--color-border)] p-4">
       <label className="flex flex-col gap-1 text-sm">
         <span className="text-[var(--color-muted-foreground)]">
           {t('vertical')}
@@ -26,7 +26,7 @@ export function StartScanForm({ verticals }: { verticals: VerticalOption[] }) {
         <select
           value={verticalId}
           onChange={(e) => setVerticalId(e.target.value)}
-          className="rounded-md border border-[var(--color-border)] bg-transparent px-2 py-1"
+          className="rounded-none border border-[var(--color-border)] bg-transparent px-2 py-1"
         >
           {verticals.map((v) => (
             <option key={v.id} value={v.id}>
@@ -42,7 +42,7 @@ export function StartScanForm({ verticals }: { verticals: VerticalOption[] }) {
         <select
           value={breadth}
           onChange={(e) => setBreadth(e.target.value)}
-          className="rounded-md border border-[var(--color-border)] bg-transparent px-2 py-1"
+          className="rounded-none border border-[var(--color-border)] bg-transparent px-2 py-1"
         >
           {SCAN_BREADTHS.map((b) => (
             <option key={b} value={b}>
@@ -64,7 +64,7 @@ export function StartScanForm({ verticals }: { verticals: VerticalOption[] }) {
             }
           })
         }
-        className="rounded-md bg-[var(--color-foreground)] px-4 py-2 text-sm text-[var(--color-background)] disabled:opacity-50"
+        className="rounded-none bg-[var(--color-foreground)] px-4 py-2 text-sm text-[var(--color-background)] disabled:opacity-50"
       >
         {isPending ? t('starting') : t('startScan')}
       </button>

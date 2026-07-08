@@ -14,7 +14,7 @@ function SectionCard({
   children: React.ReactNode
 }) {
   return (
-    <div className="rounded-md border border-[var(--color-border)] p-4">
+    <div className="rounded-none border border-[var(--color-border)] p-4">
       <h3 className="mb-3 text-sm font-semibold text-[var(--color-foreground)]">
         {title}
       </h3>
@@ -178,7 +178,7 @@ export async function CampaignView({
                       </span>{' '}
                       {String(h.text ?? h.hook ?? JSON.stringify(h))}
                       {isRecommended && (
-                        <span className="mr-2 inline-block rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
+                        <span className="mr-2 inline-block rounded-none bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
                           ⭐ מומלץ
                         </span>
                       )}
@@ -256,10 +256,10 @@ export async function CampaignView({
                         <img
                           src={String(creative.image_url)}
                           alt={String(creative.type_label ?? `Creative ${i + 1}`)}
-                          className="h-24 w-full rounded-md object-cover"
+                          className="h-24 w-full rounded-none object-cover"
                         />
                       ) : (
-                        <div className="flex h-24 w-full items-center justify-center rounded-md bg-[var(--color-muted)] text-xs text-[var(--color-muted-foreground)]">
+                        <div className="flex h-24 w-full items-center justify-center rounded-none bg-[var(--color-muted)] text-xs text-[var(--color-muted-foreground)]">
                           No image
                         </div>
                       )}
@@ -288,7 +288,7 @@ export async function CampaignView({
 
       {/* Loop 2 trigger — show when creatives exist */}
       {data.creatives && (
-        <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-muted)] p-5 text-center">
+        <div className="rounded-none border border-[var(--color-border)] bg-[var(--color-muted)] p-5 text-center">
           <p className="mb-1 text-base font-semibold text-[var(--color-foreground)]">
             🎯 הקמפיין מוכן לריצה!
           </p>

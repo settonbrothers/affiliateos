@@ -36,7 +36,7 @@ export function OfferStatusSelect({
             }
           })
         }}
-        className="rounded-md border border-[var(--color-border)] bg-transparent px-2 py-1 text-sm"
+        className="rounded-none border border-[var(--color-border)] bg-transparent px-2 py-1 text-sm"
       >
         {OFFER_STATUSES.map((s) => (
           <option key={s} value={s}>

@@ -46,14 +46,14 @@ export default async function AdminLayout({
             <Link
               key={href}
               href={href}
-              className="rounded-md px-3 py-2 hover:bg-[var(--color-muted)]"
+              className="rounded-none px-3 py-2 hover:bg-[var(--color-muted)]"
             >
               {label}
             </Link>
           ))}
           <Link
             href="/offers"
-            className="rounded-md px-3 py-2 text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]"
+            className="rounded-none px-3 py-2 text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]"
           >
             {t('backToApp')}
           </Link>

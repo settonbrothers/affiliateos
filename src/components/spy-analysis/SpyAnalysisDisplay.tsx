@@ -60,7 +60,7 @@ export function SpyAnalysisDisplay({ payload }: { payload: unknown }) {
             <span style={{ fontSize: '14px', fontWeight: 500 }}>{p.hook_analysis.hook_type}</span>
             <span
               style={{
-                borderRadius: '9999px',
+                borderRadius: '0',
                 padding: '2px 10px',
                 fontSize: '12px',
                 fontWeight: 500,
@@ -89,7 +89,7 @@ export function SpyAnalysisDisplay({ payload }: { payload: unknown }) {
           <span
             style={{
               display: 'inline-block',
-              borderRadius: '9999px',
+              borderRadius: '0',
               padding: '4px 12px',
               fontSize: '13px',
               fontWeight: 500,

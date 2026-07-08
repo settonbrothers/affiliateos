@@ -17,7 +17,7 @@ import { VERDICTS } from '@/types/agents/underwriting'
 import type { Vertical } from '@/types/db'
 
 const SELECT_CLASS =
-  'flex h-10 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-background)] px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]'
+  'flex h-10 w-full rounded-none border border-[var(--color-border)] bg-[var(--color-background)] px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]'
 
 const FACTS_PLACEHOLDER = `[
   { "fact_type": "commission_value", "fact_value": "30% recurring", "source_quote": "30% lifetime recurring commission", "confidence_score": 90 }

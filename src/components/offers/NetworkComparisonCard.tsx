@@ -9,14 +9,14 @@ export async function NetworkComparisonCard({ offerId }: Props) {
 
   if (networks.length === 0) {
     return (
-      <div className="rounded-lg border bg-muted/40 p-4 text-sm text-muted-foreground">
+      <div className="rounded-none border bg-muted/40 p-4 text-sm text-muted-foreground">
         עוד לא נמצאו רשתות — הanalyzer יעדכן אחרי הdiscovery הבא
       </div>
     )
   }
 
   return (
-    <div className="rounded-lg border bg-card p-4">
+    <div className="rounded-none border bg-card p-4">
       <h3 className="mb-3 text-sm font-semibold text-foreground">השוואת רשתות</h3>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
@@ -46,7 +46,7 @@ export async function NetworkComparisonCard({ offerId }: Props) {
                       <span className="font-medium">{n.network_name}</span>
                     )}
                     {n.is_recommended && (
-                      <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                      <span className="inline-flex items-center rounded-none bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                         מומלץ
                       </span>
                     )}

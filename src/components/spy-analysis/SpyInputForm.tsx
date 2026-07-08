@@ -145,7 +145,7 @@ export function SpyInputForm({
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border border-[var(--color-border)] p-4">
+    <div className="flex flex-col gap-4 rounded-none border border-[var(--color-border)] p-4">
       <h2 className="text-sm font-semibold">
         {hasExistingAnalysis ? 'Run new Spy Analysis' : 'Spy Analysis'}
       </h2>
@@ -176,11 +176,11 @@ export function SpyInputForm({
           onChange={(e) => setUrlInput(e.target.value)}
           placeholder={PLACEHOLDERS.url}
           disabled={isRunning}
-          className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm placeholder:text-[var(--color-muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)] disabled:opacity-50"
+          className="w-full rounded-none border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm placeholder:text-[var(--color-muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)] disabled:opacity-50"
         />
       ) : activeTab === 'image' ? (
         <div className="flex flex-col gap-2">
-          <label className="flex cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-[var(--color-border)] p-6 text-sm text-[var(--color-muted-foreground)] hover:border-[var(--color-foreground)] transition-colors">
+          <label className="flex cursor-pointer flex-col items-center justify-center rounded-none border-2 border-dashed border-[var(--color-border)] p-6 text-sm text-[var(--color-muted-foreground)] hover:border-[var(--color-foreground)] transition-colors">
             <span className="mb-1 font-medium">
               {imageName ? imageName : 'לחץ להעלאת צילום מסך של מודעה'}
             </span>
@@ -198,7 +198,7 @@ export function SpyInputForm({
             <img
               src={`data:image/png;base64,${imageBase64}`}
               alt="preview"
-              className="max-h-48 rounded-md object-contain border border-[var(--color-border)]"
+              className="max-h-48 rounded-none object-contain border border-[var(--color-border)]"
             />
           )}
         </div>
@@ -213,7 +213,7 @@ export function SpyInputForm({
           placeholder={PLACEHOLDERS[activeTab]}
           disabled={isRunning}
           rows={6}
-          className="w-full resize-y rounded-md border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm placeholder:text-[var(--color-muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)] disabled:opacity-50"
+          className="w-full resize-y rounded-none border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm placeholder:text-[var(--color-muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)] disabled:opacity-50"
         />
       )}
 

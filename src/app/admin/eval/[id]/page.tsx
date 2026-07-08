@@ -174,7 +174,7 @@ export default async function EvalDetailPage({
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-[var(--color-border)] p-3">
+    <div className="rounded-none border border-[var(--color-border)] p-3">
       <div className="text-xs text-[var(--color-muted-foreground)]">{label}</div>
       <div className="text-xl font-semibold">{value}</div>
     </div>

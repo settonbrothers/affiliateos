@@ -18,7 +18,7 @@ export function TrendingBadge({ signal }: TrendingBadgeProps) {
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        borderRadius: '999px',
+        borderRadius: '0',
         background: 'rgba(255,255,255,0.07)',
         padding: '3px 10px',
         fontSize: '10px',

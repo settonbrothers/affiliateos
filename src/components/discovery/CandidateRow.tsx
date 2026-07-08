@@ -210,14 +210,14 @@ export function CandidateRow({ candidate }: { candidate: DiscoveryCandidate }) {
           <button
             disabled={isPending}
             onClick={() => act(() => approveCandidate(candidate.id))}
-            className="rounded-md bg-[var(--color-foreground)] px-3 py-1 text-xs text-[var(--color-background)] disabled:opacity-50"
+            className="rounded-none bg-[var(--color-foreground)] px-3 py-1 text-xs text-[var(--color-background)] disabled:opacity-50"
           >
             {t('approveCreateOffer')}
           </button>
           <button
             disabled={isPending}
             onClick={() => act(() => rejectCandidate(candidate.id))}
-            className="rounded-md border border-[var(--color-border)] px-3 py-1 text-xs disabled:opacity-50"
+            className="rounded-none border border-[var(--color-border)] px-3 py-1 text-xs disabled:opacity-50"
           >
             {t('reject')}
           </button>

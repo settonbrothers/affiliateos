@@ -228,7 +228,7 @@ export default async function OfferDetailPage({
             {compliance?.suggested_verdict_cap && (
               <div
                 style={{
-                  borderRadius: '8px',
+                  borderRadius: '0',
                   border: '1px solid var(--amber-border)',
                   background: 'var(--amber-bg)',
                   padding: '12px',

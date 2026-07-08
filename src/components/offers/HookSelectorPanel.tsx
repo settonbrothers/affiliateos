@@ -86,7 +86,7 @@ export function HookSelectorPanel({
             <label
               key={idx}
               className={cn(
-                'flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors',
+                'flex cursor-pointer items-start gap-3 rounded-none border p-3 transition-colors',
                 isChecked ? 'border-blue-400 bg-blue-50' : 'border-[#DED8CB] hover:bg-[#EFEBE1]'
               )}
               style={{ color: '#1F1B16' }}
@@ -108,7 +108,7 @@ export function HookSelectorPanel({
                   {hook.text}
                 </span>
                 {hook.is_recommended && (
-                  <span className="shrink-0 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
+                  <span className="shrink-0 rounded-none bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
                     מומלץ
                   </span>
                 )}

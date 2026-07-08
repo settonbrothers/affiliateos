@@ -15,7 +15,7 @@ export function FunnelBar({ counts }: { counts: FunnelCounts }) {
       {stages.map(([label, n]) => (
         <div
           key={label}
-          className="flex min-w-28 flex-col rounded-md border border-[var(--color-border)] p-3"
+          className="flex min-w-28 flex-col rounded-none border border-[var(--color-border)] p-3"
         >
           <span className="text-2xl font-semibold">{n}</span>
           <span className="text-xs text-[var(--color-muted-foreground)]">

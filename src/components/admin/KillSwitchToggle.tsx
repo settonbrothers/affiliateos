@@ -30,7 +30,7 @@ export function KillSwitchToggle({ row }: { row: KillSwitchRow }) {
   }
 
   return (
-    <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--color-border)] p-4">
+    <div className="flex items-center justify-between gap-4 rounded-none border border-[var(--color-border)] p-4">
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <span className="font-medium">{row.orchestrator_name}</span>

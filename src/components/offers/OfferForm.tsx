@@ -80,7 +80,7 @@ export function OfferForm({ verticals, mode, initial }: Props) {
         <Label htmlFor="vertical_id">{t('vertical')}</Label>
         <select
           id="vertical_id"
-          className="flex h-10 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-background)] px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+          className="flex h-10 w-full rounded-none border border-[var(--color-border)] bg-[var(--color-background)] px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
           {...register('vertical_id')}
         >
           <option value="">{t('selectVertical')}</option>

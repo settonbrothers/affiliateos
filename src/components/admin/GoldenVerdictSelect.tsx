@@ -6,7 +6,7 @@ import { updateGoldenVerdict } from '@/lib/actions/golden'
 import { VERDICTS } from '@/types/agents/underwriting'
 
 const SELECT_CLASS =
-  'h-9 rounded-md border border-[var(--color-border)] bg-[var(--color-background)] px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]'
+  'h-9 rounded-none border border-[var(--color-border)] bg-[var(--color-background)] px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]'
 
 export function GoldenVerdictSelect({
   id,

@@ -210,7 +210,7 @@ export function DiagnoseCreativesForm({ campaignId }: { campaignId: string }) {
                     onClick={() => removeImage(i)}
                     disabled={isRunning}
                     aria-label="הסר תמונה"
-                    className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs disabled:opacity-50 hover:bg-red-600"
+                    className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-none bg-red-500 text-white text-xs disabled:opacity-50 hover:bg-red-600"
                   >
                     ×
                   </button>

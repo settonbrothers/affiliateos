@@ -67,14 +67,14 @@ export function CreativeReferenceUpload({
           <img
             src={preview}
             alt="Reference preview"
-            className="max-h-32 rounded-md object-contain border border-[var(--color-border)]"
+            className="max-h-32 rounded-none object-contain border border-[var(--color-border)]"
           />
           <button
             type="button"
             onClick={handleRemove}
             disabled={disabled}
             aria-label="Remove image"
-            className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-foreground)] text-[var(--color-background)] text-xs leading-none hover:opacity-80 disabled:opacity-50"
+            className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-none bg-[var(--color-foreground)] text-[var(--color-background)] text-xs leading-none hover:opacity-80 disabled:opacity-50"
           >
             &times;
           </button>
@@ -83,7 +83,7 @@ export function CreativeReferenceUpload({
         <label
           onDrop={handleDrop}
           onDragOver={(e) => e.preventDefault()}
-          className={`flex cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-[var(--color-border)] p-4 text-sm text-[var(--color-muted-foreground)] transition-colors hover:border-[var(--color-foreground)] ${disabled ? 'pointer-events-none opacity-50' : ''}`}
+          className={`flex cursor-pointer flex-col items-center justify-center rounded-none border-2 border-dashed border-[var(--color-border)] p-4 text-sm text-[var(--color-muted-foreground)] transition-colors hover:border-[var(--color-foreground)] ${disabled ? 'pointer-events-none opacity-50' : ''}`}
         >
           <span className="font-medium">Click or drag to upload reference image</span>
           <span className="text-xs">PNG, JPEG, WEBP &mdash; max 5MB</span>

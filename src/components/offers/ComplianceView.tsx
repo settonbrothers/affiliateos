@@ -43,7 +43,7 @@ export function ComplianceView({
       </div>
 
       {suggestedVerdictCap && (
-        <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm dark:bg-red-950/40">
+        <div className="rounded-none border border-red-300 bg-red-50 p-3 text-sm dark:bg-red-950/40">
           <p className="font-medium">
             Verdict capped to “{suggestedVerdictCap}” by compliance
           </p>

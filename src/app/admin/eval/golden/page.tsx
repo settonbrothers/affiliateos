@@ -221,7 +221,7 @@ export default async function GoldenSetPage() {
               </CardHeader>
               <CardContent className="flex flex-col gap-4">
                 {model && (
-                  <div className="flex flex-wrap items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-muted)] px-3 py-2 text-sm">
+                  <div className="flex flex-wrap items-center gap-2 rounded-none border border-[var(--color-border)] bg-[var(--color-muted)] px-3 py-2 text-sm">
                     <span className="text-xs uppercase tracking-wide text-[var(--color-muted-foreground)]">
                       Model&apos;s last eval (reference)
                     </span>
