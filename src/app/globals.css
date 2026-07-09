@@ -143,6 +143,17 @@
   .affex-sweep, .affex-blink, [style*="affexScanLine"], [style*="affexShoot"], [style*="affexCrackOut"] { animation: none !important; }
 }
 
+/* Route-transition skeleton shimmer (see docs/superpowers/specs/2026-07-09-navigation-perf-and-feedback-design.md). */
+@keyframes affexShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.affex-skel {
+  display: block;
+  background: linear-gradient(90deg, rgba(255,255,255,0.035) 25%, rgba(255,255,255,0.085) 37%, rgba(255,255,255,0.035) 63%);
+  background-size: 200% 100%;
+  animation: affexShimmer 1.4s ease-in-out infinite;
+  border-radius: 3px;
+}
+@media (prefers-reduced-motion: reduce) { .affex-skel { animation: none; } }
+
 /* Responsive show/hide for the mobile hamburger vs. desktop nav (~820px). */
 .affex-mobile-only { display: none; }
 @media (max-width: 820px) {
