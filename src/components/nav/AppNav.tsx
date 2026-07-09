@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { LinkPending } from '@/components/nav/LinkPending'
 
 interface NavItemProps {
   href: string
@@ -30,6 +31,7 @@ function NavItem({ href, label }: NavItemProps) {
       }}
     >
       {label}
+      <LinkPending />
       {active && (
         <span
           style={{
