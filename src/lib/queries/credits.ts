@@ -1,12 +1,11 @@
+import { getSessionUser } from '@/lib/auth/session'
 import { createClient } from '@/lib/supabase/server'
 
 // The current user's workspace id (1 user : 1 workspace in MVP).
 export async function getCurrentWorkspaceId(): Promise<string | null> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getSessionUser()
   if (!user) return null
+  const supabase = await createClient()
   const { data, error } = await supabase
     .from('workspace_members')
     .select('workspace_id')
