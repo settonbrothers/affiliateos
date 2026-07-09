@@ -70,6 +70,14 @@ export async function callAnthropicWithTool<T extends ZodTypeAny>(
   let attempt = 0
   let lastError: unknown
 
+  // Conversation state. On a Zod validation failure we append the model's
+  // invalid tool_use plus a tool_result describing the error, so the retry can
+  // actually correct it instead of re-sending the identical prompt (which yields
+  // the identical invalid output when the model is deterministic on this input).
+  const messages: Anthropic.MessageParam[] = [
+    { role: 'user', content: args.userMessage as Anthropic.MessageParam['content'] },
+  ]
+
   while (attempt < maxRetries) {
     attempt++
     try {
@@ -79,7 +87,7 @@ export async function callAnthropicWithTool<T extends ZodTypeAny>(
         tools: [tool],
         tool_choice: { type: 'tool', name: args.toolName },
         system: args.systemPrompt,
-        messages: [{ role: 'user', content: args.userMessage as Anthropic.MessageParam['content'] }],
+        messages,
       })
 
       const toolUse = resp.content.find((c) => c.type === 'tool_use')
@@ -89,6 +97,23 @@ export async function callAnthropicWithTool<T extends ZodTypeAny>(
 
       const parsed = args.responseSchema.safeParse(toolUse.input)
       if (!parsed.success) {
+        // Feed the failure back into the conversation so the next attempt fixes
+        // the specific problem (e.g. "angles must contain at least 2 items").
+        messages.push({ role: 'assistant', content: resp.content })
+        messages.push({
+          role: 'user',
+          content: [
+            {
+              type: 'tool_result',
+              tool_use_id: toolUse.id,
+              is_error: true,
+              content:
+                `Your submission failed schema validation: ${parsed.error.message} ` +
+                `Call ${args.toolName} again with a corrected submission that satisfies ` +
+                `every constraint (including array minimum/maximum item counts).`,
+            },
+          ],
+        })
         throw new AnthropicValidationError(parsed.error, toolUse.input)
       }
 

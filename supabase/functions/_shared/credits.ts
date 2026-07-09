@@ -91,7 +91,9 @@ export async function reserveCredits(
   // Read the balance for the threshold check (best-effort, non-critical).
   const balance = await getBalance(workspaceId)
 
-  const { data: reserved, error: rpcError } = await getAdminClient().rpc(
+  // reserve_credits atomically checks the balance and writes the debit under a
+  // per-workspace lock, returning the new ledger row id (or NULL when short).
+  const { data: reservedId, error: rpcError } = await getAdminClient().rpc(
     'reserve_credits',
     {
       p_workspace_id: workspaceId,
@@ -100,18 +102,7 @@ export async function reserveCredits(
     }
   )
   if (rpcError) throw rpcError
-  if (!reserved) throw new InsufficientCreditsError(balance, cost)
-
-  // Fetch the newly inserted ledger row so we can return its id for tracing.
-  const { data, error } = await getAdminClient()
-    .from('credit_ledger')
-    .select('id')
-    .eq('workspace_id', workspaceId)
-    .eq('description', `Reserved for ${action}`)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single()
-  if (error) throw error
+  if (!reservedId) throw new InsufficientCreditsError(balance, cost)
 
   // Warn the owner once, on the debit that crosses below the threshold.
   const newBalance = balance - cost
@@ -119,7 +110,7 @@ export async function reserveCredits(
     await notifyLowCredits(workspaceId, newBalance)
   }
 
-  return { cost, ledgerId: data.id as string }
+  return { cost, ledgerId: reservedId as string }
 }
 
 // Link a reservation to its ai_run once the run row exists (traceability).

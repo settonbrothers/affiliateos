@@ -1,6 +1,12 @@
 -- Atomically check balance and debit credits in a single transaction with a
 -- row-level lock, eliminating the race condition in the application-layer
 -- read-check-insert pattern.
+--
+-- NOTE: this original version never worked against the real credit_ledger schema
+-- (references a non-existent `description` column, omits the NOT NULL
+-- `entry_type`, and uses `FOR UPDATE` with an aggregate). It was recorded as
+-- applied on the remote but the function was effectively absent. The working
+-- definition ships in 0042_fix_reserve_credits.sql — do not rely on this file.
 CREATE OR REPLACE FUNCTION reserve_credits(
   p_workspace_id UUID,
   p_amount INT,

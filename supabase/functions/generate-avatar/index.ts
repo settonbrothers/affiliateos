@@ -39,7 +39,7 @@ Deno.serve(async (req: Request) => {
     const admin = getAdminClient()
     const { data: offer, error: offerErr } = await admin
       .from('offers')
-      .select('id, workspace_id, name, website_url, operator_notes, vertical')
+      .select('id, workspace_id, name, website_url, operator_notes, verticals(slug)')
       .eq('id', offerId)
       .single()
     if (offerErr || !offer) return jsonResponse({ error: 'Offer not found' }, 404)
@@ -124,7 +124,9 @@ Deno.serve(async (req: Request) => {
               name: offer.name,
               website_url: offer.website_url ?? null,
               operator_notes: offer.operator_notes ?? null,
-              vertical: (offer as { vertical?: string | null }).vertical ?? null,
+              vertical:
+                (offer as unknown as { verticals?: { slug: string } | null }).verticals?.slug ??
+                null,
             },
             deepBriefContext,
             spyContext,
