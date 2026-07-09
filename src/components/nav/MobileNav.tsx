@@ -4,7 +4,6 @@ import { X } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { LinkPending } from '@/components/nav/LinkPending'
 
 interface MobileNavItem {
   href: string
@@ -97,7 +96,6 @@ export function MobileNav({
                   <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', color: active ? 'var(--primary)' : '#6E6E6C' }}>
                     {n.label}
                   </span>
-                  <LinkPending />
                 </Link>
               )
             })}
