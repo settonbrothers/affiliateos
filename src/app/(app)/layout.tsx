@@ -7,26 +7,25 @@ import { LanguageToggle } from '@/components/LanguageToggle'
 import { AppNav } from '@/components/nav/AppNav'
 import { MobileNav } from '@/components/nav/MobileNav'
 import { isCurrentUserAdmin } from '@/lib/auth/role'
+import { getSessionUser } from '@/lib/auth/session'
 import { getCurrentBalance } from '@/lib/queries/credits'
 import { isOnboarded } from '@/lib/queries/onboarding'
-import { createClient } from '@/lib/supabase/server'
 
 export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getSessionUser()
   if (!user) redirect('/login')
 
-  if (!(await isOnboarded())) redirect('/onboarding')
-
-  const balance = await getCurrentBalance()
-  const isAdmin = await isCurrentUserAdmin()
-  const t = await getTranslations('nav')
+  const [onboarded, balance, isAdmin, t] = await Promise.all([
+    isOnboarded(),
+    getCurrentBalance(),
+    isCurrentUserAdmin(),
+    getTranslations('nav'),
+  ])
+  if (!onboarded) redirect('/onboarding')
 
   const navItems = [
     { href: '/offers', label: t('offers') },

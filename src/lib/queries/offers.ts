@@ -1,8 +1,10 @@
+import { cache } from 'react'
+
 import { createClient } from '@/lib/supabase/server'
 import type { UnderwritingResponse } from '@/types/agents/underwriting'
 import type { AiRun, Offer, Vertical } from '@/types/db'
 
-export async function listVerticals(): Promise<Vertical[]> {
+export const listVerticals = cache(async (): Promise<Vertical[]> => {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('verticals')
@@ -10,7 +12,7 @@ export async function listVerticals(): Promise<Vertical[]> {
     .order('display_order')
   if (error) console.error('[queries/offers] DB error:', error)
   return (data ?? []) as Vertical[]
-}
+})
 
 export async function listOffers(): Promise<Offer[]> {
   const supabase = await createClient()

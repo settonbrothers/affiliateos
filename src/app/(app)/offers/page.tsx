@@ -5,10 +5,12 @@ import { OffersTable } from '@/components/offers/OffersTable'
 import { listOffers, listVerticals } from '@/lib/queries/offers'
 
 export default async function OffersPage() {
-  const offers = await listOffers()
-  const verticals = await listVerticals()
+  const [offers, verticals, t] = await Promise.all([
+    listOffers(),
+    listVerticals(),
+    getTranslations('offers'),
+  ])
   const verticalNames = Object.fromEntries(verticals.map((v) => [v.id, v.name]))
-  const t = await getTranslations('offers')
 
   const scoredCount = offers.filter((o) => o.evaluation?.payload?.weighted_score != null).length
   const hotCount = offers.filter((o) => (o as { trending_signal?: string }).trending_signal === 'rising').length
