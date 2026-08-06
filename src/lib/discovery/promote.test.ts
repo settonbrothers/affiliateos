@@ -4,7 +4,11 @@ import {
   PROMOTE_VERIFY_MIN_CONFIDENCE,
   buildOperatorNotes,
   deepAnalysisToFacts,
+  parseStoredDeepAnalysis,
+  type StoredDeepAnalysis,
 } from './promote'
+// The fixture is deliberately typed against the STRICT contract, so it stays a
+// realistic fresh-run payload even though the converter accepts older shapes.
 import type { DeepAnalysis } from '@/types/agents/discovery'
 
 const CANDIDATE_URL = 'https://acme.com/affiliates'
@@ -178,14 +182,75 @@ describe('deepAnalysisToFacts', () => {
     expect(high!.confidence_score).toBeGreaterThan(medium!.confidence_score)
   })
 
+  it('strips the quotes real runs sometimes wrap values in', () => {
+    const deep = makeDeep({ estimated_commission: '"35% recurring lifetime"' })
+    const { facts } = deepAnalysisToFacts(deep, CANDIDATE_URL)
+    expect(facts.find((f) => f.fact_type === 'commission_value')?.fact_value).toBe(
+      '35% recurring lifetime'
+    )
+  })
+
+  it('leaves an inner quote alone', () => {
+    const deep = makeDeep({ estimated_commission: '30% on the "Pro" plan' })
+    const { facts } = deepAnalysisToFacts(deep, CANDIDATE_URL)
+    expect(facts.find((f) => f.fact_type === 'commission_value')?.fact_value).toBe(
+      '30% on the "Pro" plan'
+    )
+  })
+
   it('survives a partial payload without throwing', () => {
     const partial = {
       overall_score: 40,
       summary: 'Thin.',
       hard_filters: {},
       signals: {},
-    } as unknown as DeepAnalysis
+    } as unknown as StoredDeepAnalysis
     expect(() => deepAnalysisToFacts(partial, null)).not.toThrow()
+  })
+})
+
+// Most rows already in discovery_candidates.deep_analysis predate Discovery v2
+// Phase B and carry no `signals` at all; older ones have no `hard_filters`
+// either. Strict validation returned null for 7 of the 8 real payloads in the
+// database, which would have approved them with nothing attached — the very bug
+// this module exists to fix.
+describe('parseStoredDeepAnalysis', () => {
+  it('keeps a pre-Phase-B payload that has no signals', () => {
+    const { signals: _dropped, ...legacy } = makeDeep()
+    const parsed = parseStoredDeepAnalysis(legacy)
+    expect(parsed).not.toBeNull()
+
+    const { facts } = deepAnalysisToFacts(parsed, CANDIDATE_URL)
+    expect(verified(facts).length).toBeGreaterThanOrEqual(5)
+  })
+
+  it('keeps a payload predating the rubric, with neither filters nor signals', () => {
+    const parsed = parseStoredDeepAnalysis({
+      overall_score: 61,
+      summary: 'Early run.',
+      key_strengths: ['Recurring'],
+      key_risks: ['Unverified terms'],
+      estimated_commission: '25%',
+      recommended: true,
+    })
+    expect(parsed).not.toBeNull()
+    // Nothing to attest, so no facts — but the qualitative read still travels.
+    expect(deepAnalysisToFacts(parsed, CANDIDATE_URL).facts).toEqual([])
+    expect(buildOperatorNotes(parsed)).toContain('Unverified terms')
+  })
+
+  it('still rejects a blob of the wrong shape', () => {
+    expect(parseStoredDeepAnalysis({ overall_score: 'high' })).toBeNull()
+    expect(parseStoredDeepAnalysis(null)).toBeNull()
+  })
+
+  it('drops a signal the run stored without a confidence', () => {
+    const deep = makeDeep()
+    // @ts-expect-error modelling an older row that omitted the field
+    delete deep.signals.momentum.confidence
+    const parsed = parseStoredDeepAnalysis(deep)
+    const { facts } = deepAnalysisToFacts(parsed, CANDIDATE_URL)
+    expect(facts.some((f) => f.source_quote.includes('TechCrunch'))).toBe(false)
   })
 })
 

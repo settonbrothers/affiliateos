@@ -9,6 +9,7 @@ import {
   PROMOTE_VERIFY_MIN_CONFIDENCE,
   buildOperatorNotes,
   deepAnalysisToFacts,
+  parseStoredDeepAnalysis,
   type PromotedFact,
   type PromotedSource,
 } from '@/lib/discovery/promote'
@@ -21,7 +22,6 @@ import {
   NetworkComparisonSchema,
   trendingScore,
 } from '@/types/agents/discoverNetwork'
-import { DeepAnalysisSchema, type DeepAnalysis } from '@/types/agents/discovery'
 
 // The discovery_* tables and the columns added by migrations 0039/0043
 // (offers.trending_*, offers.discovery_candidate_id,
@@ -106,7 +106,7 @@ export async function approveCandidate(
     .limit(1)
     .maybeSingle()
 
-  const deep = parseDeepAnalysis(candidate.deep_analysis)
+  const deep = parseStoredDeepAnalysis(candidate.deep_analysis)
   const { sources, facts } = deepAnalysisToFacts(deep, candidate.url)
   const notes = buildOperatorNotes(deep) || 'Approved from Discovery Scanner.'
 
@@ -154,11 +154,6 @@ export async function approveCandidate(
 
   revalidatePath('/admin/discovery')
   revalidatePath('/offers')
-}
-
-function parseDeepAnalysis(raw: unknown): DeepAnalysis | null {
-  const parsed = DeepAnalysisSchema.safeParse(raw)
-  return parsed.success ? parsed.data : null
 }
 
 // One source_document per provenance, then the facts that cite it. Inserted

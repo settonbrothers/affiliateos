@@ -6,8 +6,69 @@
 // above 'small_paid_test'). Every discovered offer was structurally stuck.
 //
 // Pure on purpose — the DB writes live in src/lib/actions/discovery.ts.
-import type { DeepAnalysis, HardFilter, Signal } from '@/types/agents/discovery'
+import { z } from 'zod'
+
+import {
+  HARD_FILTER_STATUSES,
+  SIGNAL_CONFIDENCES,
+} from '@/types/agents/discovery'
 import type { FactType } from '@/types/db'
+
+// What is actually sitting in discovery_candidates.deep_analysis, as opposed to
+// what DeepAnalysisSchema demands of a fresh run. Candidates analysed before
+// Discovery v2 Phase B have no `signals`; older ones predate the quality rubric
+// and have no `hard_filters` either. Validating those strictly would return
+// null and approve them with nothing attached — the exact bug this module
+// exists to fix. So: tolerate absence, never tolerate a wrong shape.
+const StoredHardFilterSchema = z.object({
+  status: z.enum(HARD_FILTER_STATUSES).optional(),
+  evidence: z.string().optional(),
+  source_url: z.string().nullable().optional(),
+})
+
+const StoredSignalSchema = z.object({
+  value: z.string().optional(),
+  confidence: z.enum(SIGNAL_CONFIDENCES).optional(),
+  evidence: z.string().optional(),
+})
+
+export const StoredDeepAnalysisSchema = z.object({
+  overall_score: z.number().optional(),
+  summary: z.string().optional(),
+  key_strengths: z.array(z.string()).optional(),
+  key_risks: z.array(z.string()).optional(),
+  estimated_commission: z.string().nullable().optional(),
+  estimated_epc_band: z.string().nullable().optional(),
+  network: z.string().nullable().optional(),
+  recommended: z.boolean().optional(),
+  must_verify_before_budget: z.array(z.string()).optional(),
+  hard_filters: z
+    .object({
+      economics: StoredHardFilterSchema.optional(),
+      paid_traffic: StoredHardFilterSchema.optional(),
+      monetization_integrity: StoredHardFilterSchema.optional(),
+      scale_ceiling: StoredHardFilterSchema.optional(),
+    })
+    .optional(),
+  signals: z
+    .object({
+      demand_trend: StoredSignalSchema.optional(),
+      scale_proxy: StoredSignalSchema.optional(),
+      momentum: StoredSignalSchema.optional(),
+      best_payout_route: StoredSignalSchema.optional(),
+    })
+    .optional(),
+})
+
+export type StoredDeepAnalysis = z.infer<typeof StoredDeepAnalysisSchema>
+type StoredHardFilter = z.infer<typeof StoredHardFilterSchema>
+type StoredSignal = z.infer<typeof StoredSignalSchema>
+
+/** Parse a stored deep_analysis blob, keeping whatever the run did produce. */
+export function parseStoredDeepAnalysis(raw: unknown): StoredDeepAnalysis | null {
+  const parsed = StoredDeepAnalysisSchema.safeParse(raw)
+  return parsed.success ? parsed.data : null
+}
 
 /** Mirrors AUTO_VERIFY_MIN_CONFIDENCE in supabase/functions/ingest-source. */
 export const PROMOTE_VERIFY_MIN_CONFIDENCE = 70
@@ -55,7 +116,7 @@ export type Promotion = {
   facts: PromotedFact[]
 }
 
-type FilterKey = keyof DeepAnalysis['hard_filters']
+type FilterKey = keyof NonNullable<StoredDeepAnalysis['hard_filters']>
 
 // What a resolved filter actually tells us. `fact_value` stays a short, faithful
 // statement — the evidence prose goes into source_quote untouched, so nothing
@@ -86,23 +147,33 @@ const FILTER_FACTS: Record<
   },
 }
 
-const SIGNAL_LABELS: Record<keyof DeepAnalysis['signals'], string> = {
+const SIGNAL_LABELS: Record<keyof NonNullable<StoredDeepAnalysis['signals']>, string> = {
   demand_trend: 'demand trend',
   scale_proxy: 'promoted at scale',
   momentum: 'momentum',
   best_payout_route: 'best payout route',
 }
 
-function isResolved(f: HardFilter | undefined): f is HardFilter {
+function isResolved(f: StoredHardFilter | undefined): f is StoredHardFilter {
   return f?.status === 'pass' || f?.status === 'fail'
 }
 
-function hasEvidence(s: Signal | undefined): s is Signal {
-  return (
-    !!s?.value &&
-    s.value.trim().toLowerCase() !== 'unknown' &&
-    SIGNAL_CONFIDENCE[s.confidence] != null
-  )
+// A signal is usable only if the model gave it a value AND said how well it
+// could back it. Older runs stored signals without a confidence; those are
+// unscoreable, so they stay out of the fact list.
+// Real runs sometimes hand back values already wrapped in quotes ("35%
+// recurring..."), which then read as part of the fact. Strip one balanced pair.
+function unquote(value: string): string {
+  const t = value.trim()
+  const quoted =
+    (t.startsWith('"') && t.endsWith('"')) || (t.startsWith('“') && t.endsWith('”'))
+  return quoted && t.length > 1 ? t.slice(1, -1).trim() : t
+}
+
+function signalScore(s: StoredSignal | undefined): number | null {
+  if (!s?.value || !s.confidence) return null
+  if (s.value.trim().toLowerCase() === 'unknown') return null
+  return SIGNAL_CONFIDENCE[s.confidence] ?? null
 }
 
 // Everything here is second-hand: the model's reading of a page, not a verbatim
@@ -110,7 +181,7 @@ function hasEvidence(s: Signal | undefined): s is Signal {
 // source_extraction. A cited third-party page still beats an uncited claim.
 function describeSource(
   key: string,
-  deep: DeepAnalysis,
+  deep: StoredDeepAnalysis,
   candidateUrl: string | null
 ): PromotedSource {
   if (key === 'research') {
@@ -151,7 +222,7 @@ function describeSource(
  * items surface through buildOperatorNotes instead.
  */
 export function deepAnalysisToFacts(
-  deep: DeepAnalysis | null | undefined,
+  deep: StoredDeepAnalysis | null | undefined,
   candidateUrl: string | null
 ): Promotion {
   if (!deep) return { sources: [], facts: [] }
@@ -164,12 +235,13 @@ export function deepAnalysisToFacts(
     source_quote: string,
     confidence_score: number
   ) => {
-    if (!fact_value.trim()) return
+    const value = unquote(fact_value)
+    if (!value) return
     facts.push({
       sourceKey,
       fact_type,
-      fact_value,
-      source_quote,
+      fact_value: value,
+      source_quote: unquote(source_quote),
       confidence_score,
     })
   }
@@ -180,14 +252,14 @@ export function deepAnalysisToFacts(
     !url || url === candidateUrl ? 'page' : `cited:${url}`
   const RESEARCH = 'research'
 
-  const filters = deep.hard_filters ?? ({} as DeepAnalysis['hard_filters'])
+  const filters = deep.hard_filters ?? ({} as NonNullable<StoredDeepAnalysis['hard_filters']>)
   for (const key of Object.keys(FILTER_FACTS) as FilterKey[]) {
     const filter = filters[key]
     if (!isResolved(filter)) continue
     const spec = FILTER_FACTS[key]
     const confidence = filter.source_url ? CONFIDENCE_CITED : CONFIDENCE_OWN_PAGE
     const value = filter.status === 'pass' ? spec.pass : spec.fail
-    const key_ = citedKey(filter.source_url)
+    const key_ = citedKey(filter.source_url ?? null)
     push(key_, spec.fact_type, value, filter.evidence ?? '', confidence)
 
     // The economics filter is also where a stated commission and a derived EPC
@@ -214,16 +286,17 @@ export function deepAnalysisToFacts(
     }
   }
 
-  const signals = deep.signals ?? ({} as DeepAnalysis['signals'])
+  const signals = deep.signals ?? ({} as NonNullable<StoredDeepAnalysis['signals']>)
   for (const key of Object.keys(SIGNAL_LABELS) as (keyof typeof SIGNAL_LABELS)[]) {
     const signal = signals[key]
-    if (!hasEvidence(signal)) continue
+    const score = signalScore(signal)
+    if (score == null) continue
     push(
       RESEARCH,
       'other',
-      `${SIGNAL_LABELS[key]}: ${signal.value}`,
-      signal.evidence,
-      SIGNAL_CONFIDENCE[signal.confidence] as number
+      `${SIGNAL_LABELS[key]}: ${signal!.value}`,
+      signal!.evidence ?? '',
+      score
     )
   }
 
@@ -258,7 +331,7 @@ export function deepAnalysisToFacts(
  * `data_confidence` for a substantial note, so this is where the unresolved
  * filters (`must_verify_before_budget`) and the qualitative read belong.
  */
-export function buildOperatorNotes(deep: DeepAnalysis | null | undefined): string {
+export function buildOperatorNotes(deep: StoredDeepAnalysis | null | undefined): string {
   if (!deep) return ''
   const parts: string[] = ['Approved from Discovery Scanner.']
 
