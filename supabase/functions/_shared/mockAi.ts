@@ -49,20 +49,37 @@ export function mockUnderwriting(
     human_review_required: noFacts,
     human_review_reasons: noFacts ? ['No verified facts available for this offer.'] : [],
     payload: {
+      // {score, reasoning} per dimension, matching the real contract — the mock
+      // has to exercise the shape the UI renders, or dev never sees the
+      // reasoning path at all.
       scores: {
-        economics: 74,
-        demand: 78,
-        competition: 52,
-        creative_opportunity: 68,
-        funnel_fit: 70,
-        compliance: 88,
-        operator_fit: 70,
-        data_confidence: dataConfidence,
-        offer_trust: 86,
-        scale_potential: 75,
-        cashflow_fit: 65,
-        high_ceiling_potential: 72,
-        execution_complexity: 58,
+        economics: { score: 74, reasoning: 'Mock: payout supports a workable EPC.' },
+        demand: { score: 78, reasoning: 'Mock: category demand is growing.' },
+        competition: { score: 52, reasoning: 'Mock: crowded but not saturated.' },
+        creative_opportunity: {
+          score: 68,
+          reasoning: 'Mock: several untested angles remain.',
+        },
+        funnel_fit: { score: 70, reasoning: 'Mock: landing page converts cleanly.' },
+        compliance: { score: 88, reasoning: 'Mock: no regulated claims detected.' },
+        operator_fit: { score: 70, reasoning: 'Mock: matches the stated channels.' },
+        data_confidence: {
+          score: dataConfidence,
+          reasoning: noFacts
+            ? 'Mock: no verified facts attached to this offer.'
+            : `Mock: informed by ${inputFacts.length} verified fact(s).`,
+        },
+        offer_trust: { score: 86, reasoning: 'Mock: established vendor.' },
+        scale_potential: { score: 75, reasoning: 'Mock: no cap stated.' },
+        cashflow_fit: { score: 65, reasoning: 'Mock: net-30 payout terms.' },
+        high_ceiling_potential: {
+          score: 72,
+          reasoning: 'Mock: $10K/mo plausible for a top operator.',
+        },
+        execution_complexity: {
+          score: 58,
+          reasoning: 'Mock: standard funnel, no unusual setup.',
+        },
       },
       weighted_score: noFacts ? 55 : 73,
       verdict: noFacts ? 'watch' : 'strong_test',

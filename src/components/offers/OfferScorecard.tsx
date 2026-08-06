@@ -1,11 +1,11 @@
-import type { UnderwritingResponse } from '@/types/agents/underwriting'
+import type { StoredUnderwritingResponse } from '@/types/agents/underwriting'
 
 import { EvidenceBars } from '@/components/crack-score/evidence-bars'
 
 export function OfferScorecard({
   evaluation,
 }: {
-  evaluation: UnderwritingResponse | null
+  evaluation: StoredUnderwritingResponse | null
 }) {
   return (
     <EvidenceBars

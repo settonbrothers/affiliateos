@@ -1,7 +1,7 @@
 import { cache } from 'react'
 
 import { createClient } from '@/lib/supabase/server'
-import type { UnderwritingResponse } from '@/types/agents/underwriting'
+import type { StoredUnderwritingResponse } from '@/types/agents/underwriting'
 import type { AiRun, Offer, Vertical } from '@/types/db'
 
 export const listVerticals = cache(async (): Promise<Vertical[]> => {
@@ -39,10 +39,10 @@ export async function listOffers(): Promise<Offer[]> {
     .order('created_at', { ascending: false })
   if (runsError) console.error('[queries/offers] DB error:', runsError)
 
-  const latestByOffer = new Map<string, UnderwritingResponse>()
+  const latestByOffer = new Map<string, StoredUnderwritingResponse>()
   for (const r of runs ?? []) {
     if (r.offer_id && !latestByOffer.has(r.offer_id)) {
-      latestByOffer.set(r.offer_id, r.output_payload as unknown as UnderwritingResponse)
+      latestByOffer.set(r.offer_id, r.output_payload as unknown as StoredUnderwritingResponse)
     }
   }
 

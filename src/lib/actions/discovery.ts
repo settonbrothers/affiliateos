@@ -19,10 +19,6 @@ import {
   DiscoverySourceSchema,
   StartScanSchema,
 } from '@/lib/validations/discovery'
-import {
-  NetworkComparisonSchema,
-  trendingScore,
-} from '@/types/agents/discoverNetwork'
 
 // The discovery_* tables and the columns added by migrations 0039/0043
 // (offers.trending_*, offers.discovery_candidate_id,

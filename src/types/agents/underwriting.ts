@@ -2,21 +2,46 @@ import { z } from 'zod'
 
 import { UniversalEnvelopeSchema } from './envelope'
 
-export const ScoreDimensionSchema = z.object({
-  economics: z.number().int().min(0).max(100),
-  demand: z.number().int().min(0).max(100),
-  competition: z.number().int().min(0).max(100),
-  creative_opportunity: z.number().int().min(0).max(100),
-  funnel_fit: z.number().int().min(0).max(100),
-  compliance: z.number().int().min(0).max(100),
-  operator_fit: z.number().int().min(0).max(100),
-  data_confidence: z.number().int().min(0).max(100),
-  offer_trust: z.number().int().min(0).max(100),
-  scale_potential: z.number().int().min(0).max(100),
-  cashflow_fit: z.number().int().min(0).max(100),
-  high_ceiling_potential: z.number().int().min(0).max(100),
-  execution_complexity: z.number().int().min(0).max(100),
+// One of the 13 dimensions.
+//
+// The prompt has always asked for "each scored 0-100, with one-sentence
+// reasoning", but this was a bare z.number(): the reasoning had nowhere to go
+// and the forced-tool schema dropped it, leaving the operator with 13 bars and
+// no explanation of any of them. A fresh run must now supply both.
+export const DimensionScoreSchema = z.object({
+  score: z.number().int().min(0).max(100),
+  reasoning: z.string(),
 })
+
+// What may actually be sitting in ai_runs.output_payload. Every row written
+// before this change stores a bare number, and those rows are what the offer
+// list and the scorecard read — so the read path accepts either shape. Same
+// split as StoredDeepAnalysisSchema in src/lib/discovery/promote.ts: strict for
+// what we ask a model to produce, tolerant for what is already on disk.
+export const StoredDimensionScoreSchema = z.union([
+  z.number().int().min(0).max(100),
+  DimensionScoreSchema,
+])
+
+const dimensions = <T extends z.ZodTypeAny>(dim: T) =>
+  z.object({
+    economics: dim,
+    demand: dim,
+    competition: dim,
+    creative_opportunity: dim,
+    funnel_fit: dim,
+    compliance: dim,
+    operator_fit: dim,
+    data_confidence: dim,
+    offer_trust: dim,
+    scale_potential: dim,
+    cashflow_fit: dim,
+    high_ceiling_potential: dim,
+    execution_complexity: dim,
+  })
+
+export const ScoreDimensionSchema = dimensions(DimensionScoreSchema)
+export const StoredScoreDimensionSchema = dimensions(StoredDimensionScoreSchema)
 
 export const VERDICTS = [
   'reject',
@@ -64,12 +89,38 @@ export const UnderwritingResponseSchema = UniversalEnvelopeSchema.extend({
   payload: UnderwritingPayloadSchema,
 })
 
+// The read-path twin: same payload, but tolerant of the pre-reasoning score
+// shape. This is what types ai_runs.output_payload and offers.evaluation.
+export const StoredUnderwritingResponseSchema = UniversalEnvelopeSchema.extend({
+  payload: UnderwritingPayloadSchema.extend({
+    scores: StoredScoreDimensionSchema,
+  }),
+})
+
 export type UnderwritingResponse = z.infer<typeof UnderwritingResponseSchema>
+export type StoredUnderwritingResponse = z.infer<
+  typeof StoredUnderwritingResponseSchema
+>
 export type ScoreDimensions = z.infer<typeof ScoreDimensionSchema>
+export type StoredScoreDimensions = z.infer<typeof StoredScoreDimensionSchema>
+export type StoredDimensionScore = z.infer<typeof StoredDimensionScoreSchema>
 export type Verdict = (typeof VERDICTS)[number]
 
+/** Flatten either dimension shape. Pre-reasoning rows have none to show. */
+export function normalizeDimension(value: StoredDimensionScore | undefined): {
+  score: number
+  reasoning: string | null
+} {
+  if (typeof value === 'number') return { score: value, reasoning: null }
+  if (!value) return { score: 0, reasoning: null }
+  return { score: value.score, reasoning: value.reasoning || null }
+}
+
 // Human-readable labels for the 13 scorecard dimensions (UI rendering order).
-export const SCORE_DIMENSION_LABELS: Record<keyof ScoreDimensions, string> = {
+export const SCORE_DIMENSION_LABELS: Record<
+  keyof StoredScoreDimensions,
+  string
+> = {
   economics: 'Economics',
   demand: 'Demand',
   competition: 'Competition',

@@ -38,7 +38,13 @@ Deno.serve(async (req: Request) => {
     const admin = getAdminClient()
     const { data: offer, error: offerErr } = await admin
       .from('offers')
-      .select('id, workspace_id, vertical_id, name, operator_notes, verticals(slug)')
+      // The prompt has always told the model it receives "offer name, URL,
+      // vertical, short description" — but only the name and vertical were
+      // ever sent. Scoring funnel_fit ("landing page -> conversion path
+      // quality") without the landing page was guesswork.
+      .select(
+        'id, workspace_id, vertical_id, name, operator_notes, website_url, affiliate_program_url, short_description, network, vendor_name, verticals(slug)'
+      )
       .eq('id', offerId)
       .single()
     if (offerErr || !offer) return jsonResponse({ error: 'Offer not found' }, 404)
@@ -132,6 +138,11 @@ Deno.serve(async (req: Request) => {
           const result = await runUnderwriting({
             offerId,
             offerName: offer.name,
+            websiteUrl: offer.website_url,
+            affiliateProgramUrl: offer.affiliate_program_url,
+            shortDescription: offer.short_description,
+            network: offer.network,
+            vendorName: offer.vendor_name,
             verticalSlug,
             facts,
             userContext,

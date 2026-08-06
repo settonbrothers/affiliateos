@@ -1,13 +1,13 @@
 import {
   VERDICT_LABELS,
-  type UnderwritingResponse,
+  type StoredUnderwritingResponse,
 } from '@/types/agents/underwriting'
 import { verdictTier, verdictChipStyle, verdictDotColor } from '@/lib/offers/verdict-tier'
 
 export function OfferVerdict({
   evaluation,
 }: {
-  evaluation: UnderwritingResponse | null
+  evaluation: StoredUnderwritingResponse | null
 }) {
   const hasVerdict = !!(
     evaluation as { payload?: { verdict?: unknown } } | null

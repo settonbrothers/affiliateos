@@ -9,13 +9,11 @@ import { runDiscoveryNetwork } from '../_shared/orchestrators/discoveryNetwork.t
 import type { NetworkComparison } from '../_shared/types/discoverNetwork.ts'
 import { recordRunError, recordRunStart, recordRunSuccess } from '../_shared/recordAiRun.ts'
 import { getAdminClient } from '../_shared/supabaseAdmin.ts'
-import { truncate } from '../_shared/truncate.ts'
+import { fetchPageText } from '../_shared/fetchPage.ts'
 
 declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void }
 
-const FETCH_TIMEOUT_MS = 15_000
-const MAX_HTML_BYTES = 500_000
-const MAX_RAW_TEXT_LEN = 120_000
+const UA = 'AffiliateOS-Discovery/1.0'
 const TRIAGE_KEEP_MIN_SCORE = 55
 const DEEP_ANALYSIS_CAP = 100
 const DEEP_CONCURRENCY = 5 // deep analyses run in parallel waves to cut wall-time
@@ -345,13 +343,8 @@ async function processDiscovery(args: {
     const knownNames = new Set<string>()
     for (const ct of containers.slice(0, CONTAINER_MINE_CAP)) {
       if (minedRaw.length >= MINED_TOTAL_CAP) break
-      let pageText = ''
-      try {
-        const html = await fetchWithTimeout(ct.url, FETCH_TIMEOUT_MS)
-        pageText = truncate(stripHtml(html.slice(0, MAX_HTML_BYTES)), MAX_RAW_TEXT_LEN)
-      } catch {
-        continue
-      }
+      const pageText = await fetchPageText(ct.url, UA)
+      if (!pageText) continue
       const mineRunId = await recordRunStart({
         orchestratorName: 'DiscoveryMineOrchestrator',
         agentVersion: Deno.env.get('ANTHROPIC_API_KEY') ? 'real-v1' : 'mock-v1',
@@ -449,13 +442,8 @@ async function processDiscovery(args: {
       name: string
       url: string | null
     }): Promise<{ cost: number; analyzed: boolean }> => {
-      let rawText = ''
-      try {
-        const html = await fetchWithTimeout(s.url ?? '', FETCH_TIMEOUT_MS)
-        rawText = truncate(stripHtml(html.slice(0, MAX_HTML_BYTES)), MAX_RAW_TEXT_LEN)
-      } catch {
-        // no page text — deep analysis still runs on name/url + research
-      }
+      // No page text is fine: deep analysis still runs on name/url + research.
+      const rawText = await fetchPageText(s.url, UA)
       const deepRunId = await recordRunStart({
         orchestratorName: 'DiscoveryDeepOrchestrator',
         agentVersion: Deno.env.get('ANTHROPIC_API_KEY') ? 'real-v1' : 'mock-v1',
@@ -628,28 +616,3 @@ function domainOf(url: string | null): string | null {
   }
 }
 
-async function fetchWithTimeout(url: string, timeoutMs: number): Promise<string> {
-  if (!url) throw new Error('no url')
-  const controller = new AbortController()
-  const t = setTimeout(() => controller.abort(), timeoutMs)
-  try {
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: { 'User-Agent': 'AffiliateOS-Discovery/1.0' },
-    })
-    if (!res.ok) throw new Error(`fetch ${url} failed: HTTP ${res.status}`)
-    return await res.text()
-  } finally {
-    clearTimeout(t)
-  }
-}
-
-function stripHtml(s: string): string {
-  return s
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-}

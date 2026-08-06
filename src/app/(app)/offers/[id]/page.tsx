@@ -47,7 +47,7 @@ import {
   getOfferById,
   getVerifiedFacts,
 } from '@/lib/queries/offers'
-import type { UnderwritingResponse } from '@/types/agents/underwriting'
+import type { StoredUnderwritingResponse } from '@/types/agents/underwriting'
 
 // White "Selezione" document surface for deliverable tabs (Deep Brief, Avatar,
 // Spy, Test Kit, Ad Copy, Creatives). Full-bleed: the negative inline margins
@@ -88,7 +88,7 @@ export default async function OfferDetailPage({
         evalRun.id,
         locale,
         evalRun.output_payload
-      )) as UnderwritingResponse | null)
+      )) as StoredUnderwritingResponse | null)
     : offer.evaluation
   const analysisFailed = isAnalysisFailed(run, evalRun)
   const activeTab =

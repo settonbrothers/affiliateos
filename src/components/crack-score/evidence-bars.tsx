@@ -5,11 +5,12 @@ import { useEffect, useState } from 'react'
 
 import {
   SCORE_DIMENSION_LABELS,
-  type ScoreDimensions,
+  normalizeDimension,
+  type StoredScoreDimensions,
 } from '@/types/agents/underwriting'
 
 interface EvidenceBarsProps {
-  scores: ScoreDimensions | null | undefined
+  scores: StoredScoreDimensions | null | undefined
   weightedScore: number | null | undefined
   size?: 'full' | 'mini'
   /** Animate the score count-up + bar shoot-in on mount (the "crack" reveal). */
@@ -17,7 +18,9 @@ interface EvidenceBarsProps {
 }
 
 // Render order = SCORE_DIMENSION_LABELS key order (13 dims).
-const DIM_KEYS = Object.keys(SCORE_DIMENSION_LABELS) as (keyof ScoreDimensions)[]
+const DIM_KEYS = Object.keys(
+  SCORE_DIMENSION_LABELS
+) as (keyof StoredScoreDimensions)[]
 
 function scoreColor(v: number): string {
   if (v >= 80) return 'var(--primary)'
@@ -115,11 +118,14 @@ export function EvidenceBars({ scores, weightedScore, size = 'full', reveal = tr
           }}
         >
           {DIM_KEYS.map((key, i) => {
-            const v = scores[key]
+            const { score: v, reasoning } = normalizeDimension(scores[key])
             const strong = v >= 80
             return (
               <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span
+                  // The model's one-sentence justification for this score.
+                  // Absent on runs from before the contract carried it.
+                  title={reasoning ?? undefined}
                   style={{
                     width: '96px',
                     fontSize: '11.5px',
@@ -128,6 +134,10 @@ export function EvidenceBars({ scores, weightedScore, size = 'full', reveal = tr
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
+                    cursor: reasoning ? 'help' : undefined,
+                    borderBottom: reasoning
+                      ? '1px dotted rgba(255,255,255,0.28)'
+                      : undefined,
                   }}
                 >
                   {t(key)}
