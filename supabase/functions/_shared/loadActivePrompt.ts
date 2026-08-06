@@ -5,6 +5,12 @@ import { getAdminClient } from './supabaseAdmin.ts'
 // Throws if no active prompt exists — callers (orchestrators) fall back to mock
 // when ANTHROPIC_API_KEY is unset, so this only fires in real-call mode after a
 // misconfiguration.
+//
+// Both lookups take the newest of however many rows match rather than demanding
+// exactly one. Migration 0044 makes duplicate active rows impossible, but this
+// used to be a plain .maybeSingle(): two active rows made it ERROR, which took
+// DiagnosisV2 and DiscoveryNetwork down entirely. A prompt loader should never
+// be the thing that breaks an orchestrator.
 export async function loadActivePrompt(
   orchestratorName: string,
   verticalSlug?: string
@@ -29,6 +35,8 @@ export async function loadActivePrompt(
       .eq('prompt_type', 'main')
       .eq('is_active', true)
       .eq('vertical_id', verticalId)
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle()
     if (data?.content) return data.content
   }
@@ -40,6 +48,8 @@ export async function loadActivePrompt(
     .eq('prompt_type', 'main')
     .eq('is_active', true)
     .is('vertical_id', null)
+    .order('created_at', { ascending: false })
+    .limit(1)
     .maybeSingle()
 
   if (data?.content) return data.content
