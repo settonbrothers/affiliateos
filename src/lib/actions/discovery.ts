@@ -3,15 +3,31 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 
+import { triggerIngestSource } from '@/lib/actions/sources'
 import { isCurrentUserAdmin } from '@/lib/auth/role'
+import {
+  PROMOTE_VERIFY_MIN_CONFIDENCE,
+  buildOperatorNotes,
+  deepAnalysisToFacts,
+  type PromotedFact,
+  type PromotedSource,
+} from '@/lib/discovery/promote'
 import { createClient } from '@/lib/supabase/server'
 import {
   DiscoverySourceSchema,
   StartScanSchema,
 } from '@/lib/validations/discovery'
+import {
+  NetworkComparisonSchema,
+  trendingScore,
+} from '@/types/agents/discoverNetwork'
+import { DeepAnalysisSchema, type DeepAnalysis } from '@/types/agents/discovery'
 
-// discovery_* tables aren't in the generated database.ts until regen on main.
-// Bridge to an untyped client for those tables only; drop after regen.
+// The discovery_* tables and the columns added by migrations 0039/0043
+// (offers.trending_*, offers.discovery_candidate_id,
+// discovery_candidates.network_analysis) aren't in the generated database.ts
+// until it's regenerated on main. Bridge to an untyped client for those writes;
+// drop after regen.
 type UntypedClient = SupabaseClient
 
 export type StartScanResult = { run_id: string } | { error: string }
@@ -41,9 +57,15 @@ function slugify(value: string): string {
     .replace(/^-+|-+$/g, '')
 }
 
-// Approve a candidate → create a real, admin-visible offer (status 'published')
-// linked back from the candidate, so it shows up in the offers list and can be
-// analyzed/published like any offer.
+// Approve a candidate -> create a real offer that CARRIES the deep analysis.
+//
+// This used to select `deep_analysis` and never read it: the offer was created
+// from the name/url/vertical alone, with no sources and no facts. Underwriting
+// then scored 13 dimensions from the offer name, and its own hard rules capped
+// the verdict at 'watch' for want of the 5 verified facts nobody had supplied.
+// Now the analysis is folded into source_documents + extracted_facts (see
+// src/lib/discovery/promote.ts), the qualitative read lands in operator_notes,
+// and the offer's own page is queued for real extraction on top.
 export async function approveCandidate(
   candidateId: string
 ): Promise<{ error: string } | void> {
@@ -58,13 +80,24 @@ export async function approveCandidate(
 
   const { data: cand } = await ddb
     .from('discovery_candidates')
-    .select('id, name, url, vertical_id, deep_analysis, promoted_offer_id')
+    .select(
+      'id, name, url, vertical_id, deep_analysis, network_analysis, promoted_offer_id'
+    )
     .eq('id', candidateId)
     .maybeSingle()
   if (!cand) return { error: 'Candidate not found.' }
-  if ((cand as { promoted_offer_id: string | null }).promoted_offer_id) {
+  const candidate = cand as {
+    name: string
+    url: string | null
+    vertical_id: string | null
+    deep_analysis: unknown
+    network_analysis: unknown
+    promoted_offer_id: string | null
+  }
+  if (candidate.promoted_offer_id) {
     return { error: 'Already promoted.' }
   }
+  if (!candidate.vertical_id) return { error: 'Candidate has no vertical.' }
 
   const { data: membership } = await supabase
     .from('workspace_members')
@@ -73,35 +106,151 @@ export async function approveCandidate(
     .limit(1)
     .maybeSingle()
 
-  const name = (cand as { name: string }).name
-  const verticalId = (cand as { vertical_id: string | null }).vertical_id
-  if (!verticalId) return { error: 'Candidate has no vertical.' }
+  const deep = parseDeepAnalysis(candidate.deep_analysis)
+  const { sources, facts } = deepAnalysisToFacts(deep, candidate.url)
+  const notes = buildOperatorNotes(deep) || 'Approved from Discovery Scanner.'
 
-  const { data: offer, error: oErr } = await supabase
+  const { data: offer, error: oErr } = await ddb
     .from('offers')
     .insert({
-      name,
-      slug: `${slugify(name)}-${candidateId.slice(0, 8)}`,
-      vertical_id: verticalId,
-      website_url: (cand as { url: string | null }).url,
+      name: candidate.name,
+      slug: `${slugify(candidate.name)}-${candidateId.slice(0, 8)}`,
+      vertical_id: candidate.vertical_id,
+      website_url: candidate.url,
       created_by_user_id: user.id,
       workspace_id: membership?.workspace_id ?? null,
-      status: 'published',
+      // 'published' sits AFTER 'ai_analyzed' in the offer_status enum, and both
+      // ingest-source and analyze-offer advance the status through a .in()
+      // guard that never demotes — so a discovered offer used to skip the whole
+      // ladder and never show that it had been analyzed. Start at the bottom.
+      status: 'needs_source_ingestion',
       visibility: 'admin_only',
-      operator_notes: 'Approved from Discovery Scanner.',
+      operator_notes: notes,
+      discovery_candidate_id: candidateId,
     })
     .select('id')
     .single()
   if (oErr) return { error: oErr.message }
   const offerId = (offer as { id: string }).id
 
+  await writePromotedEvidence(ddb, offerId, sources, facts)
+  await writeNetworkData(ddb, offerId, candidate.network_analysis)
+
   await ddb
     .from('discovery_candidates')
     .update({ stage: 'promoted', promoted_offer_id: offerId })
     .eq('id', candidateId)
 
+  // Real extraction on top of the carried-over analysis: the deep read is a
+  // summary, ingest-source quotes the page verbatim. Runs in the background and
+  // must never fail the approval — the offer already has usable evidence.
+  if (candidate.url) {
+    try {
+      await triggerIngestSource(offerId, candidate.url)
+    } catch {
+      // surfaced on the offer's sources page, not here
+    }
+  }
+
   revalidatePath('/admin/discovery')
   revalidatePath('/offers')
+}
+
+function parseDeepAnalysis(raw: unknown): DeepAnalysis | null {
+  const parsed = DeepAnalysisSchema.safeParse(raw)
+  return parsed.success ? parsed.data : null
+}
+
+// One source_document per provenance, then the facts that cite it. Inserted
+// row-by-row (at most four sources) so each fact gets the right
+// source_document_id without relying on bulk-insert ordering.
+async function writePromotedEvidence(
+  ddb: UntypedClient,
+  offerId: string,
+  sources: PromotedSource[],
+  facts: PromotedFact[]
+): Promise<void> {
+  if (facts.length === 0) return
+
+  const idByKey = new Map<string, string>()
+  for (const s of sources) {
+    const { data } = await ddb
+      .from('source_documents')
+      .insert({
+        offer_id: offerId,
+        url: s.url,
+        // No raw_text: this is the model's reading of a page, not a fetch. The
+        // page itself is fetched separately by ingest-source.
+        doc_type: 'manual_note',
+        status: 'extracted',
+        source_summary: s.summary,
+        source_reliability_score: s.reliability,
+        extracted_at: new Date().toISOString(),
+      })
+      .select('id')
+      .single()
+    if (data) idByKey.set(s.key, (data as { id: string }).id)
+  }
+
+  await ddb.from('extracted_facts').insert(
+    facts.map((f) => ({
+      offer_id: offerId,
+      source_document_id: idByKey.get(f.sourceKey) ?? null,
+      fact_type: f.fact_type,
+      fact_value: f.fact_value,
+      source_quote: f.source_quote,
+      confidence_score: f.confidence_score,
+      // Same bar ingest-source uses. reviewed_by stays NULL: machine-verified,
+      // not hand-checked.
+      status:
+        f.confidence_score >= PROMOTE_VERIFY_MIN_CONFIDENCE
+          ? 'verified'
+          : 'proposed',
+    }))
+  )
+}
+
+// The scan's network pass (which network carries the offer, EPC estimates,
+// trending) is parked on the candidate because nothing is promoted while a scan
+// runs. Carry it onto the offer here.
+async function writeNetworkData(
+  ddb: UntypedClient,
+  offerId: string,
+  raw: unknown
+): Promise<void> {
+  const parsed = NetworkComparisonSchema.safeParse(raw)
+  if (!parsed.success) return
+  const nc = parsed.data
+
+  if (nc.trending_signal) {
+    await ddb
+      .from('offers')
+      .update({
+        trending_signal: nc.trending_signal,
+        trending_score: trendingScore(nc.trending_signal),
+      })
+      .eq('id', offerId)
+  }
+
+  if (nc.networks_found.length === 0) return
+  await ddb.from('offer_network_data').upsert(
+    nc.networks_found.map((n) => ({
+      offer_id: offerId,
+      network_name: n.network_name,
+      epc_usd: n.estimated_epc_usd ?? null,
+      commission_type: n.estimated_commission_type ?? null,
+      is_recommended: nc.recommended_network === n.network_name,
+      notes: [
+        `confidence: ${n.confidence}`,
+        nc.recommended_network === n.network_name ? nc.recommended_reason : null,
+        // trending_evidence used to be dropped entirely.
+        nc.trending_evidence ? `trend: ${nc.trending_evidence}` : null,
+      ]
+        .filter(Boolean)
+        .join(' | '),
+    })),
+    { onConflict: 'offer_id,network_name', ignoreDuplicates: false }
+  )
 }
 
 export async function rejectCandidate(

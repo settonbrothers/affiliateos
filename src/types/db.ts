@@ -10,6 +10,8 @@ type Enums = Database['public']['Enums']
 export type Vertical = Tables['verticals']['Row']
 export type OfferStatus = Enums['offer_status']
 export type AiRunStatus = Enums['ai_run_status']
+export type FactType = Enums['fact_type']
+export type FactStatus = Enums['fact_status']
 
 export type Offer = Omit<Tables['offers']['Row'], 'evaluation'> & {
   evaluation: UnderwritingResponse | null

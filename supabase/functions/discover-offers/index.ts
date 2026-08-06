@@ -525,7 +525,17 @@ async function processDiscovery(args: {
           const nc = networkResult.output as NetworkComparison
           totalCost += networkResult.usage?.cost_usd ?? 0
 
-          // If this candidate has a promoted offer row, update trending signals + write network data.
+          // Park the result on the candidate. Everything below is gated on
+          // promoted_offer_id, which is null for the whole scan (promotion is a
+          // manual step afterwards) — so this Haiku call used to be paid for and
+          // thrown away every single time. approveCandidate reads it from here.
+          await admin
+            .from('discovery_candidates')
+            .update({ network_analysis: nc })
+            .eq('id', cand.id)
+
+          // A re-scan can hit a candidate that was already promoted; keep that
+          // offer's network data fresh.
           if (cand.promoted_offer_id) {
             const trendingSignal = nc.trending_signal ?? null
             const trendingScore = trendingSignal === 'rising' ? 2 : trendingSignal === 'stable' ? 1 : trendingSignal === 'declining' ? -1 : 0
@@ -536,13 +546,25 @@ async function processDiscovery(args: {
               .eq('id', cand.promoted_offer_id)
 
             if (nc.networks_found.length > 0) {
-              const rows = nc.networks_found.map((n, i) => ({
+              // Mirrors writeNetworkData in src/lib/actions/discovery.ts. The
+              // reason belongs to the recommended network, not to whichever
+              // one happens to be first, and trending_evidence used to be
+              // dropped on the floor.
+              const rows = nc.networks_found.map((n) => ({
                 offer_id: cand.promoted_offer_id as string,
                 network_name: n.network_name,
                 epc_usd: n.estimated_epc_usd ?? null,
                 commission_type: n.estimated_commission_type ?? null,
                 is_recommended: nc.recommended_network === n.network_name,
-                notes: `confidence: ${n.confidence}${i === 0 && nc.recommended_reason ? ` — ${nc.recommended_reason}` : ''}`,
+                notes: [
+                  `confidence: ${n.confidence}`,
+                  nc.recommended_network === n.network_name
+                    ? nc.recommended_reason
+                    : null,
+                  nc.trending_evidence ? `trend: ${nc.trending_evidence}` : null,
+                ]
+                  .filter(Boolean)
+                  .join(' | '),
               }))
               // upsert so re-runs don't duplicate
               await admin
