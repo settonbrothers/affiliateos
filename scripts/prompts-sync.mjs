@@ -6,9 +6,12 @@
 // Behavior:
 // - For each prompts/<dir>/<version>.md, upsert a row (orchestrator_name,
 //   prompt_type='main', version, vertical_id=null, content).
-// - If no version for that (orchestrator, type, vertical) is is_active=true yet,
-//   the just-inserted row becomes active. Existing active rows are never
-//   silently flipped — use the /admin/prompts UI for that.
+// - prompts/<dir>/_active.json ({"version": "v3"}) declares which version is
+//   meant to be live. If nothing is active yet, that version is activated
+//   (falling back to the highest vN when no _active.json exists).
+// - Existing active rows are never silently flipped — use the /admin/prompts
+//   UI for that. A mismatch between _active.json and the DB is reported as
+//   DRIFT and exits non-zero, so the declared version stays honest.
 
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
@@ -49,7 +52,15 @@ function toOrchestratorName(folder) {
   return `${camel}Orchestrator`
 }
 
+// Natural version order so 'v10' sorts after 'v9' (plain string sort doesn't).
+function versionRank(v) {
+  const m = /^v(\d+)$/.exec(v)
+  return m ? Number(m[1]) : -1
+}
+
 const entries = []
+// orchestrator_name -> version declared in prompts/<dir>/_active.json
+const declaredActive = new Map()
 let dirs
 try {
   dirs = readdirSync(PROMPTS_DIR)
@@ -61,12 +72,19 @@ try {
 for (const item of dirs) {
   const dir = join(PROMPTS_DIR, item)
   if (!statSync(dir).isDirectory()) continue
+  const orchestratorName = toOrchestratorName(item)
+  try {
+    const declared = JSON.parse(readFileSync(join(dir, '_active.json'), 'utf-8'))
+    if (declared?.version) declaredActive.set(orchestratorName, declared.version)
+  } catch {
+    // No _active.json (or unreadable) — the highest version is the fallback.
+  }
   for (const file of readdirSync(dir)) {
     if (!file.endsWith('.md')) continue
     const version = file.replace(/\.md$/, '')
     const content = readFileSync(join(dir, file), 'utf-8')
     entries.push({
-      orchestratorName: toOrchestratorName(item),
+      orchestratorName,
       version,
       content,
     })
@@ -108,34 +126,91 @@ for (const e of entries) {
     console.log(`  updated  ${e.orchestratorName}/${e.version}`)
     updated++
   } else {
-    const { data: hasActive } = await supabase
-      .from('prompts')
-      .select('id')
-      .eq('orchestrator_name', e.orchestratorName)
-      .eq('prompt_type', 'main')
-      .is('vertical_id', null)
-      .eq('is_active', true)
-      .maybeSingle()
-
-    const isActive = !hasActive
+    // Always insert inactive. Which version is live is decided once per
+    // orchestrator below, from _active.json — not by whichever file happened
+    // to be read first (that made 'v1' win alphabetically over 'v3').
     const { error } = await supabase.from('prompts').insert({
       orchestrator_name: e.orchestratorName,
       prompt_type: 'main',
       version: e.version,
       content: e.content,
-      is_active: isActive,
+      is_active: false,
     })
     if (error) {
       console.error(`  ${e.orchestratorName}/${e.version}: insert failed — ${error.message}`)
       process.exitCode = 1
       continue
     }
-    console.log(`  inserted ${e.orchestratorName}/${e.version}${isActive ? '  (active)' : ''}`)
+    console.log(`  inserted ${e.orchestratorName}/${e.version}`)
     inserted++
-    if (isActive) activated++
+  }
+}
+
+// Reconcile which version is live, per orchestrator.
+// - Nothing active yet  -> activate the declared version (or the highest one).
+// - Active matches      -> nothing to do.
+// - Active differs      -> report and fail. Flipping a live prompt is a
+//   deliberate act through /admin/prompts, never a side effect of a sync.
+const byOrchestrator = new Map()
+for (const e of entries) {
+  if (!byOrchestrator.has(e.orchestratorName)) byOrchestrator.set(e.orchestratorName, [])
+  byOrchestrator.get(e.orchestratorName).push(e.version)
+}
+
+let drifted = 0
+for (const [orchestratorName, versions] of byOrchestrator) {
+  const highest = [...versions].sort((a, b) => versionRank(b) - versionRank(a))[0]
+  const declared = declaredActive.get(orchestratorName)
+  if (declared && !versions.includes(declared)) {
+    console.error(
+      `  ${orchestratorName}: _active.json declares ${declared} but no ${declared}.md exists`
+    )
+    process.exitCode = 1
+    continue
+  }
+  const intended = declared ?? highest
+
+  const { data: active, error: activeErr } = await supabase
+    .from('prompts')
+    .select('id, version')
+    .eq('orchestrator_name', orchestratorName)
+    .eq('prompt_type', 'main')
+    .is('vertical_id', null)
+    .eq('is_active', true)
+    .maybeSingle()
+  if (activeErr) {
+    console.error(`  ${orchestratorName}: active lookup failed — ${activeErr.message}`)
+    process.exitCode = 1
+    continue
+  }
+
+  if (!active) {
+    const { error } = await supabase
+      .from('prompts')
+      .update({ is_active: true })
+      .eq('orchestrator_name', orchestratorName)
+      .eq('prompt_type', 'main')
+      .is('vertical_id', null)
+      .eq('version', intended)
+    if (error) {
+      console.error(`  ${orchestratorName}: activate ${intended} failed — ${error.message}`)
+      process.exitCode = 1
+      continue
+    }
+    console.log(`  activated ${orchestratorName}/${intended}`)
+    activated++
+  } else if (declared && active.version !== declared) {
+    console.error(
+      `  DRIFT ${orchestratorName}: _active.json says ${declared}, DB has ${active.version} live. ` +
+        `Flip it in /admin/prompts (or correct _active.json).`
+    )
+    drifted++
+    process.exitCode = 1
   }
 }
 
 console.log(
-  `Done. ${inserted} inserted (${activated} marked active), ${updated} updated.`
+  `Done. ${inserted} inserted, ${activated} activated, ${updated} updated` +
+    (drifted > 0 ? `, ${drifted} DRIFTED` : '') +
+    '.'
 )

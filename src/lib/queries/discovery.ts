@@ -15,11 +15,12 @@ export type DiscoveryRun = {
   status: string
   vertical_id: string | null
   config: { breadth?: string } | null
+  // `approved` only appears on runs written before it was dropped — it was
+  // always 0. Kept optional so old rows still parse; nothing reads it.
   counts: {
     discovered?: number
     triaged?: number
     analyzed?: number
-    approved?: number
   } | null
   total_cost_usd: number | null
   error_message: string | null

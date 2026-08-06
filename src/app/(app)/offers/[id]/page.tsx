@@ -29,6 +29,7 @@ import { NetworkComparisonCard } from '@/components/offers/NetworkComparisonCard
 import { TrendingBadge } from '@/components/offers/TrendingBadge'
 import { TranslationFiller } from '@/components/i18n/TranslationFiller'
 import { isCurrentUserAdmin } from '@/lib/auth/role'
+import { isAnalysisFailed } from '@/lib/offers/analysisState'
 import {
   getTranslatedPayload,
   shouldTranslate,
@@ -41,6 +42,7 @@ import {
   getLatestDeepBrief,
   getLatestRunByOrchestrator,
   getLatestSpyAnalysis,
+  getLatestSuccessfulRun,
   getLatestTestKit,
   getOfferById,
   getVerifiedFacts,
@@ -73,15 +75,22 @@ export default async function OfferDetailPage({
   if (!offer) notFound()
 
   const locale = await getLocale()
-  const run = await getLatestRunByOrchestrator(id, 'UnderwritingOrchestrator')
-  const evaluation = run
+  // `run` is the latest run of ANY status — the Analyze button needs it to
+  // resume a still-running analysis. `evalRun` is the latest one that actually
+  // produced a payload, so a later failure never blanks the scorecard.
+  const [run, evalRun] = await Promise.all([
+    getLatestRunByOrchestrator(id, 'UnderwritingOrchestrator'),
+    getLatestSuccessfulRun(id, 'UnderwritingOrchestrator'),
+  ])
+  const evaluation = evalRun
     ? ((await getTranslatedPayload(
         'ai_runs',
-        run.id,
+        evalRun.id,
         locale,
-        run.output_payload
+        evalRun.output_payload
       )) as UnderwritingResponse | null)
     : offer.evaluation
+  const analysisFailed = isAnalysisFailed(run, evalRun)
   const activeTab =
     tab === 'scorecard' ||
     tab === 'verdict' ||
@@ -190,6 +199,35 @@ export default async function OfferDetailPage({
         </div>
       </div>
 
+      {analysisFailed && (
+        <div
+          style={{
+            border: '1px solid var(--amber-border)',
+            background: 'var(--amber-bg)',
+            color: 'var(--amber-text)',
+            padding: '12px 14px',
+            fontSize: '13px',
+          }}
+        >
+          <span style={{ fontWeight: 600 }}>{t('analysisFailed')}</span>{' '}
+          {t('analysisFailedRetry')}
+          {run?.error_message && (
+            <div
+              dir="ltr"
+              style={{
+                marginTop: '6px',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '11px',
+                opacity: 0.85,
+                textAlign: 'start',
+              }}
+            >
+              {run.error_message}
+            </div>
+          )}
+        </div>
+      )}
+
       {evaluation?.payload && (
         <div style={{ border: '1px solid rgba(255,255,255,0.1)', background: 'radial-gradient(90% 130% at 22% 0%, #17140A 0%, #161310 62%)', padding: 'clamp(24px,3vw,40px)' }}>
           <EvidenceBars scores={evaluation.payload.scores} weightedScore={evaluation.payload.weighted_score} />
@@ -214,10 +252,10 @@ export default async function OfferDetailPage({
         {activeTab === 'scorecard' && (
           <>
             <OfferScorecard evaluation={evaluation} />
-            {run && shouldTranslate(locale, run.output_payload) && (
+            {evalRun && shouldTranslate(locale, evalRun.output_payload) && (
               <TranslationFiller
                 sourceTable="ai_runs"
-                sourceId={run.id}
+                sourceId={evalRun.id}
                 locale={locale}
               />
             )}
@@ -244,10 +282,10 @@ export default async function OfferDetailPage({
               </div>
             )}
             <OfferVerdict evaluation={evaluation} />
-            {run && shouldTranslate(locale, run.output_payload) && (
+            {evalRun && shouldTranslate(locale, evalRun.output_payload) && (
               <TranslationFiller
                 sourceTable="ai_runs"
-                sourceId={run.id}
+                sourceId={evalRun.id}
                 locale={locale}
               />
             )}

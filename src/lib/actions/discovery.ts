@@ -110,11 +110,30 @@ export async function rejectCandidate(
   if (!(await isCurrentUserAdmin())) return { error: 'Admin only.' }
   const supabase = await createClient()
   const ddb = supabase as unknown as UntypedClient
+
+  // rejection_stage records HOW FAR the candidate got before being dropped —
+  // it feeds the funnel attribution. Reject is offered from both 'triaged' and
+  // 'analyzed', so read the real stage instead of assuming 'analyzed'.
+  const { data: cand } = await ddb
+    .from('discovery_candidates')
+    .select('stage, promoted_offer_id')
+    .eq('id', candidateId)
+    .maybeSingle()
+  if (!cand) return { error: 'Candidate not found.' }
+  if ((cand as { promoted_offer_id: string | null }).promoted_offer_id) {
+    // Rejecting a promoted candidate would orphan the offer it created and
+    // double-count it in the funnel. Delete the offer instead.
+    return { error: 'Already promoted to an offer.' }
+  }
+  const stage = (cand as { stage?: string }).stage
+  const reachedStage =
+    stage === 'triaged' || stage === 'analyzed' ? stage : 'analyzed'
+
   const { error } = await ddb
     .from('discovery_candidates')
     .update({
       stage: 'rejected',
-      rejection_stage: 'analyzed',
+      rejection_stage: reachedStage,
       rejection_reason: 'Rejected by admin during review.',
     })
     .eq('id', candidateId)

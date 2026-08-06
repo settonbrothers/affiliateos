@@ -23,7 +23,7 @@ const CONTAINER_MINE_CAP = 25 // max container pages to mine per run
 const MINED_OFFERS_CAP = 20 // max offers to take from one container
 const MINED_TOTAL_CAP = 150 // overall cap on mined candidates (bounds 2nd triage)
 const TRIAGE_BATCH_SIZE = 25 // candidates per triage call (a big batch fails)
-const NETWORK_ENRICH_MIN_SCORE = 7  // deep_score threshold for network enrichment (0–10 scale is 70+/10)
+const NETWORK_ENRICH_MIN_SCORE = 70 // deep_score threshold for network enrichment (deep_score is 0–100)
 const NETWORK_ENRICH_CONCURRENCY = 3 // parallel network enrichment calls
 
 // Deno mirror of src/lib/discovery/queries.ts expandQueries (unit-tested there).
@@ -194,7 +194,7 @@ async function processDiscovery(args: {
         .from('discovery_runs')
         .update({
           status: 'completed',
-          counts: { discovered: 0, triaged: 0, analyzed: 0, approved: 0 },
+          counts: { discovered: 0, triaged: 0, analyzed: 0 },
           completed_at: new Date().toISOString(),
         })
         .eq('id', args.runId)
@@ -509,7 +509,7 @@ async function processDiscovery(args: {
         .select('id, name, url, deep_score, promoted_offer_id')
         .eq('run_id', args.runId)
         .eq('stage', 'analyzed')
-        .gte('deep_score', 70)
+        .gte('deep_score', NETWORK_ENRICH_MIN_SCORE)
 
       const networkEnrichOne = async (cand: {
         id: string
@@ -567,11 +567,13 @@ async function processDiscovery(args: {
       .from('discovery_runs')
       .update({
         status: 'completed',
+        // No `approved` key: approval is a human step taken after the run, so
+        // the run can never know it. It used to be written as a hardcoded 0,
+        // which the admin table rendered as a real (always-zero) figure.
         counts: {
           discovered: candidates.length + minedTotal,
           triaged: survivors.length,
           analyzed: analyzedCount,
-          approved: 0,
         },
         total_cost_usd: totalCost,
         completed_at: new Date().toISOString(),

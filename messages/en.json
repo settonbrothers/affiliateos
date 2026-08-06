@@ -103,6 +103,8 @@
     "tabCampaignView": "Campaign View",
     "analyze": "Analyze",
     "analyzing": "Analyzing…",
+    "analysisFailed": "The last analysis failed",
+    "analysisFailedRetry": "Run it again. Any earlier result is still shown below.",
     "verifiedFacts": "Verified facts",
     "website": "Website",
     "affiliateProgram": "Affiliate program",

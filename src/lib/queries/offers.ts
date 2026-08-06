@@ -30,6 +30,7 @@ export async function listOffers(): Promise<Offer[]> {
     .from('ai_runs')
     .select('offer_id, output_payload, created_at')
     .eq('orchestrator_name', 'UnderwritingOrchestrator')
+    .eq('status', 'success')
     .not('output_payload', 'is', null)
     .in(
       'offer_id',
@@ -84,6 +85,29 @@ export async function getLatestRunByOrchestrator(
     .select('*')
     .eq('offer_id', offerId)
     .eq('orchestrator_name', orchestratorName)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (error) console.error('[queries/offers] DB error:', error)
+  return (data as AiRun | null) ?? null
+}
+
+// The latest run that actually produced a payload. Kept separate from
+// getLatestRunByOrchestrator (which must stay status-agnostic so the action
+// buttons can resume a 'running' run): a later failed run must not shadow the
+// last good scorecard.
+export async function getLatestSuccessfulRun(
+  offerId: string,
+  orchestratorName: string
+): Promise<AiRun | null> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('ai_runs')
+    .select('*')
+    .eq('offer_id', offerId)
+    .eq('orchestrator_name', orchestratorName)
+    .eq('status', 'success')
+    .not('output_payload', 'is', null)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()

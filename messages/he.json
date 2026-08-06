@@ -103,6 +103,8 @@
     "tabCampaignView": "תצוגת קמפיין",
     "analyze": "ניתוח",
     "analyzing": "מנתח…",
+    "analysisFailed": "הניתוח האחרון נכשל",
+    "analysisFailedRetry": "אפשר להריץ שוב. תוצאה קודמת, אם קיימת, עדיין מוצגת למטה.",
     "verifiedFacts": "עובדות מאומתות",
     "website": "אתר",
     "affiliateProgram": "תוכנית שותפים",

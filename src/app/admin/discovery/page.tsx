@@ -33,7 +33,7 @@ export default async function DiscoveryPage() {
           columns={[
             { label: 'STARTED', ltr: true },
             { label: 'STATUS' },
-            { label: 'DISCOVERED → ANALYZED → APPROVED', ltr: true },
+            { label: 'DISCOVERED → TRIAGED → ANALYZED', ltr: true },
             { label: 'COST', ltr: true },
           ]}
         >
@@ -41,8 +41,12 @@ export default async function DiscoveryPage() {
             <AdminRow key={r.id} cols={COLS} href={`/admin/discovery/${r.id}`}>
               <span dir="ltr" style={mono('#E4E4E2')}>{new Date(r.created_at).toLocaleString()}</span>
               <span style={{ fontSize: '12px', color: '#C9C9C7' }}>{r.status}</span>
+              {/* Approval is a human step after the run, not a run output —
+                  counts.approved was written as a hardcoded 0 and never
+                  updated. Show the funnel the run actually produced instead;
+                  counts.triaged was stored all along and never displayed. */}
               <span dir="ltr" style={mono('#8A8A88')}>
-                {r.counts?.discovered ?? 0} → {r.counts?.analyzed ?? 0} → {r.counts?.approved ?? 0}
+                {r.counts?.discovered ?? 0} → {r.counts?.triaged ?? 0} → {r.counts?.analyzed ?? 0}
               </span>
               <span dir="ltr" style={mono('#C9C9C7')}>${(r.total_cost_usd ?? 0).toFixed(2)}</span>
             </AdminRow>
