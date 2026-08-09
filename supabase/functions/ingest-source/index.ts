@@ -161,6 +161,12 @@ async function processIngestion(args: {
         source_quote: string
         confidence_score: number
       }>
+      // The extractor has always returned these — health/income/compliance
+      // claims spotted on the page — and this type did not even declare them,
+      // so they were dropped on the floor. The prompt says they are "used
+      // downstream by the compliance check"; check-compliance in fact re-derives
+      // claims from extracted_facts, so nothing consumed them at all.
+      detected_claims?: Array<{ claim_text: string; claim_type: string }>
     }
 
     let result
@@ -189,20 +195,37 @@ async function processIngestion(args: {
       })
       .eq('id', sdId)
 
-    if (p.facts.length > 0) {
-      await admin.from('extracted_facts').insert(
-        p.facts.map((f) => ({
-          offer_id: args.offerId,
-          source_document_id: sdId,
-          fact_type: f.fact_type as never,
-          fact_value: f.fact_value,
-          source_quote: f.source_quote,
-          confidence_score: f.confidence_score,
-          status: (f.confidence_score >= AUTO_VERIFY_MIN_CONFIDENCE
-            ? 'verified'
-            : 'proposed') as never,
-        }))
-      )
+    // Detected claims become compliance_claim facts, which is the fact_type the
+    // enum already reserves for "quoted claim from the page". That puts them in
+    // front of both the compliance check and underwriting instead of leaving
+    // them stranded in the raw ai_runs blob. They stay 'proposed': a claim the
+    // model merely noticed is a lead for review, not an established fact.
+    const claimFacts = (p.detected_claims ?? [])
+      .filter((c) => c.claim_text?.trim())
+      .map((c) => ({
+        offer_id: args.offerId,
+        source_document_id: sdId,
+        fact_type: 'compliance_claim' as never,
+        fact_value: `${c.claim_type}: ${c.claim_text}`.slice(0, 500),
+        source_quote: c.claim_text,
+        confidence_score: 60,
+        status: 'proposed' as never,
+      }))
+
+    const factRows = p.facts.map((f) => ({
+      offer_id: args.offerId,
+      source_document_id: sdId,
+      fact_type: f.fact_type as never,
+      fact_value: f.fact_value,
+      source_quote: f.source_quote,
+      confidence_score: f.confidence_score,
+      status: (f.confidence_score >= AUTO_VERIFY_MIN_CONFIDENCE
+        ? 'verified'
+        : 'proposed') as never,
+    }))
+
+    if (factRows.length > 0 || claimFacts.length > 0) {
+      await admin.from('extracted_facts').insert([...factRows, ...claimFacts])
     }
 
     await recordRunSuccess(runId, {

@@ -19,7 +19,8 @@
     "prompts:sync": "node scripts/prompts-sync.mjs",
     "eval:run": "tsx scripts/eval-run.mts",
     "prompts:activate": "node scripts/prompts-sync.mjs --activate",
-    "audit:prompts": "tsx scripts/audit-prompts.mts"
+    "audit:prompts": "tsx scripts/audit-prompts.mts",
+    "audit:discovery": "tsx scripts/audit-discovery-quality.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",

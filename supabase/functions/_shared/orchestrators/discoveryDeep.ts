@@ -57,7 +57,13 @@ export async function runDiscoveryDeep(
   if (Deno.env.get('DISCOVERY_SEARCH_API_KEY')) {
     for (const q of researchQueries(input.name)) {
       try {
-        const found = await runWebSearch(q, RESEARCH_RESULTS_PER_QUERY)
+        // Deeper than the discovery sweep, shorter than underwriting: these
+        // snippets have to resolve a hard filter, but this runs 5x per
+        // candidate across up to DEEP_ANALYSIS_CAP candidates in one run.
+        const found = await runWebSearch(q, RESEARCH_RESULTS_PER_QUERY, {
+          depth: 'advanced',
+          maxSnippetChars: 1200,
+        })
         research.push({
           query: q,
           results: found.map((f) => ({

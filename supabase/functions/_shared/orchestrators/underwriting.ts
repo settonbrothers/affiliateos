@@ -63,7 +63,14 @@ async function gatherResearch(name: string): Promise<ResearchResult[]> {
   const out: ResearchResult[] = []
   for (const query of researchQueries(name)) {
     try {
-      const found = await runWebSearch(query, RESEARCH_RESULTS_PER_QUERY)
+      // One offer per run, so the extra depth is affordable here in a way it
+      // is not inside the discovery sweep. offer_trust and the payment-
+      // reputation questions are exactly what a 500-character snippet cannot
+      // answer.
+      const found = await runWebSearch(query, RESEARCH_RESULTS_PER_QUERY, {
+        depth: 'advanced',
+        maxSnippetChars: 2000,
+      })
       out.push({
         query,
         results: found.map((f) => ({

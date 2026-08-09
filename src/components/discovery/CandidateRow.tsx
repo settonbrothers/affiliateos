@@ -7,6 +7,8 @@ import { useState, useTransition } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { approveCandidate, rejectCandidate } from '@/lib/actions/discovery'
 import { STAGE_BADGE_CLASS } from '@/lib/discovery/funnel'
+import type { StoredDeepAnalysis } from '@/lib/discovery/promote'
+import { deriveRecommended } from '@/lib/discovery/quality'
 import type { CandidateStage } from '@/lib/discovery/funnel'
 import { hostnameOf } from '@/lib/facts/display'
 import type { DiscoveryCandidate } from '@/lib/queries/discovery'
@@ -147,7 +149,11 @@ export function CandidateRow({ candidate }: { candidate: DiscoveryCandidate }) {
         {candidate.raw_snippet?.startsWith('[mined from') && (
           <span style={{ ...chip, color: '#9CC5FF' }}>{t('minedFrom')}</span>
         )}
-        {deep?.recommended === false && (
+        {/* Derived, not read. The model's own `recommended` flag disagreed with
+            its filters on 3 of 70 stored candidates — including one recommended
+            with paid_traffic marked `fail`, i.e. the offer forbids the traffic
+            the operator would be buying. */}
+        {deep && !deriveRecommended(deep as StoredDeepAnalysis) && (
           <span
             style={{
               ...chip,
