@@ -8,6 +8,7 @@ import {
   rankAnalyzed,
   type CandidateLike,
 } from '@/lib/discovery/funnel'
+import { TranslationBatchFiller } from '@/components/i18n/TranslationBatchFiller'
 import { getTranslatedPayload } from '@/lib/i18n/translatedPayload'
 import { getDiscoveryRun, listCandidates } from '@/lib/queries/discovery'
 
@@ -45,9 +46,11 @@ export default async function DiscoveryRunPage({
     .filter((c) => rankedIds.has(c.id))
     .sort((a, b) => (b.deep_score ?? 0) - (a.deep_score ?? 0))
   // Show the deep-analysis prose in the viewer's locale (English payload kept
-  // as the canonical source). Only the analyzed candidates carry deep_analysis;
-  // translate them in parallel, first view fills the cache. deep_score/stage
-  // are columns, so isStrong still works on the translated copies.
+  // as the canonical source). Only the analyzed candidates carry deep_analysis.
+  // This is a cache READ; the cache is filled after paint by the
+  // TranslationBatchFiller below — without it this page always rendered
+  // English, because nothing ever populated the cache it was reading.
+  // deep_score/stage are columns, so isStrong still works on translated copies.
   const locale = await getLocale()
   const reached = await Promise.all(
     reachedRaw.map(async (c) => ({
@@ -77,6 +80,15 @@ export default async function DiscoveryRunPage({
       </div>
 
       <FunnelBar counts={counts} />
+
+      {/* Fills the translation cache the render above reads from. Scoped to the
+          candidates actually worth reading (and capped in the action), so a
+          100-candidate run doesn't turn one page view into 100 Haiku calls. */}
+      <TranslationBatchFiller
+        sourceTable="discovery_candidates"
+        sourceIds={strong.filter((c) => c.deep_analysis).map((c) => c.id)}
+        locale={locale}
+      />
 
       <section>
         <h2 className="mb-2 text-lg font-medium">

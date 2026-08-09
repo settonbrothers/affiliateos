@@ -28,3 +28,30 @@ export async function ensureTranslation(
     return { filled: false }
   }
 }
+
+// How many rows one batch call will translate. A discovery run can hold 100
+// analysed candidates; translating all of them on first view would fire 100
+// Haiku calls. The cap keeps a page view bounded — the rest stay in English,
+// which getTranslatedPayload already falls back to cleanly.
+const MAX_BATCH_TRANSLATIONS = 12
+
+/**
+ * Batch variant for pages that render many translatable rows at once.
+ *
+ * Sequential on purpose: the point is to bound cost and rate-limit exposure,
+ * which firing them in parallel would defeat. Returns how many were newly
+ * created, so the caller refreshes once instead of once per row.
+ */
+export async function ensureTranslations(
+  sourceTable: TranslatableSource,
+  sourceIds: string[],
+  locale: string
+): Promise<{ filled: number }> {
+  if (locale === 'en') return { filled: 0 }
+  let filled = 0
+  for (const id of sourceIds.slice(0, MAX_BATCH_TRANSLATIONS)) {
+    const r = await ensureTranslation(sourceTable, id, locale)
+    if (r.filled) filled++
+  }
+  return { filled }
+}

@@ -105,6 +105,7 @@
     "analyzing": "מנתח…",
     "analysisFailed": "הניתוח האחרון נכשל",
     "analysisFailedRetry": "אפשר להריץ שוב. תוצאה קודמת, אם קיימת, עדיין מוצגת למטה.",
+    "capBadge": "מוגבל: {cap}",
     "verifiedFacts": "עובדות מאומתות",
     "website": "אתר",
     "affiliateProgram": "תוכנית שותפים",
@@ -278,7 +279,6 @@
     "colTotal": "סה\"כ",
     "colMatched": "תאמו",
     "colAccuracy": "דיוק",
-    "colCost": "עלות",
     "killSwitchesTitle": "מתגי חירום",
     "killSwitchesSubtitle": "עצירת חירום לכל אורקסטרטור. השהיה חוסמת מיד ריצות חדשות (edge fns מחזירות 503 לפני פתיחת שורת ai_runs).",
     "complianceTitle": "כללי רגולציה",
@@ -291,7 +291,6 @@
     "colCode": "קוד",
     "colBonus": "בונוס",
     "colUses": "שימושים",
-    "colStatus": "סטטוס",
     "failedTitle": "הודעות שנכשלו (DLQ)",
     "failedSubtitle": "עבודה ב-dead-letter. הרצה מחדש של ai_run מפעילה את האורקסטרטור עם ה-payload המקורי.",
     "failedEmpty": "אין הודעות שנכשלו. 🎉",
@@ -303,6 +302,12 @@
     "colEnabled": "מופעל",
     "enable": "הפעלה",
     "disable": "כיבוי",
-    "noSources": "אין מקורות עדיין. מיגרציה 0030 זורעת מקור חיפוש-רשת אחד לכל וורטיקל."
+    "noSources": "אין מקורות עדיין. מיגרציה 0030 זורעת מקור חיפוש-רשת אחד לכל וורטיקל.",
+    "strengths": "חוזקות",
+    "risks": "סיכונים",
+    "triageScore": "סינון {n}",
+    "minedFrom": "נשלף מדירקטורי",
+    "fromSearch": "מחיפוש רשת",
+    "source": "מקור"
   }
 }

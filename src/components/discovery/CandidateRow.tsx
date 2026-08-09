@@ -21,6 +21,10 @@ type SignalView = { value?: string; confidence?: string; evidence?: string }
 
 type DeepView = {
   summary?: string
+  // key_strengths / key_risks were absent from this type entirely: the model
+  // produces them, they are stored and even translated, and nothing read them.
+  key_strengths?: string[]
+  key_risks?: string[]
   estimated_commission?: string | null
   estimated_epc_band?: string | null
   network?: string | null
@@ -47,10 +51,25 @@ const HARD_FILTER_LABELS: Array<[keyof NonNullable<DeepView['hard_filters']>, st
   ['scale_ceiling', 'hfScaleCeiling'],
 ]
 
-const FILTER_STATUS_CLASS: Record<string, string> = {
-  pass: 'bg-green-100 text-green-800',
-  fail: 'bg-red-100 text-red-800',
-  unknown_verify: 'bg-amber-100 text-amber-800',
+// Dark-app chips. These were light Tailwind swatches (bg-green-100) left over
+// from before the AFFEX reskin, glowing on a near-black page.
+const FILTER_STATUS_STYLE: Record<string, React.CSSProperties> = {
+  pass: { color: '#7BD88F', border: '1px solid rgba(123,216,143,0.35)' },
+  fail: { color: '#F87171', border: '1px solid rgba(248,113,113,0.35)' },
+  unknown_verify: {
+    color: 'var(--amber-text)',
+    border: '1px solid var(--amber-border)',
+    background: 'var(--amber-bg)',
+  },
+}
+
+const chip: React.CSSProperties = {
+  fontFamily: 'var(--font-mono)',
+  fontSize: '10px',
+  letterSpacing: '0.06em',
+  textTransform: 'uppercase',
+  padding: '2px 6px',
+  whiteSpace: 'nowrap',
 }
 
 const SIGNAL_LABELS: Array<[keyof NonNullable<DeepView['signals']>, string]> = [
@@ -69,11 +88,11 @@ const STAGE_LABEL_KEYS: Record<CandidateStage, string> = {
   promoted: 'stagePromoted',
 }
 
-const SIGNAL_CONFIDENCE_CLASS: Record<string, string> = {
-  high: 'bg-green-100 text-green-800',
-  medium: 'bg-blue-100 text-blue-800',
-  low: 'bg-zinc-100 text-zinc-600',
-  unknown: 'bg-amber-100 text-amber-800',
+const SIGNAL_CONFIDENCE_STYLE: Record<string, React.CSSProperties> = {
+  high: { color: '#7BD88F' },
+  medium: { color: '#9CC5FF' },
+  low: { color: '#8A8A88' },
+  unknown: { color: 'var(--amber-text)' },
 }
 
 export function CandidateRow({ candidate }: { candidate: DiscoveryCandidate }) {
@@ -116,8 +135,27 @@ export function CandidateRow({ candidate }: { candidate: DiscoveryCandidate }) {
             {t('score', { n: candidate.deep_score })}
           </span>
         )}
+        {/* The triage score is stored on every candidate and was never shown,
+            even though it decides which ones reach the deep-analysis cap. */}
+        {candidate.triage_score != null && (
+          <span style={{ ...chip, color: '#8A8A88' }}>
+            {t('triageScore', { n: candidate.triage_score })}
+          </span>
+        )}
+        {/* Whether a candidate came from search or was mined out of a directory
+            only ever existed as a marker inside raw_snippet. */}
+        {candidate.raw_snippet?.startsWith('[mined from') && (
+          <span style={{ ...chip, color: '#9CC5FF' }}>{t('minedFrom')}</span>
+        )}
         {deep?.recommended === false && (
-          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800">
+          <span
+            style={{
+              ...chip,
+              color: 'var(--amber-text)',
+              border: '1px solid var(--amber-border)',
+              background: 'var(--amber-bg)',
+            }}
+          >
             {t('notRecommended')}
           </span>
         )}
@@ -144,17 +182,29 @@ export function CandidateRow({ candidate }: { candidate: DiscoveryCandidate }) {
             const hf = deep.hard_filters?.[key]
             if (!hf?.status) return null
             return (
-              <div key={key} className="flex items-baseline gap-2 text-xs">
-                <span
-                  className={`rounded px-1.5 py-0.5 ${FILTER_STATUS_CLASS[hf.status] ?? ''}`}
-                >
+              <div key={key} className="flex flex-wrap items-baseline gap-2 text-xs">
+                <span style={{ ...chip, ...(FILTER_STATUS_STYLE[hf.status] ?? {}) }}>
                   {hf.status === 'unknown_verify' ? t('verify') : hf.status}
                 </span>
                 <span className="font-medium">{t(labelKey)}</span>
                 {hf.evidence && (
                   <span className="text-[var(--color-muted-foreground)]">
-                    — {hf.evidence}
+                    {hf.evidence}
                   </span>
+                )}
+                {/* The prompt requires a source_url for every filter verdict and
+                    it is stored — but only the prose was rendered, so there was
+                    no way to check any claim against where it came from. */}
+                {hf.source_url && (
+                  <a
+                    href={hf.source_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline"
+                    style={{ color: '#9CC5FF' }}
+                  >
+                    {hostnameOf(hf.source_url)} ↗
+                  </a>
                 )}
               </div>
             )
@@ -165,12 +215,36 @@ export function CandidateRow({ candidate }: { candidate: DiscoveryCandidate }) {
       {deep?.must_verify_before_budget &&
         deep.must_verify_before_budget.length > 0 && (
           <div className="mt-1 text-xs">
-            <span className="font-medium text-amber-800">
+            <span
+              className="font-medium"
+              style={{ color: 'var(--amber-text)' }}
+            >
               {t('verifyBeforeBudget')}
             </span>{' '}
             {deep.must_verify_before_budget.join('; ')}
           </div>
         )}
+
+      {(deep?.key_strengths?.length || deep?.key_risks?.length) && (
+        <div className="mt-1 flex flex-col gap-1 text-xs">
+          {deep?.key_strengths && deep.key_strengths.length > 0 && (
+            <div className="flex flex-wrap items-baseline gap-2">
+              <span style={{ ...chip, color: '#7BD88F' }}>{t('strengths')}</span>
+              <span className="text-[var(--color-muted-foreground)]">
+                {deep.key_strengths.join('; ')}
+              </span>
+            </div>
+          )}
+          {deep?.key_risks && deep.key_risks.length > 0 && (
+            <div className="flex flex-wrap items-baseline gap-2">
+              <span style={{ ...chip, color: '#F87171' }}>{t('risks')}</span>
+              <span className="text-[var(--color-muted-foreground)]">
+                {deep.key_risks.join('; ')}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
       {deep?.signals && (
         <div className="mt-1 flex flex-col gap-1">
@@ -178,12 +252,22 @@ export function CandidateRow({ candidate }: { candidate: DiscoveryCandidate }) {
             const sig = deep.signals?.[key]
             if (!sig?.value) return null
             return (
-              <div key={key} className="flex items-baseline gap-2 text-xs">
+              <div key={key} className="flex flex-wrap items-baseline gap-2 text-xs">
                 <span className="w-24 shrink-0 font-medium">{t(labelKey)}</span>
                 <span>{sig.value}</span>
+                {/* Only value + confidence surfaced; the evidence behind each
+                    signal was stored, translated, and never read. */}
+                {sig.evidence && (
+                  <span className="text-[var(--color-muted-foreground)]">
+                    {sig.evidence}
+                  </span>
+                )}
                 {sig.confidence && (
                   <span
-                    className={`rounded px-1 py-0.5 ${SIGNAL_CONFIDENCE_CLASS[sig.confidence] ?? ''}`}
+                    style={{
+                      ...chip,
+                      ...(SIGNAL_CONFIDENCE_STYLE[sig.confidence] ?? {}),
+                    }}
                   >
                     {sig.confidence}
                   </span>

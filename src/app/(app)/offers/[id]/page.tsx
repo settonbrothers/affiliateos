@@ -25,6 +25,7 @@ import { CampaignView } from '@/components/campaign-view/CampaignView'
 import { CampaignWizard } from '@/components/wizard/CampaignWizard'
 import type { WizardStep } from '@/components/wizard/CampaignWizard'
 import { EvidenceBars } from '@/components/crack-score/evidence-bars'
+import { AnalysisNav } from '@/components/offers/AnalysisNav'
 import { NetworkComparisonCard } from '@/components/offers/NetworkComparisonCard'
 import { TrendingBadge } from '@/components/offers/TrendingBadge'
 import { TranslationFiller } from '@/components/i18n/TranslationFiller'
@@ -109,11 +110,12 @@ export default async function OfferDetailPage({
 
   const facts = activeTab === 'overview' ? await getVerifiedFacts(id) : []
 
-  const compliance =
-    activeTab === 'compliance' || activeTab === 'verdict'
-      ? await getLatestCompliance(id)
-      : null
-  const compliancePayload = compliance
+  // Fetched unconditionally: the analysis nav needs to know a compliance report
+  // exists (and whether it capped the verdict) on every tab, not just the two
+  // that render it. Otherwise a compliance-only offer has no way in.
+  const compliance = await getLatestCompliance(id)
+  const compliancePayload =
+    compliance && (activeTab === 'compliance' || activeTab === 'verdict')
     ? await getTranslatedPayload(
         'offer_compliance_warnings',
         compliance.id,
@@ -228,9 +230,28 @@ export default async function OfferDetailPage({
         </div>
       )}
 
-      {evaluation?.payload && (
+      {(evaluation?.payload || compliance) && (
         <div style={{ border: '1px solid rgba(255,255,255,0.1)', background: 'radial-gradient(90% 130% at 22% 0%, #17140A 0%, #161310 62%)', padding: 'clamp(24px,3vw,40px)' }}>
-          <EvidenceBars scores={evaluation.payload.scores} weightedScore={evaluation.payload.weighted_score} />
+          {evaluation?.payload && (
+            <EvidenceBars scores={evaluation.payload.scores} weightedScore={evaluation.payload.weighted_score} />
+          )}
+          {/* The only way into these three views. They render fine but nothing
+              linked to them, so the verdict was reachable only by typing a URL. */}
+          <AnalysisNav
+            offerId={offer.id}
+            activeTab={activeTab}
+            items={[
+              { key: 'scorecard', label: t('tabScorecard') },
+              { key: 'verdict', label: t('tabVerdict') },
+              {
+                key: 'compliance',
+                label: t('tabCompliance'),
+                badge: compliance?.suggested_verdict_cap
+                  ? t('capBadge', { cap: compliance.suggested_verdict_cap })
+                  : null,
+              },
+            ]}
+          />
         </div>
       )}
 
