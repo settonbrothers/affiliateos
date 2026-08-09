@@ -9,14 +9,23 @@
 // - prompts/<dir>/_active.json ({"version": "v3"}) declares which version is
 //   meant to be live. If nothing is active yet, that version is activated
 //   (falling back to the highest vN when no _active.json exists).
-// - Existing active rows are never silently flipped — use the /admin/prompts
-//   UI for that. A mismatch between _active.json and the DB is reported as
-//   DRIFT and exits non-zero, so the declared version stays honest.
+// - Existing active rows are never silently flipped. A mismatch between
+//   _active.json and the DB is reported as DRIFT and exits non-zero, so the
+//   declared version stays honest.
+// - Pass --activate to APPLY the declared versions (deactivating siblings
+//   first, exactly as /admin/prompts does). Changing which prompt is live
+//   changes model output, so it stays an explicit act, never a side effect of
+//   syncing content.
+//
+//   node scripts/prompts-sync.mjs             # sync content, report drift
+//   node scripts/prompts-sync.mjs --activate  # sync content, resolve drift
 
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { createClient } from '@supabase/supabase-js'
+
+const APPLY_ACTIVE = process.argv.includes('--activate')
 
 // Start from process.env (CI), then let a local .env.local override it if present.
 const env = { ...process.env }
@@ -200,12 +209,43 @@ for (const [orchestratorName, versions] of byOrchestrator) {
     console.log(`  activated ${orchestratorName}/${intended}`)
     activated++
   } else if (declared && active.version !== declared) {
-    console.error(
-      `  DRIFT ${orchestratorName}: _active.json says ${declared}, DB has ${active.version} live. ` +
-        `Flip it in /admin/prompts (or correct _active.json).`
-    )
-    drifted++
-    process.exitCode = 1
+    if (!APPLY_ACTIVE) {
+      console.error(
+        `  DRIFT ${orchestratorName}: _active.json says ${declared}, DB has ${active.version} live. ` +
+          `Re-run with --activate, or flip it in /admin/prompts (or correct _active.json).`
+      )
+      drifted++
+      process.exitCode = 1
+      continue
+    }
+
+    // Deactivate first, then activate — same order as activatePrompt, and the
+    // order the one-active-per-orchestrator index added in 0044 requires.
+    const { error: deactErr } = await supabase
+      .from('prompts')
+      .update({ is_active: false })
+      .eq('orchestrator_name', orchestratorName)
+      .eq('prompt_type', 'main')
+      .is('vertical_id', null)
+    if (deactErr) {
+      console.error(`  ${orchestratorName}: deactivate failed — ${deactErr.message}`)
+      process.exitCode = 1
+      continue
+    }
+    const { error: actErr } = await supabase
+      .from('prompts')
+      .update({ is_active: true })
+      .eq('orchestrator_name', orchestratorName)
+      .eq('prompt_type', 'main')
+      .is('vertical_id', null)
+      .eq('version', declared)
+    if (actErr) {
+      console.error(`  ${orchestratorName}: activate ${declared} failed — ${actErr.message}`)
+      process.exitCode = 1
+      continue
+    }
+    console.log(`  ACTIVATED ${orchestratorName}/${declared}  (was ${active.version})`)
+    activated++
   }
 }
 

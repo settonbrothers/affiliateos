@@ -17,7 +17,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prompts:sync": "node scripts/prompts-sync.mjs",
-    "eval:run": "tsx scripts/eval-run.mts"
+    "eval:run": "tsx scripts/eval-run.mts",
+    "prompts:activate": "node scripts/prompts-sync.mjs --activate",
+    "audit:prompts": "tsx scripts/audit-prompts.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",
