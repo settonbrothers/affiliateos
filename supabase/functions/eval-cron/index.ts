@@ -109,6 +109,13 @@ Deno.serve(async (req: Request) => {
                 confidence_score: number | null
               }>) ?? [],
               userContext: REP_OPERATOR_CONTEXT,
+              // The golden set measures the PROMPT against frozen inputs. Live
+              // research makes a score drop ambiguous — the web changed, or the
+              // prompt regressed? — and it is what pushed this eval past the
+              // wall clock, which is why it has never written a row. The local
+              // scripts/eval-run.mts is already deterministic for the same
+              // reason: it calls Anthropic directly.
+              skipResearch: true,
             })
             const actual =
               (r.output as { payload?: { verdict?: string } }).payload?.verdict ?? null

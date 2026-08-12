@@ -35,6 +35,16 @@ type UnderwritingInput = {
   operatorNotes?: string | null
   // The operator's profile (from onboarding) — feeds operator_fit scoring.
   userContext?: OperatorContext | null
+  /**
+   * Skip the page fetch and gap-fill searches.
+   *
+   * For the golden-set eval. That set exists to measure a PROMPT against frozen
+   * `facts_snapshot` inputs, so live research would reintroduce variance nobody
+   * controls: a drop in accuracy could be the web changing rather than the
+   * prompt regressing. It also happens to be what keeps the eval inside the
+   * edge function's wall clock.
+   */
+  skipResearch?: boolean
 }
 
 const MAX_PAGE_TEXT_FOR_LLM = 60_000
@@ -124,10 +134,12 @@ export async function runUnderwriting(
   // Read the offer for itself instead of scoring it blind. Both are optional:
   // no key means no research, an unreachable page means no page text, and the
   // model is told to leave what it cannot establish unresolved.
-  const [pageText, research] = await Promise.all([
-    fetchPageText(input.websiteUrl, 'AffiliateOS-Underwriting/1.0'),
-    input.offerName ? gatherResearch(input.offerName) : Promise.resolve([]),
-  ])
+  const [pageText, research] = input.skipResearch
+    ? ['', [] as ResearchResult[]]
+    : await Promise.all([
+        fetchPageText(input.websiteUrl, 'AffiliateOS-Underwriting/1.0'),
+        input.offerName ? gatherResearch(input.offerName) : Promise.resolve([]),
+      ])
 
   const userMessage = JSON.stringify(
     {
