@@ -179,7 +179,10 @@ for (const g of goldens) {
   try {
     const resp = await anthropic.messages.create({
       model: args.model,
-      max_tokens: 4096,
+      // Matches the orchestrator. A v4 response averages ~3,280 output tokens;
+      // at 4,096 one golden in sixteen was truncated mid-tool-call and scored
+      // as a miss, which quietly depresses the accuracy this script reports.
+      max_tokens: 8192,
       tools: [tool],
       tool_choice: { type: 'tool', name: tool.name },
       system: prompt.content,

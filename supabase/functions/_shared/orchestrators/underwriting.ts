@@ -173,6 +173,12 @@ export async function runUnderwriting(
     toolName: TOOL_NAME,
     toolDescription: TOOL_DESCRIPTION,
     responseSchema: UnderwritingResponseSchema,
+    // Measured: a v4 response averages ~3,280 output tokens against the 4,096
+    // default, and one golden in sixteen blew past it — the tool call was cut
+    // off mid-JSON and came back with no `payload` at all. Adding a reasoning
+    // sentence to each of the 13 dimensions raised output by ~50%, and the
+    // ceiling was never raised with it.
+    maxTokens: 8192,
   })
 
   return {
