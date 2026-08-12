@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { isCurrentUserAdmin } from '@/lib/auth/role'
+import { PROMOTE_VERIFY_MIN_CONFIDENCE } from '@/lib/discovery/promote'
 import { createClient } from '@/lib/supabase/server'
 import {
   GoldenOfferSchema,
@@ -218,6 +219,13 @@ export async function promoteGoldenToOffer(
         fact_value: f.fact_value,
         source_quote: f.source_quote,
         confidence_score: f.confidence_score,
+        // Without this the column falls to its default 'proposed', and
+        // underwriting reads only status='verified' — so a promoted golden
+        // arrived carrying facts the analyst could never see. Same bar
+        // ingest-source uses (AUTO_VERIFY_MIN_CONFIDENCE = 70).
+        status: ((f.confidence_score ?? 0) >= PROMOTE_VERIFY_MIN_CONFIDENCE
+          ? 'verified'
+          : 'proposed') as never,
       }))
     )
     if (fErr) return { error: fErr.message }

@@ -103,6 +103,11 @@ async function processIngestion(args: {
   const willCallReal = !!Deno.env.get('ANTHROPIC_API_KEY')
   const model = willCallReal ? 'claude-haiku-4-5-20251001' : 'mock'
   const agentVersion = willCallReal ? 'real-v1' : 'mock-v1'
+  // Held outside the try so the catch can mark the document failed. Without it
+  // a failure after the fetch left the row at 'fetched' forever: 2 of the 4
+  // source_documents that exist are stranded exactly that way, and the sources
+  // page renders them as though they were merely in progress.
+  let sourceDocId: string | null = null
 
   try {
     await admin
@@ -127,6 +132,7 @@ async function processIngestion(args: {
       .single()
     if (sdErr || !sdRow) throw new Error('Failed to insert source_document')
     const sdId = sdRow.id
+    sourceDocId = sdId
 
     await admin
       .from('source_fetch_jobs')
@@ -262,6 +268,18 @@ async function processIngestion(args: {
         completed_at: new Date().toISOString(),
       })
       .eq('id', args.jobId)
+
+    // Mark the document too. source_fetch_jobs carries the real error but is
+    // rendered nowhere, so until now a failed ingest was invisible: the sources
+    // page just showed a document sitting at 'fetched' with no facts and no
+    // explanation. source_documents.error_message has existed since 0010 and
+    // was never written.
+    if (sourceDocId) {
+      await admin
+        .from('source_documents')
+        .update({ status: 'failed', error_message: msg })
+        .eq('id', sourceDocId)
+    }
   }
 }
 
