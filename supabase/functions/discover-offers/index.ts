@@ -15,12 +15,27 @@ declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void }
 
 const UA = 'AffiliateOS-Discovery/1.0'
 const TRIAGE_KEEP_MIN_SCORE = 55
-const DEEP_ANALYSIS_CAP = 100
-const DEEP_CONCURRENCY = 5 // deep analyses run in parallel waves to cut wall-time
+
+// The deep stage lives inside an edge function, and its WALL CLOCK is the real
+// constraint — not this cap. Evidence from the run history: no run has ever
+// survived past ~225s, and five of the last twelve were killed mid-analysis and
+// left stranded in 'analyzing' forever. At ~50s per candidate a cap of 100 was
+// asking for 15+ minutes, which the runtime was never going to grant, so the
+// deep stage had literally never completed a full pass.
+//
+// DEEP_DEADLINE_MS is what actually stops it now; the cap is a sane upper
+// bound. A run that runs out of time finishes honestly with what it analysed
+// instead of hanging.
+const DEEP_ANALYSIS_CAP = 40
+const DEEP_CONCURRENCY = 8 // deep analyses run in parallel waves to cut wall-time
+const DEEP_DEADLINE_MS = 170_000
+const NETWORK_DEADLINE_MS = 210_000
 const CONTAINER_MINE_CAP = 25 // max container pages to mine per run
 const MINED_OFFERS_CAP = 20 // max offers to take from one container
 const MINED_TOTAL_CAP = 150 // overall cap on mined candidates (bounds 2nd triage)
 const TRIAGE_BATCH_SIZE = 25 // candidates per triage call (a big batch fails)
+const TRIAGE_CONCURRENCY = 4 // batches in flight at once
+const MINE_CONCURRENCY = 5 // container pages mined at once
 const NETWORK_ENRICH_MIN_SCORE = 70 // deep_score threshold for network enrichment (deep_score is 0–100)
 const NETWORK_ENRICH_CONCURRENCY = 3 // parallel network enrichment calls
 
@@ -115,6 +130,8 @@ async function processDiscovery(args: {
   const admin = getAdminClient()
   const params = BREADTH_PARAMS[args.breadth] ?? BREADTH_PARAMS.standard
   let totalCost = 0
+  const runStartedAt = Date.now()
+  const elapsed = () => Date.now() - runStartedAt
 
   try {
     await admin
@@ -240,8 +257,14 @@ async function processDiscovery(args: {
       mined: boolean
     ): Promise<Map<string, TriageResult>> => {
       const byId = new Map<string, TriageResult>()
+      // Batches are independent, so run them in parallel waves. Sequentially
+      // this was ~9.5s x 7 calls = 66s of the run budget spent before deep
+      // analysis — the stage that actually matters — got a single second.
+      const chunks: Array<typeof cands> = []
       for (let off = 0; off < cands.length; off += TRIAGE_BATCH_SIZE) {
-        const chunk = cands.slice(off, off + TRIAGE_BATCH_SIZE)
+        chunks.push(cands.slice(off, off + TRIAGE_BATCH_SIZE))
+      }
+      const runChunk = async (chunk: typeof cands): Promise<void> => {
         const batchRunId = await recordRunStart({
           orchestratorName: 'DiscoveryTriageOrchestrator',
           agentVersion: Deno.env.get('ANTHROPIC_API_KEY') ? 'real-v1' : 'mock-v1',
@@ -270,6 +293,9 @@ async function processDiscovery(args: {
         } catch (err) {
           await recordRunError(batchRunId, err instanceof Error ? err.message : String(err))
         }
+      }
+      for (let i = 0; i < chunks.length; i += TRIAGE_CONCURRENCY) {
+        await Promise.all(chunks.slice(i, i + TRIAGE_CONCURRENCY).map(runChunk))
       }
       return byId
     }
@@ -341,10 +367,14 @@ async function processDiscovery(args: {
     // listicles give an offer's name but no clean URL — those are still valid
     // candidates; deep analysis researches them by name).
     const knownNames = new Set<string>()
-    for (const ct of containers.slice(0, CONTAINER_MINE_CAP)) {
-      if (minedRaw.length >= MINED_TOTAL_CAP) break
+    // Mining a container is a page fetch plus one Haiku call, all independent
+    // of each other — another 45s of the budget that was being spent serially.
+    // The dedup sets below are only touched after each call resolves, so
+    // running the calls in waves keeps that bookkeeping sequential.
+    const mineOne = async (ct: { url: string }): Promise<void> => {
+      if (minedRaw.length >= MINED_TOTAL_CAP) return
       const pageText = await fetchPageText(ct.url, UA)
-      if (!pageText) continue
+      if (!pageText) return
       const mineRunId = await recordRunStart({
         orchestratorName: 'DiscoveryMineOrchestrator',
         agentVersion: Deno.env.get('ANTHROPIC_API_KEY') ? 'real-v1' : 'mock-v1',
@@ -381,6 +411,12 @@ async function processDiscovery(args: {
       } catch (err) {
         await recordRunError(mineRunId, err instanceof Error ? err.message : String(err))
       }
+    }
+
+    const toMine = containers.slice(0, CONTAINER_MINE_CAP)
+    for (let i = 0; i < toMine.length; i += MINE_CONCURRENCY) {
+      if (minedRaw.length >= MINED_TOTAL_CAP) break
+      await Promise.all(toMine.slice(i, i + MINE_CONCURRENCY).map(mineOne))
     }
 
     if (minedRaw.length > 0) {
@@ -476,8 +512,17 @@ async function processDiscovery(args: {
       }
     }
 
-    // Parallel waves to cut wall-time (the deep cap can be large).
+    // Parallel waves to cut wall-time, and stop starting new ones once the
+    // budget is spent. Without this the function is killed mid-wave and the run
+    // row is never updated, which is why five of the last twelve runs sat in
+    // 'analyzing' forever. Candidates we don't reach stay at 'triaged' and are
+    // reported, not silently dropped.
+    let deepSkipped = 0
     for (let off = 0; off < toAnalyze.length; off += DEEP_CONCURRENCY) {
+      if (elapsed() > DEEP_DEADLINE_MS) {
+        deepSkipped = toAnalyze.length - off
+        break
+      }
       const wave = toAnalyze.slice(off, off + DEEP_CONCURRENCY)
       const rs = await Promise.all(wave.map((s) => analyzeOne(s)))
       for (const r of rs) {
@@ -498,6 +543,9 @@ async function processDiscovery(args: {
         .eq('run_id', args.runId)
         .eq('stage', 'analyzed')
         .gte('deep_score', NETWORK_ENRICH_MIN_SCORE)
+        // Enrichment is additive: skip it rather than let it eat the budget
+        // that finalising the run needs.
+        .limit(elapsed() > NETWORK_DEADLINE_MS ? 0 : 20)
 
       const networkEnrichOne = async (cand: {
         id: string
@@ -566,6 +614,7 @@ async function processDiscovery(args: {
       }
 
       for (let off = 0; off < (topCands ?? []).length; off += NETWORK_ENRICH_CONCURRENCY) {
+        if (elapsed() > NETWORK_DEADLINE_MS) break
         const wave = (topCands ?? []).slice(off, off + NETWORK_ENRICH_CONCURRENCY)
         await Promise.all(wave.map(networkEnrichOne))
       }
@@ -587,6 +636,12 @@ async function processDiscovery(args: {
         },
         total_cost_usd: totalCost,
         completed_at: new Date().toISOString(),
+        // Say so when the budget cut the deep pass short, rather than letting
+        // a partial run read as a complete one.
+        error_message:
+          deepSkipped > 0
+            ? `Deep analysis stopped after ${analyzedCount} candidates (${deepSkipped} left unanalysed) — ran out of the edge function's time budget at ${Math.round(elapsed() / 1000)}s. They remain at 'triaged'.`
+            : null,
       })
       .eq('id', args.runId)
   } catch (err) {

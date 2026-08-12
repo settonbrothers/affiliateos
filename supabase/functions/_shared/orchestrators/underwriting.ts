@@ -58,33 +58,37 @@ type ResearchResult = {
   results: Array<{ title: string; url: string; snippet: string }>
 }
 
+// In parallel — the queries are independent, and an Analyze run is something a
+// user waits on.
 async function gatherResearch(name: string): Promise<ResearchResult[]> {
   if (!Deno.env.get('DISCOVERY_SEARCH_API_KEY')) return []
-  const out: ResearchResult[] = []
-  for (const query of researchQueries(name)) {
-    try {
-      // One offer per run, so the extra depth is affordable here in a way it
-      // is not inside the discovery sweep. offer_trust and the payment-
-      // reputation questions are exactly what a 500-character snippet cannot
-      // answer.
-      const found = await runWebSearch(query, RESEARCH_RESULTS_PER_QUERY, {
-        depth: 'advanced',
-        maxSnippetChars: 2000,
-      })
-      out.push({
-        query,
-        results: found.map((f) => ({
-          title: f.name,
-          url: f.url,
-          snippet: f.snippet,
-        })),
-      })
-    } catch {
-      // A failed query is missing evidence, not a failed analysis. The model is
-      // told to leave what it cannot establish in `unknowns` / `missing_data`.
-    }
-  }
-  return out
+  const settled = await Promise.all(
+    researchQueries(name).map(async (query) => {
+      try {
+        // One offer per run, so the extra depth is affordable here in a way it
+        // is not inside the discovery sweep. offer_trust and the payment-
+        // reputation questions are exactly what a 500-character snippet cannot
+        // answer.
+        const found = await runWebSearch(query, RESEARCH_RESULTS_PER_QUERY, {
+          depth: 'advanced',
+          maxSnippetChars: 2000,
+        })
+        return {
+          query,
+          results: found.map((f) => ({
+            title: f.name,
+            url: f.url,
+            snippet: f.snippet,
+          })),
+        }
+      } catch {
+        // A failed query is missing evidence, not a failed analysis. The model
+        // is told to leave what it cannot establish in unknowns/missing_data.
+        return null
+      }
+    })
+  )
+  return settled.filter((r): r is ResearchResult => r !== null)
 }
 
 export type OrchestratorResult = {

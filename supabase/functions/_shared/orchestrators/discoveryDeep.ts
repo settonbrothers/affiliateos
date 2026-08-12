@@ -50,32 +50,40 @@ export async function runDiscoveryDeep(
 
   // Step 2: gap-fill research — only when a search key is configured. A failed
   // research query never blocks scoring (the filter just stays unknown_verify).
-  const research: Array<{
+  // In PARALLEL. These five were sequential, which cost ~25s per candidate on
+  // its own — and the deep stage runs inside an edge function whose wall clock
+  // is the binding constraint on how many candidates a scan can analyse at all.
+  // The queries are independent; nothing was gained by waiting.
+  let research: Array<{
     query: string
     results: Array<{ title: string; url: string; snippet: string }>
   }> = []
   if (Deno.env.get('DISCOVERY_SEARCH_API_KEY')) {
-    for (const q of researchQueries(input.name)) {
-      try {
-        // Deeper than the discovery sweep, shorter than underwriting: these
-        // snippets have to resolve a hard filter, but this runs 5x per
-        // candidate across up to DEEP_ANALYSIS_CAP candidates in one run.
-        const found = await runWebSearch(q, RESEARCH_RESULTS_PER_QUERY, {
-          depth: 'advanced',
-          maxSnippetChars: 1200,
-        })
-        research.push({
-          query: q,
-          results: found.map((f) => ({
-            title: f.name,
-            url: f.url,
-            snippet: f.snippet,
-          })),
-        })
-      } catch {
-        // skip this query; scoring proceeds with whatever we have
-      }
-    }
+    const settled = await Promise.all(
+      researchQueries(input.name).map(async (q) => {
+        try {
+          // Deeper than the discovery sweep, shorter than underwriting: these
+          // snippets have to resolve a hard filter, but this runs 5x per
+          // candidate across every candidate in the deep pass.
+          const found = await runWebSearch(q, RESEARCH_RESULTS_PER_QUERY, {
+            depth: 'advanced',
+            maxSnippetChars: 1200,
+          })
+          return {
+            query: q,
+            results: found.map((f) => ({
+              title: f.name,
+              url: f.url,
+              snippet: f.snippet,
+            })),
+          }
+        } catch {
+          // skip this query; scoring proceeds with whatever we have
+          return null
+        }
+      })
+    )
+    research = settled.filter((r): r is NonNullable<typeof r> => r !== null)
   }
 
   // Step 3: score against the rubric.
