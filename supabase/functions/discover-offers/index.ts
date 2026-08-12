@@ -555,7 +555,11 @@ async function runDeepPhase(args: {
       .select('config, counts, total_cost_usd, vertical_id, triggered_by, status')
       .eq('id', args.runId)
       .maybeSingle()
-    if (!run || run.status === 'completed' || run.status === 'failed') return
+    // A 'completed' run is still resumable: the deep pass finishes early and
+    // marks itself completed whenever it runs out of clock, so refusing that
+    // status is refusing every run the Resume button exists for. Only a run
+    // that failed outright stays closed.
+    if (!run || run.status === 'failed') return
 
     const counts = (run.counts ?? {}) as Record<string, number>
     const costSoFar = Number(run.total_cost_usd ?? 0)
@@ -604,6 +608,13 @@ async function runDeepPhase(args: {
       url: string | null
     }>
     if (toAnalyze.length === 0) return stop('')
+
+    // Reopen the run while this hop works, so the page does not read
+    // 'completed' next to a funnel that is visibly still moving.
+    await admin
+      .from('discovery_runs')
+      .update({ status: 'analyzing', error_message: null, completed_at: null })
+      .eq('id', args.runId)
 
     const analyzeOne = async (s: {
       id: string

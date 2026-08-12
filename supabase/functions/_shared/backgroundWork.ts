@@ -18,9 +18,22 @@ import { requireAdmin } from './auth.ts'
  * anon key in Authorization as well — see invokeSelf.
  */
 export function isCronCall(req: Request): boolean {
-  const secret = Deno.env.get('CRON_SECRET')
   const header = req.headers.get('x-cron-secret')
-  return !!secret && !!header && header === secret
+  if (!header) return false
+
+  // CRON_SECRET first, for the Vercel cron → eval-cron path.
+  const cronSecret = Deno.env.get('CRON_SECRET')
+  if (cronSecret && header === cronSecret) return true
+
+  // Fall back to the service-role key, which the runtime always has. Without
+  // this a self-invocation depends on a secret that has to be provisioned
+  // separately — and CRON_SECRET is in fact NOT set on this project, which is
+  // why the nightly eval has never produced a run: eval-cron falls through to
+  // requireAdmin and the cron call, carrying only the anon key, gets a 401.
+  // Anyone holding the service-role key already has full database access, so
+  // this grants nothing new.
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  return !!serviceKey && header === serviceKey
 }
 
 /**
@@ -45,17 +58,21 @@ export async function invokeSelf(
   body: Record<string, unknown>
 ): Promise<boolean> {
   const url = Deno.env.get('SUPABASE_URL')
-  const anon = Deno.env.get('SUPABASE_ANON_KEY')
-  const secret = Deno.env.get('CRON_SECRET')
-  if (!url || !anon || !secret) return false
+  // The service-role key is always present in the runtime, so a hand-off needs
+  // no extra configuration. It satisfies the gateway's JWT check and marks the
+  // call as internal in one go.
+  const key =
+    Deno.env.get('CRON_SECRET') ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  const auth = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_ANON_KEY')
+  if (!url || !key || !auth) return false
 
   try {
     const res = await fetch(`${url}/functions/v1/${functionName}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${anon}`,
-        'x-cron-secret': secret,
+        Authorization: `Bearer ${auth}`,
+        'x-cron-secret': key,
       },
       body: JSON.stringify(body),
     })
