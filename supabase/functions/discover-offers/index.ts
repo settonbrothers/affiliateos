@@ -1,5 +1,15 @@
 import { ForbiddenError, requireAdmin, UnauthorizedError } from '../_shared/auth.ts'
+import {
+  deadlineAfter,
+  invokeSelf,
+  processInWaves,
+  requireAdminOrCron,
+} from '../_shared/backgroundWork.ts'
 import { handleCors, jsonResponse } from '../_shared/cors.ts'
+import {
+  assertUnderDiscoveryDailyCap,
+  DiscoveryCapExceededError,
+} from '../_shared/costCap.ts'
 import { assertNotPaused, OrchestratorPausedError } from '../_shared/killSwitch.ts'
 import { runWebSearch } from '../_shared/adapters/webSearch.ts'
 import { runDiscoveryMine } from '../_shared/orchestrators/discoveryMine.ts'
@@ -16,20 +26,18 @@ declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void }
 const UA = 'AffiliateOS-Discovery/1.0'
 const TRIAGE_KEEP_MIN_SCORE = 55
 
-// The deep stage lives inside an edge function, and its WALL CLOCK is the real
-// constraint — not this cap. Evidence from the run history: no run has ever
-// survived past ~225s, and five of the last twelve were killed mid-analysis and
-// left stranded in 'analyzing' forever. At ~50s per candidate a cap of 100 was
-// asking for 15+ minutes, which the runtime was never going to grant, so the
-// deep stage had literally never completed a full pass.
+// The deep stage lives inside an edge function whose WALL CLOCK it cannot beat:
+// no run has ever survived past ~225s, and at ~50s per candidate even 40 of
+// them needs several minutes. So the stage no longer tries to finish in one
+// invocation — it analyses what fits, then hands off to a fresh clock.
 //
-// DEEP_DEADLINE_MS is what actually stops it now; the cap is a sane upper
-// bound. A run that runs out of time finishes honestly with what it analysed
-// instead of hanging.
-const DEEP_ANALYSIS_CAP = 40
+// How far a scan goes is a deliberate choice (BREADTH_PARAMS.deepTarget), not
+// an accident of when the runtime pulled the plug.
 const DEEP_CONCURRENCY = 8 // deep analyses run in parallel waves to cut wall-time
-const DEEP_DEADLINE_MS = 170_000
-const NETWORK_DEADLINE_MS = 210_000
+const DEEP_DEADLINE_MS = 150_000
+const NETWORK_DEADLINE_MS = 200_000
+const MAX_HOPS = 6 // hard ceiling on the self-chain
+const MAX_RUN_USD = 8 // a single scan may not spend more than this
 const CONTAINER_MINE_CAP = 25 // max container pages to mine per run
 const MINED_OFFERS_CAP = 20 // max offers to take from one container
 const MINED_TOTAL_CAP = 150 // overall cap on mined candidates (bounds 2nd triage)
@@ -64,12 +72,18 @@ function expandQueries(base: string[], vertical: string): string[] {
   return out
 }
 
-// Breadth → fan-out. queries: how many of a source's templates to use;
-// resultsPerQuery: web-search results each.
-const BREADTH_PARAMS: Record<string, { queries: number; resultsPerQuery: number }> = {
-  quick: { queries: 1, resultsPerQuery: 5 },
-  standard: { queries: 3, resultsPerQuery: 10 },
-  deep: { queries: 5, resultsPerQuery: 15 },
+// Breadth → fan-out AND how many survivors get deep-analysed. Measured cost of
+// one deep analysis is ~$0.058, so deepTarget is the dial that decides what a
+// scan costs: roughly $1 / $2.8 / $6.5. It used to control only the search
+// fan-out, while the deep stage silently analysed whatever it managed before
+// dying — which is how a "standard" scan produced 8 analyses out of 110.
+const BREADTH_PARAMS: Record<
+  string,
+  { queries: number; resultsPerQuery: number; deepTarget: number }
+> = {
+  quick: { queries: 1, resultsPerQuery: 5, deepTarget: 15 },
+  standard: { queries: 3, resultsPerQuery: 10, deepTarget: 45 },
+  deep: { queries: 5, resultsPerQuery: 15, deepTarget: 150 },
 }
 
 Deno.serve(async (req: Request) => {
@@ -77,12 +91,27 @@ Deno.serve(async (req: Request) => {
   if (preflight) return preflight
 
   try {
-    const user = await requireAdmin(req)
-
     const body = (await req.json().catch(() => ({}))) as {
       vertical_id?: string
       breadth?: string
+      run_id?: string
+      phase?: string
+      hop?: number
     }
+
+    // Continue an existing run's deep pass on a fresh clock. Reached two ways:
+    // the run chaining to itself (x-cron-secret), or an admin pressing Resume
+    // on a run that stalled. Deliberately narrow — it can only continue a run
+    // that already exists, never start a scan.
+    if (body.run_id && body.phase === 'deep') {
+      await requireAdminOrCron(req)
+      const runId = body.run_id
+      const hop = typeof body.hop === 'number' ? body.hop : 0
+      EdgeRuntime.waitUntil(runDeepPhase({ runId, hop }))
+      return jsonResponse({ run_id: runId, resumed: true, hop }, 200)
+    }
+
+    const user = await requireAdmin(req)
     if (!body.vertical_id) return jsonResponse({ error: 'vertical_id is required' }, 400)
     const breadth = body.breadth && body.breadth in BREADTH_PARAMS ? body.breadth : 'standard'
 
@@ -91,6 +120,15 @@ Deno.serve(async (req: Request) => {
       await assertNotPaused('DiscoveryDeepOrchestrator')
     } catch (err) {
       if (err instanceof OrchestratorPausedError) return jsonResponse({ error: err.message }, 503)
+      throw err
+    }
+
+    try {
+      await assertUnderDiscoveryDailyCap()
+    } catch (err) {
+      if (err instanceof DiscoveryCapExceededError) {
+        return jsonResponse({ error: err.message }, 429)
+      }
       throw err
     }
 
@@ -462,17 +500,111 @@ async function processDiscovery(args: {
       }
     }
 
-    // Best triage scores first, so the deep cap takes the strongest survivors.
-    survivors.sort((a, b) => b.score - a.score)
+    // Survivors now sit in the DB at stage='triaged'. The deep phase reads
+    // them from there rather than from memory, which is what lets a later
+    // invocation pick up exactly where this one ran out of clock.
+    await admin.from('discovery_runs').update({
+      status: 'analyzing',
+      counts: {
+        discovered: candidates.length + minedTotal,
+        triaged: survivors.length,
+        analyzed: 0,
+      },
+      total_cost_usd: totalCost,
+    }).eq('id', args.runId)
 
-    // 3) DEEP — Sonnet on the top survivors (cap), fetching each page.
-    await admin.from('discovery_runs').update({ status: 'analyzing' }).eq('id', args.runId)
-    const toAnalyze = survivors.slice(0, DEEP_ANALYSIS_CAP)
-    let analyzedCount = 0
+    await runDeepPhase({ runId: args.runId, hop: 0, alreadyElapsedMs: elapsed() })
+  } catch (err) {
+    await admin
+      .from('discovery_runs')
+      .update({
+        status: 'failed',
+        error_message: err instanceof Error ? err.message : String(err),
+        total_cost_usd: totalCost,
+        completed_at: new Date().toISOString(),
+      })
+      .eq('id', args.runId)
+  }
+}
 
-    // One candidate's deep analysis — returns its cost + success so parallel
-    // waves don't race the shared counters. Each candidate is persisted as it
-    // finishes, so partial progress survives even if the run is cut short.
+/**
+ * One invocation's worth of deep analysis, then either hand off or finish.
+ *
+ * Reads its work from `discovery_candidates` at stage='triaged' instead of from
+ * memory, so any invocation can continue any run. That is the whole trick: the
+ * progress was always in the database — candidates move to 'analyzed' one at a
+ * time — and nothing was using it.
+ *
+ * Ends in exactly one of two states, never in limbo: chained to a fresh clock,
+ * or finalised with an honest account of what it managed.
+ */
+async function runDeepPhase(args: {
+  runId: string
+  hop: number
+  /** Time already burnt by discovery/triage/mine in this same invocation. */
+  alreadyElapsedMs?: number
+}): Promise<void> {
+  const admin = getAdminClient()
+  const spent = args.alreadyElapsedMs ?? 0
+  const pastDeadline = deadlineAfter(Math.max(DEEP_DEADLINE_MS - spent, 15_000))
+  let totalCost = 0
+
+  try {
+    const { data: run } = await admin
+      .from('discovery_runs')
+      .select('config, counts, total_cost_usd, vertical_id, triggered_by, status')
+      .eq('id', args.runId)
+      .maybeSingle()
+    if (!run || run.status === 'completed' || run.status === 'failed') return
+
+    const counts = (run.counts ?? {}) as Record<string, number>
+    const costSoFar = Number(run.total_cost_usd ?? 0)
+    const breadth = ((run.config ?? {}) as { breadth?: string }).breadth ?? 'standard'
+    const deepTarget = (BREADTH_PARAMS[breadth] ?? BREADTH_PARAMS.standard).deepTarget
+
+    // Stop conditions checked BEFORE spending anything.
+    const stop = async (reason: string): Promise<void> => {
+      await finaliseRun(admin, args.runId, counts, costSoFar, reason)
+    }
+    // The kill switch has to be read here, at the hop boundary: inside
+    // analyzeOne its throw is swallowed as a per-candidate failure, which
+    // degrades a run instead of stopping it.
+    try {
+      await assertNotPaused('DiscoveryDeepOrchestrator')
+    } catch {
+      return stop('Stopped: the DiscoveryDeep kill switch was flipped.')
+    }
+    if (costSoFar >= MAX_RUN_USD) {
+      return stop(`Stopped at the $${MAX_RUN_USD} per-run ceiling.`)
+    }
+    if (args.hop >= MAX_HOPS) {
+      return stop(`Stopped after ${MAX_HOPS} continuations.`)
+    }
+
+    const budgetLeft = deepTarget - (counts.analyzed ?? 0)
+    if (budgetLeft <= 0) return stop('')
+
+    const { data: vertical } = await admin
+      .from('verticals')
+      .select('slug')
+      .eq('id', run.vertical_id)
+      .maybeSingle()
+    const verticalSlug = (vertical as { slug?: string } | null)?.slug
+
+    const { data: pending } = await admin
+      .from('discovery_candidates')
+      .select('id, name, url')
+      .eq('run_id', args.runId)
+      .eq('stage', 'triaged')
+      .order('triage_score', { ascending: false })
+      .limit(budgetLeft)
+    const toAnalyze = (pending ?? []) as Array<{
+      id: string
+      name: string
+      url: string | null
+    }>
+    if (toAnalyze.length === 0) return stop('')
+
     const analyzeOne = async (s: {
       id: string
       name: string
@@ -484,8 +616,8 @@ async function processDiscovery(args: {
         orchestratorName: 'DiscoveryDeepOrchestrator',
         agentVersion: Deno.env.get('ANTHROPIC_API_KEY') ? 'real-v1' : 'mock-v1',
         model: Deno.env.get('ANTHROPIC_API_KEY') ? 'claude-sonnet-4-6' : 'mock',
-        inputPayload: { candidate_id: s.id },
-        userId: args.userId,
+        inputPayload: { candidate_id: s.id, run_id: args.runId, hop: args.hop },
+        userId: run.triggered_by ?? undefined,
       })
       try {
         const deep = await runDiscoveryDeep({ name: s.name, url: s.url, rawText }, verticalSlug)
@@ -507,154 +639,190 @@ async function processDiscovery(args: {
         return { cost: deep.usage?.cost_usd ?? 0, analyzed: true }
       } catch (err) {
         await recordRunError(deepRunId, err instanceof Error ? err.message : String(err))
-        // leave the candidate at 'triaged' — partial run, not a hard failure
+        // leave the candidate at 'triaged' — a later hop can retry it
         return { cost: 0, analyzed: false }
       }
     }
 
-    // Parallel waves to cut wall-time, and stop starting new ones once the
-    // budget is spent. Without this the function is killed mid-wave and the run
-    // row is never updated, which is why five of the last twelve runs sat in
-    // 'analyzing' forever. Candidates we don't reach stay at 'triaged' and are
-    // reported, not silently dropped.
-    let deepSkipped = 0
-    for (let off = 0; off < toAnalyze.length; off += DEEP_CONCURRENCY) {
-      if (elapsed() > DEEP_DEADLINE_MS) {
-        deepSkipped = toAnalyze.length - off
-        break
-      }
-      const wave = toAnalyze.slice(off, off + DEEP_CONCURRENCY)
-      const rs = await Promise.all(wave.map((s) => analyzeOne(s)))
-      for (const r of rs) {
-        totalCost += r.cost
-        if (r.analyzed) analyzedCount++
-      }
+    const wave = await processInWaves(toAnalyze, DEEP_CONCURRENCY, pastDeadline, analyzeOne)
+    let analyzedThisHop = 0
+    for (const r of wave.results) {
+      totalCost += r.cost
+      if (r.analyzed) analyzedThisHop++
     }
 
-    // 4) NETWORK ENRICHMENT — additive secondary pass on high-scoring survivors.
-    // For each top candidate (deep_score >= 70), look up which affiliate networks
-    // carry this offer and capture trending signals. If a candidate has already
-    // been promoted to an offer row, write the results there too.
-    // A failure here must never surface as a run failure.
-    try {
-      const { data: topCands } = await admin
-        .from('discovery_candidates')
-        .select('id, name, url, deep_score, promoted_offer_id')
-        .eq('run_id', args.runId)
-        .eq('stage', 'analyzed')
-        .gte('deep_score', NETWORK_ENRICH_MIN_SCORE)
-        // Enrichment is additive: skip it rather than let it eat the budget
-        // that finalising the run needs.
-        .limit(elapsed() > NETWORK_DEADLINE_MS ? 0 : 20)
-
-      const networkEnrichOne = async (cand: {
-        id: string
-        name: string
-        url: string | null
-        deep_score: number | null
-        promoted_offer_id: string | null
-      }): Promise<void> => {
-        try {
-          const networkResult = await runDiscoveryNetwork({
-            offer: { id: cand.promoted_offer_id ?? undefined, name: cand.name, url: cand.url },
-          })
-          const nc = networkResult.output as NetworkComparison
-          totalCost += networkResult.usage?.cost_usd ?? 0
-
-          // Park the result on the candidate. Everything below is gated on
-          // promoted_offer_id, which is null for the whole scan (promotion is a
-          // manual step afterwards) — so this Haiku call used to be paid for and
-          // thrown away every single time. approveCandidate reads it from here.
-          await admin
-            .from('discovery_candidates')
-            .update({ network_analysis: nc })
-            .eq('id', cand.id)
-
-          // A re-scan can hit a candidate that was already promoted; keep that
-          // offer's network data fresh.
-          if (cand.promoted_offer_id) {
-            const trendingSignal = nc.trending_signal ?? null
-            const trendingScore = trendingSignal === 'rising' ? 2 : trendingSignal === 'stable' ? 1 : trendingSignal === 'declining' ? -1 : 0
-
-            await admin
-              .from('offers')
-              .update({ trending_signal: trendingSignal, trending_score: trendingScore })
-              .eq('id', cand.promoted_offer_id)
-
-            if (nc.networks_found.length > 0) {
-              // Mirrors writeNetworkData in src/lib/actions/discovery.ts. The
-              // reason belongs to the recommended network, not to whichever
-              // one happens to be first, and trending_evidence used to be
-              // dropped on the floor.
-              const rows = nc.networks_found.map((n) => ({
-                offer_id: cand.promoted_offer_id as string,
-                network_name: n.network_name,
-                epc_usd: n.estimated_epc_usd ?? null,
-                commission_type: n.estimated_commission_type ?? null,
-                is_recommended: nc.recommended_network === n.network_name,
-                notes: [
-                  `confidence: ${n.confidence}`,
-                  nc.recommended_network === n.network_name
-                    ? nc.recommended_reason
-                    : null,
-                  nc.trending_evidence ? `trend: ${nc.trending_evidence}` : null,
-                ]
-                  .filter(Boolean)
-                  .join(' | '),
-              }))
-              // upsert so re-runs don't duplicate
-              await admin
-                .from('offer_network_data')
-                .upsert(rows, { onConflict: 'offer_id,network_name', ignoreDuplicates: false })
-            }
-          }
-        } catch {
-          // individual enrichment failure is non-fatal
-        }
-      }
-
-      for (let off = 0; off < (topCands ?? []).length; off += NETWORK_ENRICH_CONCURRENCY) {
-        if (elapsed() > NETWORK_DEADLINE_MS) break
-        const wave = (topCands ?? []).slice(off, off + NETWORK_ENRICH_CONCURRENCY)
-        await Promise.all(wave.map(networkEnrichOne))
-      }
-    } catch {
-      // enrichment block failure must never fail the run
+    const newCounts = {
+      ...counts,
+      analyzed: (counts.analyzed ?? 0) + analyzedThisHop,
     }
-
+    const newCost = costSoFar + totalCost
     await admin
       .from('discovery_runs')
-      .update({
-        status: 'completed',
-        // No `approved` key: approval is a human step taken after the run, so
-        // the run can never know it. It used to be written as a hardcoded 0,
-        // which the admin table rendered as a real (always-zero) figure.
-        counts: {
-          discovered: candidates.length + minedTotal,
-          triaged: survivors.length,
-          analyzed: analyzedCount,
-        },
-        total_cost_usd: totalCost,
-        completed_at: new Date().toISOString(),
-        // Say so when the budget cut the deep pass short, rather than letting
-        // a partial run read as a complete one.
-        error_message:
-          deepSkipped > 0
-            ? `Deep analysis stopped after ${analyzedCount} candidates (${deepSkipped} left unanalysed) — ran out of the edge function's time budget at ${Math.round(elapsed() / 1000)}s. They remain at 'triaged'.`
-            : null,
-      })
+      .update({ counts: newCounts, total_cost_usd: newCost })
       .eq('id', args.runId)
+
+    const { count: stillPending } = await admin
+      .from('discovery_candidates')
+      .select('*', { count: 'exact', head: true })
+      .eq('run_id', args.runId)
+      .eq('stage', 'triaged')
+
+    const moreToDo = (stillPending ?? 0) > 0 && newCounts.analyzed < deepTarget
+    // A hop that analysed nothing must not chain — that is the guard against a
+    // run looping forever on candidates that all fail.
+    const worthContinuing =
+      moreToDo && analyzedThisHop > 0 && newCost < MAX_RUN_USD && args.hop + 1 < MAX_HOPS
+
+    if (worthContinuing) {
+      const handedOff = await invokeSelf('discover-offers', {
+        run_id: args.runId,
+        phase: 'deep',
+        hop: args.hop + 1,
+      })
+      if (handedOff) return
+      // Hand-off refused: finish here rather than strand the run. The Resume
+      // button on the run page can pick it up.
+      await finaliseRun(
+        admin,
+        args.runId,
+        newCounts,
+        newCost,
+        `Could not continue automatically after ${newCounts.analyzed} candidates; ${stillPending} still at 'triaged'. Press Resume to carry on.`
+      )
+      return
+    }
+
+    await enrichNetworks(admin, args.runId, (c) => {
+      totalCost += c
+    })
+
+    await finaliseRun(
+      admin,
+      args.runId,
+      newCounts,
+      newCost,
+      moreToDo
+        ? `Stopped after ${newCounts.analyzed} candidates with ${stillPending} still at 'triaged' — ${
+            analyzedThisHop === 0 ? 'the last pass analysed none of them' : `the ${breadth} target of ${deepTarget} was reached`
+          }.`
+        : ''
+    )
   } catch (err) {
     await admin
       .from('discovery_runs')
       .update({
         status: 'failed',
         error_message: err instanceof Error ? err.message : String(err),
-        total_cost_usd: totalCost,
         completed_at: new Date().toISOString(),
       })
       .eq('id', args.runId)
   }
+}
+
+/**
+ * Which networks carry the top candidates, and are they trending.
+ *
+ * Additive: a failure here degrades the result, it never fails the run. Runs
+ * once, on the last hop, because it only makes sense over the finished set.
+ */
+async function enrichNetworks(
+  admin: ReturnType<typeof getAdminClient>,
+  runId: string,
+  addCost: (usd: number) => void
+): Promise<void> {
+  const pastDeadline = deadlineAfter(NETWORK_DEADLINE_MS - DEEP_DEADLINE_MS)
+  try {
+    const { data: topCands } = await admin
+      .from('discovery_candidates')
+      .select('id, name, url, deep_score, promoted_offer_id')
+      .eq('run_id', runId)
+      .eq('stage', 'analyzed')
+      .gte('deep_score', NETWORK_ENRICH_MIN_SCORE)
+      .limit(20)
+
+    await processInWaves(
+      (topCands ?? []) as Array<{
+        id: string
+        name: string
+        url: string | null
+        promoted_offer_id: string | null
+      }>,
+      NETWORK_ENRICH_CONCURRENCY,
+      pastDeadline,
+      async (cand) => {
+        try {
+          const networkResult = await runDiscoveryNetwork({
+            offer: { id: cand.promoted_offer_id ?? undefined, name: cand.name, url: cand.url },
+          })
+          const nc = networkResult.output as NetworkComparison
+          addCost(networkResult.usage?.cost_usd ?? 0)
+
+          // Park it on the candidate regardless. Every write here used to be
+          // gated on promoted_offer_id, which is null for the whole scan, so
+          // this Haiku call was paid for and discarded every single time.
+          await admin
+            .from('discovery_candidates')
+            .update({ network_analysis: nc })
+            .eq('id', cand.id)
+
+          if (cand.promoted_offer_id) {
+            const signal = nc.trending_signal ?? null
+            await admin
+              .from('offers')
+              .update({
+                trending_signal: signal,
+                trending_score:
+                  signal === 'rising' ? 2 : signal === 'stable' ? 1 : signal === 'declining' ? -1 : 0,
+              })
+              .eq('id', cand.promoted_offer_id)
+
+            if (nc.networks_found.length > 0) {
+              await admin.from('offer_network_data').upsert(
+                nc.networks_found.map((n) => ({
+                  offer_id: cand.promoted_offer_id as string,
+                  network_name: n.network_name,
+                  epc_usd: n.estimated_epc_usd ?? null,
+                  commission_type: n.estimated_commission_type ?? null,
+                  is_recommended: nc.recommended_network === n.network_name,
+                  notes: [
+                    `confidence: ${n.confidence}`,
+                    nc.recommended_network === n.network_name ? nc.recommended_reason : null,
+                    nc.trending_evidence ? `trend: ${nc.trending_evidence}` : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' | '),
+                })),
+                { onConflict: 'offer_id,network_name', ignoreDuplicates: false }
+              )
+            }
+          }
+        } catch {
+          // individual enrichment failure is non-fatal
+        }
+      }
+    )
+  } catch {
+    // enrichment block failure must never fail the run
+  }
+}
+
+async function finaliseRun(
+  admin: ReturnType<typeof getAdminClient>,
+  runId: string,
+  counts: Record<string, number>,
+  totalCost: number,
+  note: string
+): Promise<void> {
+  await admin
+    .from('discovery_runs')
+    .update({
+      status: 'completed',
+      counts,
+      total_cost_usd: totalCost,
+      completed_at: new Date().toISOString(),
+      error_message: note || null,
+    })
+    .eq('id', runId)
 }
 
 // Local copy of the dedup domain normalizer (the Node helper in

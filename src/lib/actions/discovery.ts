@@ -46,6 +46,26 @@ export async function startScan(
   return data as { run_id: string }
 }
 
+/**
+ * Continue a run whose deep pass stopped early.
+ *
+ * The deep stage chains itself across invocations, but a hand-off can fail —
+ * and a run stranded mid-flight is the exact bug that left five runs sitting in
+ * 'analyzing' forever. This is the manual way back in: the work is all in the
+ * database, so anyone can pick it up.
+ */
+export async function resumeRun(
+  runId: string
+): Promise<{ error: string } | void> {
+  if (!(await isCurrentUserAdmin())) return { error: 'Admin only.' }
+  const supabase = await createClient()
+  const { error } = await supabase.functions.invoke('discover-offers', {
+    body: { run_id: runId, phase: 'deep' },
+  })
+  if (error) return { error: error.message }
+  revalidatePath(`/admin/discovery/${runId}`)
+}
+
 function slugify(value: string): string {
   return value
     .toLowerCase()

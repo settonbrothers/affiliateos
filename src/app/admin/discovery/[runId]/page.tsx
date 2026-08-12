@@ -8,6 +8,7 @@ import {
   rankAnalyzed,
   type CandidateLike,
 } from '@/lib/discovery/funnel'
+import { ResumeRunButton } from '@/components/discovery/ResumeRunButton'
 import { TranslationBatchFiller } from '@/components/i18n/TranslationBatchFiller'
 import { getTranslatedPayload } from '@/lib/i18n/translatedPayload'
 import { getDiscoveryRun, listCandidates } from '@/lib/queries/discovery'
@@ -80,6 +81,16 @@ export default async function DiscoveryRunPage({
       </div>
 
       <FunnelBar counts={counts} />
+
+      {/* Candidates still waiting at 'triaged' — the deep pass ran out of clock
+          or hit its target. The work is all in the database, so it can simply
+          be continued. */}
+      {candidates.filter((c) => c.stage === 'triaged').length > 0 && (
+        <ResumeRunButton
+          runId={run.id}
+          pending={candidates.filter((c) => c.stage === 'triaged').length}
+        />
+      )}
 
       {/* Fills the translation cache the render above reads from. Scoped to the
           candidates actually worth reading (and capped in the action), so a

@@ -64,3 +64,50 @@ export async function assertUnderDailyCap(workspaceId: string): Promise<void> {
     throw new DailyCapExceededError(workspaceId, spent, cap)
   }
 }
+
+// Discovery is admin-triggered and has no workspace, so assertUnderDailyCap —
+// which is scoped to one — cannot protect it. That is precisely why it was the
+// only user-triggered function with no spend guard at all: harmless while a
+// scan cost $0.07, indefensible now that one can reach several dollars and
+// chain itself across invocations unattended.
+export const DISCOVERY_DAILY_USD_CAP = Number(
+  Deno.env.get('DISCOVERY_DAILY_USD_CAP') ?? 25
+)
+
+const DISCOVERY_ORCHESTRATORS = [
+  'DiscoveryTriageOrchestrator',
+  'DiscoveryDeepOrchestrator',
+  'DiscoveryMineOrchestrator',
+  'DiscoveryNetworkOrchestrator',
+]
+
+export class DiscoveryCapExceededError extends Error {
+  constructor(
+    public readonly spentUsd: number,
+    public readonly capUsd: number
+  ) {
+    super(
+      `Discovery has spent $${spentUsd.toFixed(2)} today against a $${capUsd.toFixed(2)} cap. ` +
+        `Try again tomorrow, or raise DISCOVERY_DAILY_USD_CAP.`
+    )
+    this.name = 'DiscoveryCapExceededError'
+  }
+}
+
+/** Today's discovery spend across every scan, regardless of workspace. */
+export async function assertUnderDiscoveryDailyCap(): Promise<void> {
+  const { data } = await getAdminClient()
+    .from('ai_runs')
+    .select('estimated_cost')
+    .in('orchestrator_name', DISCOVERY_ORCHESTRATORS)
+    .eq('status', 'success')
+    .gte('completed_at', startOfUtcDayIso())
+
+  const spent = (data ?? []).reduce(
+    (sum, r) => sum + Number((r as { estimated_cost: number | null }).estimated_cost ?? 0),
+    0
+  )
+  if (isOverDailyCap(spent, DISCOVERY_DAILY_USD_CAP)) {
+    throw new DiscoveryCapExceededError(spent, DISCOVERY_DAILY_USD_CAP)
+  }
+}
