@@ -154,10 +154,13 @@ export type Database = {
       ad_copy_generations: {
         Row: {
           ai_run_id: string | null
+          creative_hint: string | null
           created_at: string
           created_by_user_id: string | null
+          engine_version: string
           id: string
           offer_id: string
+          output_status: string | null
           payload: Json
           source_underwriting_run_id: string | null
           status: string
@@ -167,10 +170,13 @@ export type Database = {
         }
         Insert: {
           ai_run_id?: string | null
+          creative_hint?: string | null
           created_at?: string
           created_by_user_id?: string | null
+          engine_version?: string
           id?: string
           offer_id: string
+          output_status?: string | null
           payload: Json
           source_underwriting_run_id?: string | null
           status?: string
@@ -180,10 +186,13 @@ export type Database = {
         }
         Update: {
           ai_run_id?: string | null
+          creative_hint?: string | null
           created_at?: string
           created_by_user_id?: string | null
+          engine_version?: string
           id?: string
           offer_id?: string
+          output_status?: string | null
           payload?: Json
           source_underwriting_run_id?: string | null
           status?: string
