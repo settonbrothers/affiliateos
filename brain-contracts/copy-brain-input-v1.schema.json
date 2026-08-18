@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://affx.local/schemas/copy-brain-input-v1.schema.json",
+  "title": "CopyBrainInputSnapshotV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "snapshot_id", "captured_at", "origin", "fixture_only",
+    "offer", "campaign_context", "underwriting", "compliance", "sources",
+    "research_documents", "deep_brief", "spy_analyses", "market_examples",
+    "performance_winners", "avatar", "test_kit", "taste_corpus", "hook_library",
+    "creative_hint", "missing_inputs", "omitted_context", "snapshot_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": "copy-brain-input-v1" },
+    "snapshot_id": { "type": "string", "minLength": 1 },
+    "captured_at": { "type": "string", "format": "date-time" },
+    "origin": { "enum": ["affx", "synthetic_fixture"] },
+    "fixture_only": { "type": "boolean" },
+    "offer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "website_url", "affiliate_program_url", "network", "vendor_name", "vertical", "primary_language", "description"],
+      "properties": {
+        "id": { "type": "string" }, "name": { "type": "string" },
+        "website_url": { "type": ["string", "null"], "format": "uri" },
+        "affiliate_program_url": { "type": ["string", "null"], "format": "uri" },
+        "network": { "type": ["string", "null"] }, "vendor_name": { "type": ["string", "null"] },
+        "vertical": { "type": ["string", "null"] }, "primary_language": { "type": ["string", "null"] },
+        "description": { "type": ["string", "null"] }
+      }
+    },
+    "campaign_context": {
+      "type": "object", "additionalProperties": false,
+      "required": ["channel", "geo", "audience", "generation_language"],
+      "properties": {
+        "channel": { "type": ["string", "null"] }, "geo": { "type": "array", "items": { "type": "string" } },
+        "audience": { "type": ["string", "null"] }, "generation_language": { "const": "he" }
+      }
+    },
+    "underwriting": { "type": ["object", "null"] },
+    "compliance": { "type": ["object", "null"] },
+    "sources": { "type": "array", "items": { "$ref": "#/$defs/source" } },
+    "research_documents": { "type": "array", "items": { "type": "object" } },
+    "deep_brief": { "type": ["object", "null"] },
+    "spy_analyses": { "type": "array", "items": { "type": "object" } },
+    "market_examples": { "type": "array", "items": { "type": "object" } },
+    "performance_winners": { "type": "array", "items": { "$ref": "#/$defs/winner" } },
+    "avatar": { "type": ["object", "null"] },
+    "test_kit": { "type": ["object", "null"] },
+    "taste_corpus": { "type": "array", "items": { "type": "object" } },
+    "hook_library": { "type": "array", "items": { "type": "object" } },
+    "creative_hint": { "type": ["string", "null"] },
+    "missing_inputs": { "type": "array", "items": { "type": "string" } },
+    "omitted_context": { "type": "array", "items": { "$ref": "#/$defs/omission" } },
+    "snapshot_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+  },
+  "$defs": {
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_id", "source_type", "source_url", "source_quote", "claim", "priority", "verified", "snapshot_sha256"],
+      "properties": {
+        "source_id": { "type": "string" },
+        "source_type": { "enum": ["network_platform", "independent_research", "independent_review", "first_party_document", "operator_note", "spy_example", "campaign_result"] },
+        "source_url": { "type": ["string", "null"], "format": "uri" }, "source_quote": { "type": ["string", "null"] },
+        "claim": { "type": "string" }, "priority": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "verified": { "type": "boolean" }, "snapshot_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "winner": {
+      "type": "object", "additionalProperties": false,
+      "required": ["winner_id", "offer_id", "campaign_id", "creative_id", "hook", "metrics", "decision_rule", "source_ref"],
+      "properties": {
+        "winner_id": { "type": "string" }, "offer_id": { "type": "string" }, "campaign_id": { "type": "string" },
+        "creative_id": { "type": ["string", "null"] }, "hook": { "type": "string" },
+        "metrics": { "type": "object", "additionalProperties": { "type": "number" } },
+        "decision_rule": { "type": "string" }, "source_ref": { "type": "string" }
+      }
+    },
+    "omission": {
+      "type": "object", "additionalProperties": false, "required": ["section", "reason", "source_refs"],
+      "properties": { "section": { "type": "string" }, "reason": { "type": "string" }, "source_refs": { "type": "array", "items": { "type": "string" } } }
+    }
+  }
+}

@@ -1,0 +1,176 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://affex.local/creation-engine/schemas/deep-avatar.schema.json",
+  "title": "Deep Avatar (Stage 5) — האווטאר העמוק",
+  "description": "Output of stage-5-deep-avatar per doctrine/14: six layers, 24 fields, each field anchor-tagged (Anchoring Law): 'quote' [ציטוט] / 'category_inference' [היסק-קטגוריה] / 'unknown' [לא ידוע]. Empty beats pretty. This is the SEGMENT avatar; the per-ad mini-avatar lives in the memo (field 2b).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "offer_id",
+    "segment_name",
+    "identity",
+    "emotion_map",
+    "belief_map",
+    "market_position",
+    "buying_psychology",
+    "action_fields",
+    "declared_gaps"
+  ],
+  "properties": {
+    "offer_id": { "type": "string", "minLength": 1 },
+    "segment_name": { "type": "string", "minLength": 1, "description": "The stage-4 segment this avatar maps." },
+    "identity": {
+      "type": "object",
+      "description": "Layer A — identity and life picture (fields 1-3).",
+      "additionalProperties": false,
+      "required": ["portrait", "week_texture", "identity_gap"],
+      "properties": {
+        "portrait": { "$ref": "#/definitions/anchored_field", "description": "1. One person — name, age, life situation. Not a segment." },
+        "week_texture": { "$ref": "#/definitions/anchored_field", "description": "2. The concrete moments where the problem stings — which day, where, in front of whom." },
+        "identity_gap": { "$ref": "#/definitions/anchored_field", "description": "3. 'Who I am' vs 'who I became' — what the problem stole from her self-story. Feeds: identity angles." }
+      }
+    },
+    "emotion_map": {
+      "type": "object",
+      "description": "Layer B — emotion map (fields 4-8).",
+      "additionalProperties": false,
+      "required": ["fear_ladder", "three_am_thoughts", "shame_and_hiding", "dreams", "envy_comparison"],
+      "properties": {
+        "fear_ladder": {
+          "type": "object",
+          "description": "4. Three floors. The ad works one floor BELOW where competitors work.",
+          "additionalProperties": false,
+          "required": ["surface_fear", "deep_fear", "wordless_fear"],
+          "properties": {
+            "surface_fear": { "$ref": "#/definitions/anchored_field" },
+            "deep_fear": { "$ref": "#/definitions/anchored_field" },
+            "wordless_fear": { "$ref": "#/definitions/anchored_field" }
+          }
+        },
+        "three_am_thoughts": { "$ref": "#/definitions/anchored_field", "description": "5. What she tells no one. Feeds: confession hooks, 'how did you know' lines." },
+        "shame_and_hiding": { "$ref": "#/definitions/anchored_field", "description": "6. What she hides, from whom, and the LOGISTICS of hiding (the objects! the excuses!). Feeds: sensory details that make 'a real person wrote this'." },
+        "dreams": {
+          "type": "object",
+          "description": "7. Three levels. Feeds: the transformation arc, the story's payoff.",
+          "additionalProperties": false,
+          "required": ["near_dream", "deep_dream", "identity_dream"],
+          "properties": {
+            "near_dream": { "$ref": "#/definitions/anchored_field" },
+            "deep_dream": { "$ref": "#/definitions/anchored_field" },
+            "identity_dream": { "$ref": "#/definitions/anchored_field" }
+          }
+        },
+        "envy_comparison": { "$ref": "#/definitions/anchored_field", "description": "8. Who she measures herself against, and what about the other woman pinches. Feeds: social-proof and identification angles." }
+      }
+    },
+    "belief_map": {
+      "type": "object",
+      "description": "Layer C — belief map (fields 9-12).",
+      "additionalProperties": false,
+      "required": ["cause_theory", "who_is_blamed", "solution_beliefs", "past_attempts_scars"],
+      "properties": {
+        "cause_theory": { "$ref": "#/definitions/anchored_field", "description": "9. Why SHE thinks it happened to her (right or wrong — this is the belief the copy meets)." },
+        "who_is_blamed": { "$ref": "#/definitions/anchored_field", "description": "10. Herself / age / doctors / her body. Feeds: whom the ad absolves — the gold move of health categories." },
+        "solution_beliefs": { "$ref": "#/definitions/anchored_field", "description": "11. What she believes about the category ('supplements = scam'; 'it's just part of aging' — the fatalism belief is almost always the belief-to-shift)." },
+        "past_attempts_scars": { "$ref": "#/definitions/anchored_field", "description": "12. What she tried, why she thinks it failed, and the trust scar left. Feeds: differentiation must answer THE specific scar." }
+      }
+    },
+    "market_position": {
+      "type": "object",
+      "description": "Layer D — market position, Schwartz (fields 13-15).",
+      "additionalProperties": false,
+      "required": ["awareness_sophistication", "already_seen", "consumer_trust_wounds"],
+      "properties": {
+        "awareness_sophistication": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["awareness_stage", "sophistication_stage", "entry_point_note", "anchor"],
+          "properties": {
+            "awareness_stage": { "type": "string", "enum": ["unaware", "problem_aware", "solution_aware", "product_aware", "most_aware"] },
+            "sophistication_stage": { "type": "integer", "minimum": 1, "maximum": 5 },
+            "entry_point_note": { "type": "string", "minLength": 1, "description": "13. What this dictates for the entry point." },
+            "anchor": { "$ref": "#/definitions/anchor_tag" }
+          }
+        },
+        "already_seen": { "$ref": "#/definitions/anchored_field", "description": "14. Her ad-fatigue in this category: which promises no longer work on her. Cross-references the stage-2 saturation map." },
+        "consumer_trust_wounds": { "$ref": "#/definitions/anchored_field", "description": "15. The purchase that disappointed, the signup that drowned her in spam. Feeds: what NOT to do + trust signals." }
+      }
+    },
+    "buying_psychology": {
+      "type": "object",
+      "description": "Layer E — buying psychology (fields 16-20).",
+      "additionalProperties": false,
+      "required": ["stated_vs_real_objection", "purchase_context", "internal_price_anchor", "permission_needed", "decision_moment"],
+      "properties": {
+        "stated_vs_real_objection": {
+          "type": "object",
+          "description": "16. 'Does it work?' (stated) vs 'I can't survive another disappointment' (real). The ad answers the real one THROUGH the stated one.",
+          "additionalProperties": false,
+          "required": ["stated", "real", "anchor"],
+          "properties": {
+            "stated": { "type": "string", "minLength": 1 },
+            "real": { "type": "string", "minLength": 1 },
+            "anchor": { "$ref": "#/definitions/anchor_tag" }
+          }
+        },
+        "purchase_context": { "$ref": "#/definitions/anchored_field", "description": "17. Who sees the package, who sees the credit-card charge, how much discretion she needs. Critical in shame categories." },
+        "internal_price_anchor": { "$ref": "#/definitions/anchored_field", "description": "18. What she compares the amount to in her head. Feeds: the price-anchor function in the closing engine." },
+        "permission_needed": { "$ref": "#/definitions/anchored_field", "description": "19. What someone must tell her so she allows herself to believe it can be different. Feeds: the ad's turning line." },
+        "decision_moment": { "$ref": "#/definitions/anchored_field", "description": "20. When and where she clicks (at night in bed? after an embarrassing event?). Feeds: tone, timing, urgency." }
+      }
+    },
+    "action_fields": {
+      "type": "object",
+      "description": "Layer F — action fields: conclusions, not data (fields 21-24).",
+      "additionalProperties": false,
+      "required": ["voc_lines", "the_one_trigger", "transformation_arc", "forbidden_word"],
+      "properties": {
+        "voc_lines": {
+          "type": "array",
+          "minItems": 1,
+          "description": "21. Lines in THEIR words, each source-tagged.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["line", "anchor", "source"],
+            "properties": {
+              "line": { "type": "string", "minLength": 1 },
+              "anchor": { "$ref": "#/definitions/anchor_tag" },
+              "source": { "type": ["string", "null"] }
+            }
+          }
+        },
+        "the_one_trigger": { "$ref": "#/definitions/anchored_field", "description": "22. The single deepest emotion everything drains into." },
+        "transformation_arc": { "$ref": "#/definitions/anchored_field", "description": "23. Before → after, through HER eyes." },
+        "forbidden_word": { "$ref": "#/definitions/anchored_field", "description": "24. What must never be said to her (what triggers the defenses). No less important than what to say." }
+      }
+    },
+    "declared_gaps": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "definitions": {
+    "anchor_tag": {
+      "type": "string",
+      "enum": ["quote", "category_inference", "unknown"],
+      "description": "The Anchoring Law: quote=[ציטוט] (real stage-3 source) · category_inference=[היסק-קטגוריה] (reasoned, marked) · unknown=[לא ידוע] (empty beats pretty). Fabricated quotes presented as real = violation."
+    },
+    "anchored_field": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "anchor", "source"],
+      "properties": {
+        "value": {
+          "type": ["string", "null"],
+          "description": "The field content. null ONLY when anchor='unknown'."
+        },
+        "anchor": { "$ref": "#/definitions/anchor_tag" },
+        "source": {
+          "type": ["string", "null"],
+          "description": "Required (non-null) when anchor='quote'. For 'category_inference': the reasoning basis. null for 'unknown'."
+        }
+      }
+    }
+  }
+}

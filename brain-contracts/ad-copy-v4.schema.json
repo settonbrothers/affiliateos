@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://affex.local/integration/copy-engine-v4/ad-copy-v4.schema.json",
+  "definitions": {
+    "sourceEvidence": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_id", "source_type", "independence", "quality", "claim", "snapshot_sha256"],
+      "properties": {
+        "source_id": { "type": "string", "minLength": 1 },
+        "source_type": { "enum": ["documented_case", "customer_review", "independent_review", "study", "owner_verified_general_fact", "product_page", "program_record", "manual_note"] },
+        "independence": { "enum": ["independent", "first_party", "owner_verified"] },
+        "quality": { "enum": ["low", "medium", "high"] },
+        "claim": { "type": "string", "minLength": 1 },
+        "source_url": { "type": ["string", "null"] },
+        "source_quote": { "type": ["string", "null"] },
+        "snapshot_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "supportedOutcome": {
+      "type": "object", "additionalProperties": false,
+      "required": ["outcome_id", "statement", "intensity_ceiling", "evidence_basis", "source_ids", "typicality"],
+      "properties": {
+        "outcome_id": { "type": "string", "minLength": 1 }, "statement": { "type": "string", "minLength": 1 },
+        "intensity_ceiling": { "type": "string", "minLength": 1 },
+        "evidence_basis": { "enum": ["single_documented_case", "review_convergence", "study_plus_review", "owner_verified_general_condition", "mechanism_only"] },
+        "source_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "typicality": { "enum": ["individual_only", "representative", "unknown"] }
+      }
+    },
+    "evidenceEnvelope": {
+      "type": "object", "additionalProperties": false,
+      "required": ["research_status", "sources", "supported_outcomes", "allowed_scene_inventions", "source_required_elements", "forbidden_escalations", "vulnerability_constraints"],
+      "properties": {
+        "research_status": { "enum": ["ready", "story_insufficient_non_story_ready", "insufficient"] },
+        "sources": { "type": "array", "items": { "$ref": "#/definitions/sourceEvidence" } },
+        "supported_outcomes": { "type": "array", "items": { "$ref": "#/definitions/supportedOutcome" } },
+        "allowed_scene_inventions": { "type": "array", "uniqueItems": true, "items": { "enum": ["synthetic_name", "synthetic_person", "setting", "chronology", "mundane_action", "non_claim_dialogue", "sensory_detail"] } },
+        "source_required_elements": { "type": "array", "uniqueItems": true, "items": { "enum": ["outcome", "measurement", "diagnosis", "urgency", "scarcity", "quotation", "testimonial_attribution", "high_impact_vulnerability", "combined_vulnerability"] } },
+        "forbidden_escalations": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "vulnerability_constraints": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "narrativeLicense": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "decision_reason", "basis_outcome_ids", "character_status", "voice_mode", "disclosure_required", "allowed_inventions", "forbidden_inventions", "fallback_format", "requirements_met"],
+      "properties": {
+        "mode": { "enum": ["documented_case", "evidence_based_dramatization", "non_story", "blocked"] },
+        "decision_reason": { "type": "string", "minLength": 1 },
+        "basis_outcome_ids": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "character_status": { "enum": ["real", "synthetic", "not_applicable"] },
+        "voice_mode": { "enum": ["actual_testimonial", "dramatized_first_person_disclosed", "third_person_scenario", "brand_narrated", "non_story"] },
+        "disclosure_required": { "type": "boolean" },
+        "allowed_inventions": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "forbidden_inventions": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "fallback_format": { "type": ["string", "null"] },
+        "requirements_met": { "type": "boolean" }
+      }
+    },
+    "conversionSpine": {
+      "type": "object", "additionalProperties": false,
+      "required": ["person", "unmet_need_now", "scene_evidence", "consequence_without_offer", "truth_sources", "dominant_emotional_peak", "build_to_peak", "offer_mechanism", "why_offer_is_causal_solution", "unresolved_at_ask", "swap_test"],
+      "properties": {
+        "person": { "type": "string", "minLength": 1 }, "unmet_need_now": { "type": "string", "minLength": 1 },
+        "scene_evidence": { "type": "string", "minLength": 1 }, "consequence_without_offer": { "type": "string", "minLength": 1 },
+        "truth_sources": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "dominant_emotional_peak": { "type": "string", "minLength": 1 },
+        "build_to_peak": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "offer_mechanism": { "type": "string", "minLength": 1 }, "why_offer_is_causal_solution": { "type": "string", "minLength": 1 },
+        "unresolved_at_ask": { "type": "string", "minLength": 1 },
+        "swap_test": { "type": "object", "additionalProperties": false, "required": ["replacement_offer", "story_still_works", "conclusion"], "properties": { "replacement_offer": { "type": "string", "minLength": 1 }, "story_still_works": { "const": false }, "conclusion": { "type": "string", "minLength": 1 } } }
+      }
+    },
+    "killFlag": {
+      "enum": ["no_dominant_peak", "unmet_need_not_scene", "problem_closed_before_ask", "offer_not_causal", "swap_test_passes", "wording_stronger_than_fact", "claim_violation", "evidence_threshold_unmet", "fake_testimonial", "disclosure_required", "invented_claim_detail", "vulnerability_stack", "missing_block_coverage", "wrong_audience", "weak_fold", "visual_density", "no_soul", "low_momentum", "boring"]
+    }
+  },
+  "type": "object", "additionalProperties": false,
+  "required": ["language", "status", "evidence_envelope", "narrative_license", "variant", "conversion_spine", "judge", "trace", "user_message"],
+  "properties": {
+    "language": { "const": "he" },
+    "status": { "enum": ["ready_for_user", "needs_evidence", "compliance_review", "blocked"] },
+    "evidence_envelope": { "$ref": "#/definitions/evidenceEnvelope" },
+    "narrative_license": { "$ref": "#/definitions/narrativeLicense" },
+    "variant": { "type": ["object", "null"], "additionalProperties": false, "properties": { "primary_text": { "type": "string" }, "headline": { "type": "string" }, "hook": { "type": "string" }, "cta_button": { "type": "string" } } },
+    "conversion_spine": { "oneOf": [{ "$ref": "#/definitions/conversionSpine" }, { "type": "null" }] },
+    "judge": { "type": "object", "additionalProperties": false, "required": ["overall", "kill_flags", "calibrated", "evidence"], "properties": { "overall": { "enum": ["pass", "fail", "advisory"] }, "kill_flags": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/definitions/killFlag" } }, "calibrated": { "const": false }, "evidence": { "type": "array", "items": { "type": "string", "minLength": 1 } } } },
+    "trace": { "type": "object", "additionalProperties": false, "required": ["line_purpose_map", "source_snapshot_refs", "reader_report_ref", "critic_report_ref"], "properties": { "line_purpose_map": { "type": "array", "items": { "type": "object" } }, "source_snapshot_refs": { "type": "array", "items": { "type": "string", "minLength": 1 } }, "reader_report_ref": { "type": ["string", "null"] }, "critic_report_ref": { "type": ["string", "null"] } } },
+    "user_message": { "type": "string" }
+  }
+}
