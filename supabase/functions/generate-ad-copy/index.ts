@@ -22,7 +22,16 @@ import {
 } from '../_shared/killSwitch.ts'
 import { createTrace, recordGeneration } from '../_shared/langfuseClient.ts'
 import { runAdCopy, type AdCopyInput } from '../_shared/orchestrators/adCopy.ts'
+import {
+  createCopyBrainSnapshot,
+  missingCopyBrainInputs,
+} from '../_shared/orchestrators/copyBrainSnapshot.ts'
+import { sha256Text } from '../_shared/orchestrators/adCopyEvidenceResearch.ts'
 import type { TasteExample } from '../_shared/orchestrators/adCopyLogic.ts'
+import {
+  StoredAvatarSchema,
+  type CopyBrainInputSnapshotV1,
+} from '../_shared/types/copyBrain.ts'
 import {
   recordRunError,
   recordRunStart,
@@ -97,7 +106,7 @@ Deno.serve(async (req: Request) => {
     const { data: offer, error: offerErr } = await admin
       .from('offers')
       .select(
-        'id, workspace_id, vertical_id, name, website_url, operator_notes, verticals(slug)'
+        'id, workspace_id, vertical_id, name, website_url, affiliate_program_url, network, vendor_name, primary_language, short_description, operator_notes, verticals(slug)'
       )
       .eq('id', offerId)
       .single()
@@ -144,10 +153,44 @@ Deno.serve(async (req: Request) => {
     // verdict is built from) feed product excavation.
     const { data: factsRows } = await admin
       .from('extracted_facts')
-      .select('fact_type, fact_value, source_quote, confidence_score')
+      .select(
+        'source_document_id, fact_type, fact_value, source_quote, confidence_score'
+      )
       .eq('offer_id', offerId)
       .eq('status', 'verified')
     const facts = factsRows ?? []
+
+    const { data: sourceDocumentRows } = await admin
+      .from('source_documents')
+      .select(
+        'id, url, doc_type, raw_text, source_summary, source_reliability_score, status'
+      )
+      .eq('offer_id', offerId)
+      .in('status', ['fetched', 'extracted'])
+    const sourceDocuments = sourceDocumentRows ?? []
+
+    const { data: underwritingRow } = await admin
+      .from('ai_runs')
+      .select('output_payload')
+      .eq('offer_id', offerId)
+      .eq('orchestrator_name', 'UnderwritingOrchestrator')
+      .eq('status', 'success')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    const underwritingContext =
+      (underwritingRow?.output_payload as Record<string, unknown> | null) ??
+      null
+
+    const { data: complianceRow } = await admin
+      .from('offer_compliance_warnings')
+      .select('payload')
+      .eq('offer_id', offerId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    const complianceContext =
+      (complianceRow?.payload as Record<string, unknown> | null) ?? null
 
     // Latest consumer-facing test kit (angles, hooks, target_audience) — prior
     // work the copy builds on rather than regenerating from scratch.
@@ -183,15 +226,41 @@ Deno.serve(async (req: Request) => {
       (avatarRow?.payload as Record<string, unknown> | null) ?? null
 
     // Fetch spy analysis context (optional — non-fatal if missing).
-    const { data: spyRow } = await admin
+    const { data: spyRows } = await admin
       .from('spy_analyses')
-      .select('payload')
+      .select('id, payload, input_type, raw_input, created_at')
       .eq('offer_id', offerId)
       .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
+      .limit(10)
+    const spyHistory = (spyRows ?? []).map((row) => ({
+      id: row.id,
+      input_type: row.input_type,
+      raw_input: row.raw_input,
+      created_at: row.created_at,
+      payload: row.payload,
+    }))
     const spyContext =
-      (spyRow?.payload as Record<string, unknown> | null) ?? null
+      (spyRows?.[0]?.payload as Record<string, unknown> | undefined) ?? null
+
+    const { data: campaignRows } = await admin
+      .from('campaigns')
+      .select('id')
+      .eq('offer_id', offerId)
+    const campaignIds = (campaignRows ?? []).map((row) => row.id)
+    const { data: campaignResultRows } = campaignIds.length
+      ? await admin
+          .from('campaign_results')
+          .select(
+            'campaign_id, spend_usd, impressions, clicks, landing_views, conversions, revenue_usd, days_running'
+          )
+          .in('campaign_id', campaignIds)
+      : { data: [] }
+    const { data: diagnosisRows } = campaignIds.length
+      ? await admin
+          .from('result_diagnoses')
+          .select('campaign_id, creative_analysis')
+          .in('campaign_id', campaignIds)
+      : { data: [] }
 
     // Taste Corpus: human-labelled examples (Edit-Loop + any seed), scoped to the
     // workspace plus global admin examples. Drives few-shot + (later) calibration.
@@ -227,6 +296,160 @@ Deno.serve(async (req: Request) => {
       hook_type: r.hook_type as string,
       label: r.label as string,
     }))
+
+    const docsById = new Map(
+      sourceDocuments.map((doc) => [String(doc.id), doc] as const)
+    )
+    const brainSources: CopyBrainInputSnapshotV1['sources'] = await Promise.all(
+      facts.map(async (fact, index) => {
+        const sourceDocumentId = (
+          fact as { source_document_id?: string | null }
+        ).source_document_id
+        const doc = sourceDocumentId
+          ? docsById.get(sourceDocumentId)
+          : undefined
+        const docType = String(doc?.doc_type ?? 'unknown')
+        const sourceType =
+          docType === 'review_page'
+            ? 'independent_review'
+            : docType === 'manual_note'
+              ? 'operator_note'
+              : 'first_party_document'
+        const claim = String(fact.fact_value)
+        const quote = fact.source_quote ? String(fact.source_quote) : null
+        const sourceId = `fact-${index}-${String(fact.fact_type)}`
+        return {
+          source_id: sourceId,
+          source_type: sourceType as
+            'independent_review' | 'operator_note' | 'first_party_document',
+          source_url: typeof doc?.url === 'string' ? doc.url : null,
+          source_quote: quote,
+          claim,
+          priority:
+            sourceType === 'independent_review'
+              ? 2
+              : sourceType === 'first_party_document'
+                ? 3
+                : 5,
+          verified: true,
+          snapshot_sha256: await sha256Text(
+            `${sourceId}\n${claim}\n${quote ?? ''}`
+          ),
+        }
+      })
+    )
+    const resultByCampaign = new Map(
+      (campaignResultRows ?? []).map(
+        (row) => [String(row.campaign_id), row] as const
+      )
+    )
+    const performanceWinners: Array<{
+      winner_id: string
+      offer_id: string
+      campaign_id: string
+      creative_id: string | null
+      hook: string
+      metrics: Record<string, number>
+      decision_rule: string
+      source_ref: string
+    }> = []
+    for (const diagnosis of diagnosisRows ?? []) {
+      const campaignId = String(diagnosis.campaign_id)
+      const result = resultByCampaign.get(campaignId)
+      if (!result) continue
+      const metrics = {
+        spend_usd: Number(result.spend_usd),
+        impressions: Number(result.impressions),
+        clicks: Number(result.clicks),
+        conversions: Number(result.conversions),
+        revenue_usd: Number(result.revenue_usd),
+      }
+      const sourceRef = `campaign-${campaignId}`
+      brainSources.push({
+        source_id: sourceRef,
+        source_type: 'campaign_result',
+        source_url: null,
+        source_quote: null,
+        claim: `Measured campaign result for ${campaignId}`,
+        priority: 1,
+        verified: true,
+        snapshot_sha256: await sha256Text(
+          JSON.stringify({ campaignId, metrics })
+        ),
+      })
+      const analysis = Array.isArray(diagnosis.creative_analysis)
+        ? diagnosis.creative_analysis
+        : []
+      for (const [index, item] of analysis.entries()) {
+        if (!item || typeof item !== 'object') continue
+        const record = item as Record<string, unknown>
+        if (record.is_winner !== true || typeof record.hook !== 'string')
+          continue
+        performanceWinners.push({
+          winner_id: `${campaignId}-${index}`,
+          offer_id: offerId,
+          campaign_id: campaignId,
+          creative_id: null,
+          hook: record.hook,
+          metrics,
+          decision_rule:
+            typeof record.winner_reason === 'string'
+              ? record.winner_reason
+              : 'Diagnosis marked winner against measured campaign results.',
+          source_ref: sourceRef,
+        })
+      }
+    }
+
+    const brainSnapshot = await createCopyBrainSnapshot({
+      snapshot_id: crypto.randomUUID(),
+      captured_at: new Date().toISOString(),
+      origin: 'affx',
+      fixture_only: false,
+      offer: {
+        id: offer.id,
+        name: offer.name,
+        website_url: offer.website_url ?? null,
+        affiliate_program_url: offer.affiliate_program_url ?? null,
+        network: offer.network ?? null,
+        vendor_name: offer.vendor_name ?? null,
+        vertical: verticalSlug ?? null,
+        primary_language: offer.primary_language ?? null,
+        description: offer.short_description ?? offer.operator_notes ?? null,
+      },
+      campaign_context: {
+        channel: body.campaign_context?.channel ?? 'meta_facebook',
+        geo: body.campaign_context?.geo ? [body.campaign_context.geo] : [],
+        audience: body.campaign_context?.audience ?? null,
+        generation_language: 'he',
+      },
+      underwriting: underwritingContext,
+      compliance: complianceContext,
+      sources: brainSources,
+      research_documents: sourceDocuments as unknown as Array<
+        Record<string, unknown>
+      >,
+      deep_brief: deepBriefContext,
+      spy_analyses: spyHistory,
+      market_examples: spyHistory,
+      performance_winners: performanceWinners,
+      avatar: StoredAvatarSchema.safeParse(avatarContext).success
+        ? StoredAvatarSchema.parse(avatarContext)
+        : null,
+      test_kit: testKit as Record<string, unknown> | null,
+      taste_corpus: corpus as unknown as Array<Record<string, unknown>>,
+      hook_library: hookLibrary as unknown as Array<Record<string, unknown>>,
+      creative_hint: body.creative_hint?.trim() || null,
+      missing_inputs: missingCopyBrainInputs({
+        sources: brainSources,
+        underwriting: underwritingContext,
+        deepBrief: deepBriefContext,
+        avatar: avatarContext,
+        testKit,
+        spy: spyHistory,
+      }),
+      omitted_context: [],
+    })
 
     const willCallReal = !!Deno.env.get('ANTHROPIC_API_KEY')
     const model = willCallReal
@@ -288,6 +511,7 @@ Deno.serve(async (req: Request) => {
               geo: null,
               audience: null,
             },
+            brainSnapshot,
           }
 
           const result = await runAdCopy(input)

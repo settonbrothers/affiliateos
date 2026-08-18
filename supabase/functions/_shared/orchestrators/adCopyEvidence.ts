@@ -1,7 +1,7 @@
 import { z, type ZodTypeAny } from 'npm:zod@^3.24.0'
 
 import { callAnthropicWithTool } from '../anthropicJson.ts'
-import { loadActivePrompt } from '../loadActivePrompt.ts'
+import { loadActivePrompt, loadPromptVersion } from '../loadActivePrompt.ts'
 import {
   AdCopyEvidenceResponseSchema,
   BlindReaderSchema,
@@ -16,6 +16,8 @@ import {
 import { AvatarExcavationSchema } from '../types/adCopy.ts'
 import { gatherCopyResearch } from './adCopyEvidenceResearch.ts'
 import { validateNarrativePolicy } from './adCopyEvidencePolicy.ts'
+import { compileCopyBrainContext } from './copyBrainContext.ts'
+import type { CopyBrainInputSnapshotV1 } from '../types/copyBrain.ts'
 
 const MODEL = Deno.env.get('AD_COPY_MODEL') ?? 'claude-sonnet-4-6'
 const JUDGE_MODEL = Deno.env.get('AD_COPY_JUDGE_MODEL') ?? MODEL
@@ -51,6 +53,9 @@ export type EvidenceAdCopyInput = {
     audience?: string | null
   }
   verticalSlug?: string
+  brainSnapshot?: CopyBrainInputSnapshotV1
+  promptVersions?: Record<string, string>
+  promptContents?: Record<string, string>
 }
 
 type Usage = { input_tokens: number; output_tokens: number; cost_usd: number }
@@ -63,10 +68,20 @@ async function stage<T extends ZodTypeAny>(args: {
   payload: Record<string, unknown>
   vertical?: string
   model?: string
+  version?: string
+  frozenPromptContent?: string
 }): Promise<{ data: z.infer<T>; usage: Usage }> {
   const result = await callAnthropicWithTool({
     model: args.model ?? MODEL,
-    systemPrompt: await loadActivePrompt(args.orchestrator, args.vertical),
+    systemPrompt:
+      args.frozenPromptContent ??
+      (args.version
+        ? await loadPromptVersion(
+            args.orchestrator,
+            args.version,
+            args.vertical
+          )
+        : await loadActivePrompt(args.orchestrator, args.vertical)),
     userMessage: JSON.stringify(args.payload, null, 2),
     toolName: args.tool,
     toolDescription: args.description,
@@ -192,11 +207,16 @@ export async function runAdCopyEvidence(
   input: EvidenceAdCopyInput
 ): Promise<{ output: Record<string, unknown>; usage: Usage; mode: 'real' }> {
   const vertical = input.verticalSlug ?? input.offer.vertical ?? undefined
-  const research = await gatherCopyResearch({
-    offerName: input.offer.name,
-    vertical,
-    additionalSourceUrls: input.additionalSourceUrls,
-  })
+  const compiled = input.brainSnapshot
+    ? compileCopyBrainContext(input.brainSnapshot)
+    : null
+  const research = input.brainSnapshot
+    ? []
+    : await gatherCopyResearch({
+        offerName: input.offer.name,
+        vertical,
+        additionalSourceUrls: input.additionalSourceUrls,
+      })
   const total: Usage = { input_tokens: 0, output_tokens: 0, cost_usd: 0 }
   const spend = (usage: Usage) => {
     total.input_tokens += usage.input_tokens
@@ -213,10 +233,12 @@ export async function runAdCopyEvidence(
     tool: 'submit_evidence_envelope',
     description: 'Submit the evidence envelope once.',
     schema: EvidenceEnvelopeSchema,
+    version: input.promptVersions?.CopyExcavateProductOrchestrator,
+    frozenPromptContent: input.promptContents?.CopyExcavateProductOrchestrator,
     vertical,
     payload: {
       offer: input.offer,
-      verified_context: input.productContext ?? null,
+      verified_context: compiled?.context ?? input.productContext ?? null,
       research_snapshots: research,
       optional_creative_hint: input.creativeHint ?? null,
       campaign_context: input.campaignContext ?? null,
@@ -224,19 +246,28 @@ export async function runAdCopyEvidence(
   })
   spend(evidence.usage)
 
-  const avatar = await stage({
-    orchestrator: 'CopyExcavateAvatarOrchestrator',
-    tool: 'submit_avatar_excavation',
-    description: 'Submit the avatar excavation once.',
-    schema: AvatarExcavationSchema,
-    vertical,
-    payload: {
-      offer: input.offer,
-      evidence_envelope: evidence.data,
-      upstream_avatar: input.avatarContext ?? null,
-      deep_brief: input.deepBriefContext ?? null,
-    },
-  })
+  const frozenAvatar = input.brainSnapshot?.avatar ?? null
+  const avatar = frozenAvatar
+    ? {
+        data: frozenAvatar,
+        usage: { input_tokens: 0, output_tokens: 0, cost_usd: 0 },
+      }
+    : await stage({
+        orchestrator: 'CopyExcavateAvatarOrchestrator',
+        tool: 'submit_avatar_excavation',
+        description: 'Submit the avatar excavation once.',
+        schema: AvatarExcavationSchema,
+        version: input.promptVersions?.CopyExcavateAvatarOrchestrator,
+        frozenPromptContent:
+          input.promptContents?.CopyExcavateAvatarOrchestrator,
+        vertical,
+        payload: {
+          offer: input.offer,
+          evidence_envelope: evidence.data,
+          upstream_avatar: input.avatarContext ?? null,
+          deep_brief: input.deepBriefContext ?? null,
+        },
+      })
   spend(avatar.usage)
 
   const angles = await stage({
@@ -244,6 +275,8 @@ export async function runAdCopyEvidence(
     tool: 'submit_angles',
     description: 'Submit evidence-licensed angles once.',
     schema: AnglesSchema,
+    version: input.promptVersions?.CopyAngleOrchestrator,
+    frozenPromptContent: input.promptContents?.CopyAngleOrchestrator,
     vertical,
     payload: {
       offer: input.offer,
@@ -326,6 +359,8 @@ export async function runAdCopyEvidence(
     tool: 'submit_hooks',
     description: 'Submit Hebrew evidence-bound hooks once.',
     schema: HooksSchema,
+    version: input.promptVersions?.CopyHookOrchestrator,
+    frozenPromptContent: input.promptContents?.CopyHookOrchestrator,
     vertical,
     payload: {
       angles: angles.data.angles,
@@ -349,6 +384,8 @@ export async function runAdCopyEvidence(
       tool: 'submit_ad_copy',
       description: 'Submit one Hebrew evidence-bound variant.',
       schema: VariantsSchema,
+      version: input.promptVersions?.CopyWriteOrchestrator,
+      frozenPromptContent: input.promptContents?.CopyWriteOrchestrator,
       vertical,
       payload: {
         offer: input.offer,
@@ -371,6 +408,8 @@ export async function runAdCopyEvidence(
       tool: 'submit_reader_report',
       description: 'Submit the blind reader report.',
       schema: BlindReaderSchema,
+      version: input.promptVersions?.CopyReaderOrchestrator,
+      frozenPromptContent: input.promptContents?.CopyReaderOrchestrator,
       vertical,
       payload: {
         text: variants.variants[0].primary_text,
@@ -385,6 +424,8 @@ export async function runAdCopyEvidence(
       tool: 'submit_critic_report',
       description: 'Submit the evidence critic report.',
       schema: EvidenceCriticSchema,
+      version: input.promptVersions?.CopyCriticOrchestrator,
+      frozenPromptContent: input.promptContents?.CopyCriticOrchestrator,
       vertical,
       payload: {
         evidence_envelope: evidence.data,
@@ -402,6 +443,8 @@ export async function runAdCopyEvidence(
       tool: 'submit_copy_judgment',
       description: 'Submit the structured copy judgment.',
       schema: EvidenceJudgeSchema,
+      version: input.promptVersions?.CopyJudgeOrchestrator,
+      frozenPromptContent: input.promptContents?.CopyJudgeOrchestrator,
       model: JUDGE_MODEL,
       vertical,
       payload: {
