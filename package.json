@@ -18,6 +18,8 @@
     "format:check": "prettier --check .",
     "prompts:sync": "node scripts/prompts-sync.mjs",
     "eval:run": "tsx scripts/eval-run.mts",
+    "eval:copy-evidence": "tsx scripts/eval-copy-evidence.mts",
+    "eval:copy-owner-packet": "tsx scripts/build-copy-owner-packet.mts",
     "prompts:activate": "node scripts/prompts-sync.mjs --activate",
     "audit:prompts": "tsx scripts/audit-prompts.mts",
     "audit:discovery": "tsx scripts/audit-discovery-quality.mts"
