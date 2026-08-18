@@ -1,0 +1,133 @@
+{
+  "release_version": "copy-brain-v4.1.0-eval",
+  "engine_version": "evidence-story-v4",
+  "activation": "blocked_pending_8_case_eval",
+  "files": [
+    {
+      "source": "integration/copy-engine-v3/prompts/copy_excavate_product/v3.md",
+      "target": "prompts/copy_excavate_product/v3.md",
+      "kind": "prompt",
+      "orchestrator": "CopyExcavateProductOrchestrator",
+      "version": "v3",
+      "sha256": "37cb09ca1362ca436e63270ab041ce47d10b8b136382a342c2b7d8c30e02791d"
+    },
+    {
+      "source": "integration/copy-engine-v3/prompts/copy_angle/v4.md",
+      "target": "prompts/copy_angle/v4.md",
+      "kind": "prompt",
+      "orchestrator": "CopyAngleOrchestrator",
+      "version": "v4",
+      "sha256": "ad42538a7a9b068fc49d6651b16e231cf44ffa8c860717e289901c11f786404c"
+    },
+    {
+      "source": "integration/copy-engine-v3/prompts/copy_hook/v4.md",
+      "target": "prompts/copy_hook/v4.md",
+      "kind": "prompt",
+      "orchestrator": "CopyHookOrchestrator",
+      "version": "v4",
+      "sha256": "875eadc35d417866b4c748f7a3eaeab34beae519c0c0b5e42df1d4601baf1952"
+    },
+    {
+      "source": "integration/copy-engine-v3/prompts/copy_write/v4.md",
+      "target": "prompts/copy_write/v4.md",
+      "kind": "prompt",
+      "orchestrator": "CopyWriteOrchestrator",
+      "version": "v4",
+      "sha256": "006259ac392d1abd71763a3a5e48a391f11ade8ead0c809a959a83cfc252315b"
+    },
+    {
+      "source": "integration/copy-engine-v3/prompts/copy_reader/v1.md",
+      "target": "prompts/copy_reader/v1.md",
+      "kind": "prompt",
+      "orchestrator": "CopyReaderOrchestrator",
+      "version": "v1",
+      "sha256": "2b84d1b9433ecbc4ef010f1d95fa6ed2fa097e2663978ba97a186036c17996fb"
+    },
+    {
+      "source": "integration/copy-engine-v3/prompts/copy_critic/v1.md",
+      "target": "prompts/copy_critic/v1.md",
+      "kind": "prompt",
+      "orchestrator": "CopyCriticOrchestrator",
+      "version": "v1",
+      "sha256": "d994c9ada30f2bd0959eeffc824438b4fa23394a903003e3dd917f57940a0d98"
+    },
+    {
+      "source": "integration/copy-engine-v3/prompts/copy_judge/v3.md",
+      "target": "prompts/copy_judge/v3.md",
+      "kind": "prompt",
+      "orchestrator": "CopyJudgeOrchestrator",
+      "version": "v3",
+      "sha256": "9058c5baf991d8cea0c05a7f6164b9da82b24e0f033629bc7e0c6df7e08f7302"
+    },
+    {
+      "source": "integration/copy-engine-v3/prompts/avatar_builder/v2.md",
+      "target": "prompts/avatar_builder/v2.md",
+      "kind": "prompt",
+      "orchestrator": "AvatarBuilderOrchestrator",
+      "version": "v2",
+      "sha256": "12fc393d7fdd78a684a777e97d442ead3bdaf4f57cd3c2043ca8f0064ad828bf"
+    },
+    {
+      "source": "schemas/deep-avatar.schema.json",
+      "target": "brain-contracts/deep-avatar-v2.schema.json",
+      "kind": "contract",
+      "sha256": "85680d30b1d86960805601c1dbe6cfa6be407402b18582cf51e9f0b301c7b3ba"
+    },
+    {
+      "source": "integration/copy-engine-v3/schemas/copy-brain-input-v1.schema.json",
+      "target": "brain-contracts/copy-brain-input-v1.schema.json",
+      "kind": "contract",
+      "sha256": "bcc51f95089dbaa802b964e0c559b5845870715d9a5e8f6edc52a474f65268f3"
+    },
+    {
+      "source": "integration/copy-engine-v3/schemas/ad-copy-v4.schema.json",
+      "target": "brain-contracts/ad-copy-v4.schema.json",
+      "kind": "contract",
+      "sha256": "355a9045f3107b2e8a346582762074fd80fb1dd067601217095de9ffd1fc7e98"
+    },
+    {
+      "source": "tests/copy-system-v2/protocol.json",
+      "target": "brain-evals/copy-system-v2.protocol.json",
+      "kind": "eval",
+      "sha256": "803973ee0cb7bb189f70ce9c86683c82e57d1b2223a098756676c3697cbce7b3"
+    },
+    {
+      "source": "tests/copy-system-v2/source-packs.json",
+      "target": "brain-evals/copy-system-v2.source-packs.json",
+      "kind": "eval",
+      "sha256": "c39121df862b23930514d1eb6be196ff31a6ebd054d352a6d367708782942265"
+    }
+  ],
+  "source_repository": "creation-engine",
+  "source_git_sha": "45f6c224c709dd5add422916093b4567b2b14279",
+  "compiled_at": "2026-08-18T15:20:11.893Z",
+  "regression_commands": [
+    "node tests/run-conversion-regressions.mjs",
+    "node tests/run-story-evidence-evals.mjs",
+    "node tests/run-copy-system-v2.mjs",
+    "node integration/copy-engine-v3/scripts/check-package.mjs"
+  ],
+  "regression_results": [
+    {
+      "command": "node tests/run-conversion-regressions.mjs",
+      "status": "passed",
+      "output": "PASS conversion-arc suite: 12 cases, schemas valid, semantic reports match gold\nPASS round5 blind consensus: 3/3 evaluators caught peak, scene-need and causal-offer failures"
+    },
+    {
+      "command": "node tests/run-story-evidence-evals.mjs",
+      "status": "passed",
+      "output": "PENDING live generation: no live-results.json; fixture/policy validation only\nPASS story-evidence fixtures: 12 sealed cases (8 calibration, 4 holdout)\nPASS deterministic narrative decisions and preregistered 72-run protocol"
+    },
+    {
+      "command": "node tests/run-copy-system-v2.mjs",
+      "status": "passed",
+      "output": "PASS copy-system-v2: 8 cases, 48 preregistered jobs, sha256=0efa1706a80924948c612ba159b9eebaf79cbd6ea8a75c4fbeb11e36dfb07e3e\nPENDING live AffX snapshots, generation and owner scoring"
+    },
+    {
+      "command": "node integration/copy-engine-v3/scripts/check-package.mjs",
+      "status": "passed",
+      "output": "PASS copy-engine-v4-local: 9 checksums, schema valid, placeholders clean, Zod parity exact"
+    }
+  ],
+  "manifest_sha256": "569464395783b4ab4c49bb0ec7e37a42c72e2cc0d32a30b74d0dc1f73e750a2a"
+}

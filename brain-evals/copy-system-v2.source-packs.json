@@ -1,0 +1,91 @@
+{
+  "suite": "copy-brain-system-v2",
+  "notice": "Four AffX selectors plus four controlled fixtures. Synthetic statements are test data and must never be published as real claims or testimonials.",
+  "packs": [
+    {
+      "id": "affx-full-with-winner",
+      "origin": "affx",
+      "domain": "commercial",
+      "split": "calibration",
+      "selector": { "profile": "full_context_with_measured_winner", "distinct_vertical": true },
+      "expected_input": ["underwriting", "verified_sources", "deep_brief", "avatar", "spy_analyses", "test_kit", "performance_winners"]
+    },
+    {
+      "id": "affx-full-no-winner",
+      "origin": "affx",
+      "domain": "commercial",
+      "split": "calibration",
+      "selector": { "profile": "full_context_without_measured_winner", "distinct_vertical": true },
+      "expected_input": ["underwriting", "verified_sources", "deep_brief", "avatar", "spy_analyses", "test_kit"]
+    },
+    {
+      "id": "affx-good-evidence-missing-spy",
+      "origin": "affx",
+      "domain": "commercial",
+      "split": "calibration",
+      "selector": { "profile": "good_evidence_missing_optional_upstream", "distinct_vertical": true },
+      "expected_missing_any": ["spy_analyses", "performance_winners"]
+    },
+    {
+      "id": "affx-thin-or-compliance",
+      "origin": "affx",
+      "domain": "commercial",
+      "split": "holdout",
+      "selector": { "profile": "thin_conflicting_or_compliance_risk", "distinct_vertical": true },
+      "expected_behavior": "narrow_non_story_or_block"
+    },
+    {
+      "id": "fixture-sleep-evidence",
+      "origin": "synthetic_fixture",
+      "domain": "commercial",
+      "split": "calibration",
+      "fixture_only": true,
+      "offer": { "id": "fixture-sleep", "name": "SomnaCalm", "vertical": "sleep_support" },
+      "sources": [
+        { "source_id": "sleep-study", "source_type": "independent_research", "claim": "A bounded sleep-continuity outcome is supported for the tested mechanism." },
+        { "source_id": "sleep-review-a", "source_type": "independent_review", "claim": "Independent reviewer reports fewer ordinary nighttime interruptions." },
+        { "source_id": "sleep-review-b", "source_type": "independent_review", "claim": "Independent reviewer reports fewer ordinary nighttime interruptions." },
+        { "source_id": "sleep-review-c", "source_type": "independent_review", "claim": "Independent reviewer reports fewer ordinary nighttime interruptions." }
+      ],
+      "expected_behavior": "evidence_based_dramatization"
+    },
+    {
+      "id": "fixture-saas-mechanism",
+      "origin": "synthetic_fixture",
+      "domain": "commercial",
+      "split": "calibration",
+      "fixture_only": true,
+      "offer": { "id": "fixture-saas", "name": "LedgerFlow", "vertical": "small_business_saas" },
+      "sources": [
+        { "source_id": "saas-spec", "source_type": "first_party_document", "claim": "The verified mechanism categorizes imported transactions and drafts a reconciliation queue." }
+      ],
+      "expected_behavior": "non_story"
+    },
+    {
+      "id": "fixture-digital-extreme-claim",
+      "origin": "synthetic_fixture",
+      "domain": "commercial",
+      "split": "holdout",
+      "fixture_only": true,
+      "offer": { "id": "fixture-digital", "name": "Reconnect 30", "vertical": "relationship_course" },
+      "sources": [
+        { "source_id": "vendor-page", "source_type": "first_party_document", "claim": "Vendor promises to save any relationship in seven days; no independent evidence is supplied." }
+      ],
+      "expected_behavior": "narrow_or_block_extreme_claim"
+    },
+    {
+      "id": "fixture-hot-meal-donation",
+      "origin": "synthetic_fixture",
+      "domain": "donation",
+      "split": "calibration",
+      "fixture_only": true,
+      "offer": { "id": "fixture-meal", "name": "ארוחה חמה עד הבית", "vertical": "donation" },
+      "sources": [
+        { "source_id": "owner-general", "source_type": "operator_note", "claim": "Owner-verified general condition: an approved address whose route stop is not funded does not receive that hot meal and hand delivery." },
+        { "source_id": "program-mechanism", "source_type": "first_party_document", "claim": "A donation funds the same hot meal and hand delivery." }
+      ],
+      "forbidden_claims": ["has no other food", "goes to sleep hungry", "companionship is guaranteed"],
+      "expected_behavior": "causal_evidence_based_dramatization"
+    }
+  ]
+}

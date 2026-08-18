@@ -32,6 +32,12 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Verify local brain release has no hand-edited drift
+        run: pnpm brain:drift
+
+      - name: Guard Isaac-owned upstream paths
+        run: pnpm brain:ownership
+
       - name: Lint
         run: pnpm lint
 
