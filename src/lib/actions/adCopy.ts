@@ -6,11 +6,24 @@ export type TriggerGenerateAdCopyResult = { run_id: string } | { error: string }
 
 export async function triggerGenerateAdCopy(
   offerId: string,
-  template?: string
+  options?: {
+    creativeHint?: string
+    additionalSourceUrls?: string[]
+    template?: string
+  }
 ): Promise<TriggerGenerateAdCopyResult> {
   const supabase = await createClient()
   const { data, error } = await supabase.functions.invoke('generate-ad-copy', {
-    body: { offer_id: offerId, ...(template ? { template } : {}) },
+    body: {
+      offer_id: offerId,
+      ...(options?.template ? { template: options.template } : {}),
+      ...(options?.creativeHint?.trim()
+        ? { creative_hint: options.creativeHint.trim() }
+        : {}),
+      ...(options?.additionalSourceUrls?.length
+        ? { additional_source_urls: options.additionalSourceUrls }
+        : {}),
+    },
   })
   if (error) return { error: error.message }
   return data as { run_id: string }
@@ -65,18 +78,20 @@ export async function triggerSaveCopyEdit(
   // Learning signal for the corpus: a 'bad' rating stores the original as the bad
   // example with the edit as its improvement; a 'good' rating stores the kept text.
   const isBad = input.rating === 'bad'
-  const { error: corpusErr } = await supabase.from('copy_taste_examples').insert({
-    kind: 'copy',
-    lang: input.variantLang,
-    text: isBad ? input.originalText : input.editedText,
-    improved_text: isBad ? input.editedText : null,
-    label: input.rating,
-    reason: input.reason ?? null,
-    source: 'edit_loop',
-    workspace_id: gen.workspace_id,
-    offer_id: gen.offer_id,
-    created_by_user_id: user.id,
-  })
+  const { error: corpusErr } = await supabase
+    .from('copy_taste_examples')
+    .insert({
+      kind: 'copy',
+      lang: input.variantLang,
+      text: isBad ? input.originalText : input.editedText,
+      improved_text: isBad ? input.editedText : null,
+      label: input.rating,
+      reason: input.reason ?? null,
+      source: 'edit_loop',
+      workspace_id: gen.workspace_id,
+      offer_id: gen.offer_id,
+      created_by_user_id: user.id,
+    })
   if (corpusErr) return { error: corpusErr.message }
 
   return { ok: true }

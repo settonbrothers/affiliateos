@@ -31,6 +31,7 @@ import {
   shouldRefine,
   type TasteExample,
 } from './adCopyLogic.ts'
+import { runAdCopyEvidence } from './adCopyEvidence.ts'
 
 // NOTE (locked plan): generation + judging run on Opus. The exact Opus model id
 // and its PRICING_USD_PER_MTOK entry are wired + verified against the live API in
@@ -71,6 +72,11 @@ export type AdCopyInput = {
   deepBriefContext?: Record<string, unknown> | null
   avatarContext?: Record<string, unknown> | null
   spyContext?: Record<string, unknown> | null
+  // Evidence-story v4: optional user direction and extra research hints. Neither
+  // is trusted as a claim without corroboration.
+  creativeHint?: string | null
+  additionalSourceUrls?: string[]
+  campaignContext?: { channel?: string | null; geo?: string | null; audience?: string | null }
 }
 
 export type OrchestratorResult = {
@@ -117,6 +123,13 @@ export async function runAdCopy(input: AdCopyInput): Promise<OrchestratorResult>
 
   if (!Deno.env.get('ANTHROPIC_API_KEY')) {
     return { output: mockAdCopy(), mode: 'mock' }
+  }
+
+  // Staged rollout: the implementation and prompts can ship safely while the
+  // production engine stays bit-for-bit on v2. Enable only after the sealed
+  // 72-run eval and owner blind review pass.
+  if (Deno.env.get('AD_COPY_EVIDENCE_V4_ENABLED') === 'true') {
+    return runAdCopyEvidence(input)
   }
 
   const corpus = input.corpus ?? []
