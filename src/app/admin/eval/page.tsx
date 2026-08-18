@@ -6,8 +6,12 @@ import { AdminRow, AdminTable } from '@/components/admin/AdminTable'
 import { createClient } from '@/lib/supabase/server'
 
 const COLS = '130px minmax(0,1fr) 90px 70px 80px 90px 90px'
-const mono = (color: string) =>
-  ({ fontFamily: 'var(--font-mono)', fontSize: '12px', color, textAlign: 'right' as const })
+const mono = (color: string) => ({
+  fontFamily: 'var(--font-mono)',
+  fontSize: '12px',
+  color,
+  textAlign: 'right' as const,
+})
 
 type EvalRow = {
   id: string
@@ -52,15 +56,38 @@ export default async function EvalListPage() {
 
       <div>
         <Link
+          href="/admin/eval/copy"
+          style={{
+            fontFamily: 'var(--font-sans)',
+            fontSize: '13px',
+            color: '#E4E4E2',
+            border: '1px solid rgba(255,255,255,0.26)',
+            padding: '9px 16px',
+            textDecoration: 'none',
+            marginRight: '10px',
+          }}
+        >
+          COPY BRAIN LAB ←
+        </Link>
+        <Link
           href="/admin/eval/golden"
-          style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', color: '#B0B0AE', border: '1px solid rgba(255,255,255,0.16)', padding: '9px 16px', textDecoration: 'none' }}
+          style={{
+            fontFamily: 'var(--font-sans)',
+            fontSize: '13px',
+            color: '#B0B0AE',
+            border: '1px solid rgba(255,255,255,0.16)',
+            padding: '9px 16px',
+            textDecoration: 'none',
+          }}
         >
           {t('manageGoldenSet')} ←
         </Link>
       </div>
 
       {rows.length === 0 ? (
-        <p style={{ fontSize: '14px', color: 'var(--muted-foreground)' }}>{t('evalEmpty')}</p>
+        <p style={{ fontSize: '14px', color: 'var(--muted-foreground)' }}>
+          {t('evalEmpty')}
+        </p>
       ) : (
         <AdminTable
           cols={COLS}
@@ -76,15 +103,32 @@ export default async function EvalListPage() {
         >
           {rows.map((r) => (
             <AdminRow key={r.id} cols={COLS} href={`/admin/eval/${r.id}`}>
-              <span dir="ltr" style={mono('#7A7A78')}>{new Date(r.started_at).toLocaleDateString()}</span>
-              <span dir="ltr" style={mono('#E4E4E2')}>
-                {r.prompts ? `${r.prompts.orchestrator_name} ${r.prompts.version}` : '—'}
+              <span dir="ltr" style={mono('#7A7A78')}>
+                {new Date(r.started_at).toLocaleDateString()}
               </span>
-              <span dir="ltr" style={mono('#8A8A88')}>{r.trigger_type}</span>
-              <span dir="ltr" style={mono('#8A8A88')}>{r.total_offers}</span>
-              <span dir="ltr" style={mono('#8A8A88')}>{r.matched_verdict_count}</span>
-              <span dir="ltr" style={{ ...mono('var(--primary)'), fontWeight: 600 }}>{fmtAccuracy(r.accuracy_pct)}</span>
-              <span dir="ltr" style={mono('#C9C9C7')}>{fmtCost(r.total_cost_usd)}</span>
+              <span dir="ltr" style={mono('#E4E4E2')}>
+                {r.prompts
+                  ? `${r.prompts.orchestrator_name} ${r.prompts.version}`
+                  : '—'}
+              </span>
+              <span dir="ltr" style={mono('#8A8A88')}>
+                {r.trigger_type}
+              </span>
+              <span dir="ltr" style={mono('#8A8A88')}>
+                {r.total_offers}
+              </span>
+              <span dir="ltr" style={mono('#8A8A88')}>
+                {r.matched_verdict_count}
+              </span>
+              <span
+                dir="ltr"
+                style={{ ...mono('var(--primary)'), fontWeight: 600 }}
+              >
+                {fmtAccuracy(r.accuracy_pct)}
+              </span>
+              <span dir="ltr" style={mono('#C9C9C7')}>
+                {fmtCost(r.total_cost_usd)}
+              </span>
             </AdminRow>
           ))}
         </AdminTable>
