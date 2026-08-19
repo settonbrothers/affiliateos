@@ -22,10 +22,17 @@ import { AvatarExcavationSchema } from '../types/adCopy.ts'
 import { gatherCopyResearch } from './adCopyEvidenceResearch.ts'
 import { validateNarrativePolicy } from './adCopyEvidencePolicy.ts'
 import { compileCopyBrainContext } from './copyBrainContext.ts'
+import { compileCopyExecutionBriefV2 } from './copyExecutionBrief.ts'
 import type { CopyBrainInputSnapshotV1 } from '../types/copyBrain.ts'
 
-const MODEL = Deno.env.get('AD_COPY_MODEL') ?? 'claude-sonnet-4-6'
-const JUDGE_MODEL = Deno.env.get('AD_COPY_JUDGE_MODEL') ?? MODEL
+const MODEL =
+  Deno.env.get('AD_COPY_PREP_MODEL') ??
+  Deno.env.get('AD_COPY_MODEL') ??
+  'claude-sonnet-4-6'
+const LEGACY_JUDGE_MODEL = Deno.env.get('AD_COPY_JUDGE_MODEL') ?? MODEL
+const STRONG_MODEL = Deno.env.get('AD_COPY_STRONG_MODEL') ?? 'claude-opus-4-6'
+const WRITER_MODEL = Deno.env.get('AD_COPY_WRITER_MODEL') ?? STRONG_MODEL
+const V6_JUDGE_MODEL = Deno.env.get('AD_COPY_V6_JUDGE_MODEL') ?? STRONG_MODEL
 const MAX_USD = Number(Deno.env.get('AD_COPY_MAX_USD') ?? '0.75')
 const MAX_REFINE = 2
 
@@ -56,6 +63,15 @@ export type EvidenceAdCopyInput = {
     channel?: string | null
     geo?: string | null
     audience?: string | null
+    objective_type?:
+      | 'sale'
+      | 'lead'
+      | 'donation'
+      | 'trial'
+      | 'signup'
+      | 'affiliate_recruitment'
+    desired_action?: string | null
+    audience_side?: 'consumer' | 'affiliate_marketer' | 'donor'
   }
   verticalSlug?: string
   brainSnapshot?: CopyBrainInputSnapshotV1
@@ -117,6 +133,150 @@ const blockedLicense = (reason: string) => ({
   requirements_met: false,
 })
 
+type ExecutionBriefV2 = ReturnType<typeof compileCopyExecutionBriefV2>
+
+function snapshotWithCampaignInput(input: EvidenceAdCopyInput) {
+  if (!input.brainSnapshot) return null
+  return {
+    ...input.brainSnapshot,
+    campaign_context: {
+      ...input.brainSnapshot.campaign_context,
+      audience:
+        input.campaignContext?.audience ??
+        input.brainSnapshot.campaign_context.audience,
+      objective_type:
+        input.campaignContext?.objective_type ??
+        input.brainSnapshot.campaign_context.objective_type,
+      desired_action:
+        input.campaignContext?.desired_action ??
+        input.brainSnapshot.campaign_context.desired_action,
+      audience_side:
+        input.campaignContext?.audience_side ??
+        input.brainSnapshot.campaign_context.audience_side,
+    },
+  }
+}
+
+const readinessFlags = (
+  brief: ExecutionBriefV2
+): z.infer<typeof EvidenceJudgeSchema>['kill_flags'] => {
+  const flags: z.infer<typeof EvidenceJudgeSchema>['kill_flags'] = []
+  if (brief.critical_missing.includes('campaign_objective'))
+    flags.push('objective_unknown')
+  if (
+    brief.critical_missing.includes('consumer_audience') ||
+    brief.critical_missing.includes('avatar_v2')
+  )
+    flags.push('audience_unknown')
+  if (brief.conflicts.length) flags.push('objective_mismatch')
+  if (!brief.doctrine_bundle.active_lesson_ids.length)
+    flags.push('doctrine_bundle_mismatch')
+  // Empty taste is a trace warning, not a block. It becomes a kill flag only
+  // when a later stage falsely claims that examples were consumed.
+  return [...new Set(flags)]
+}
+
+const candidatePreflightFlags = (
+  candidate: z.infer<typeof AgencyEvidenceVariantSchema>
+): z.infer<typeof EvidenceJudgeSchema>['kill_flags'] => {
+  const hook = candidate.hook.replace(/\s+/g, ' ').trim()
+  const body = candidate.primary_text.replace(/\s+/g, ' ').trim()
+  return hook && (body === hook || body.startsWith(`${hook} `))
+    ? ['hook_body_duplicate']
+    : []
+}
+
+function assembleInputBlocked(brief: ExecutionBriefV2): AdCopyEvidenceResponse {
+  const flags = readinessFlags(brief)
+  const envelope = {
+    research_status: 'insufficient' as const,
+    real_problem: '',
+    real_solution: '',
+    sources: [],
+    supported_outcomes: [],
+    allowed_scene_inventions: [],
+    source_required_elements: [],
+    forbidden_escalations: [],
+    vulnerability_constraints: [],
+    missing_data: [
+      ...brief.critical_missing,
+      ...brief.conflicts.map((item) => item.code),
+    ],
+  }
+  const judge = {
+    principles: [
+      {
+        principle: 'product_understanding' as const,
+        verdict: 'fail' as const,
+        reason:
+          'Consumer offer, audience and objective are not yet a coherent execution target.',
+      },
+      {
+        principle: 'eye_level_authentic' as const,
+        verdict: 'fail' as const,
+        reason: 'Writing was stopped before generic persona invention.',
+      },
+      {
+        principle: 'depth_without_exaggeration' as const,
+        verdict: 'fail' as const,
+        reason: 'Missing upstream input was preserved instead of guessed.',
+      },
+    ],
+    compliance_ok: true,
+    overall: 'fail' as const,
+    calibrated: false as const,
+    notes:
+      'CopyExecutionBriefV2 readiness gate stopped generation before any model call.',
+    kill_flags: flags,
+    evidence: envelope.missing_data,
+  }
+  return AdCopyEvidenceResponseSchema.parse({
+    orchestrator_name: 'AdCopyOrchestrator',
+    agent_version: 'evidence-agency-v6',
+    status: 'partial',
+    confidence_score: 20,
+    facts: [],
+    assumptions: [],
+    estimates: [],
+    risks: flags.map((flag) => ({
+      type: flag,
+      description: `Copy input gate flagged ${flag}.`,
+      severity: 'high' as const,
+    })),
+    unknowns: brief.critical_missing,
+    missing_data: envelope.missing_data,
+    human_review_required: true,
+    human_review_reasons: [
+      'Complete and freeze the upstream audience, avatar and campaign objective before copy generation.',
+    ],
+    payload: {
+      engine_version: 'evidence-agency-v6',
+      output_status: 'blocked',
+      evidence_envelope: envelope,
+      narrative_license: blockedLicense(
+        'Execution brief is not ready to write.'
+      ),
+      angles: [],
+      hooks: [],
+      variants: [],
+      reader_report: null,
+      critic_report: null,
+      judge,
+      refine_iterations: 0,
+      trace: {
+        source_snapshot_refs: [],
+        selected_angle_index: null,
+        execution_brief: brief,
+        doctrine_lesson_ids: brief.doctrine_bundle.active_lesson_ids,
+        taste_selection_count: brief.taste_selection.selected.length,
+        preflight_flags: flags,
+        models: {},
+      },
+      user_message: `הקופי לא נכתב כדי לא להמציא קהל או מטרה. חסר: ${envelope.missing_data.join('; ')}`,
+    },
+  })
+}
+
 function assemble(parts: {
   envelope: z.infer<typeof EvidenceEnvelopeSchema>
   angles: z.infer<typeof EvidenceAngleSchema>[]
@@ -127,7 +287,8 @@ function assemble(parts: {
   judge: z.infer<typeof EvidenceJudgeSchema>
   selectedIndex: number | null
   refineIterations: number
-  engineVersion?: 'evidence-story-v4' | 'evidence-agency-v5'
+  engineVersion?:
+    'evidence-story-v4' | 'evidence-agency-v5' | 'evidence-agency-v6'
 }): AdCopyEvidenceResponse {
   const selected =
     parts.selectedIndex === null ? null : parts.angles[parts.selectedIndex]
@@ -229,6 +390,8 @@ function tokenSimilarity(left: string, right: string): number {
 }
 
 function assembleAgency(parts: {
+  executionBrief: ExecutionBriefV2 | null
+  engineVersion: 'evidence-agency-v5' | 'evidence-agency-v6'
   envelope: z.infer<typeof EvidenceEnvelopeSchema>
   angles: z.infer<typeof EvidenceAngleSchema>[]
   hooks: z.infer<typeof EvidenceHookSchema>[]
@@ -276,7 +439,7 @@ function assembleAgency(parts: {
     ranked.length > 0 ? 'ready_for_user' : 'compliance_review'
   return AdCopyEvidenceResponseSchema.parse({
     orchestrator_name: 'AdCopyOrchestrator',
-    agent_version: 'evidence-agency-v5',
+    agent_version: parts.engineVersion,
     status: outputStatus === 'ready_for_user' ? 'success' : 'partial',
     confidence_score: outputStatus === 'ready_for_user' ? 90 : 45,
     facts: parts.envelope.supported_outcomes.map((outcome) => ({
@@ -306,7 +469,7 @@ function assembleAgency(parts: {
             'No safe, materially distinct candidate passed every independent gate.',
           ],
     payload: {
-      engine_version: 'evidence-agency-v5',
+      engine_version: parts.engineVersion,
       output_status: outputStatus,
       evidence_envelope: parts.envelope,
       narrative_license: selectedAngle.narrative_license,
@@ -356,6 +519,24 @@ function assembleAgency(parts: {
         candidate_ids: parts.candidates.map(
           (candidate) => candidate.candidate_id
         ),
+        ...(parts.executionBrief
+          ? {
+              execution_brief: parts.executionBrief,
+              doctrine_lesson_ids:
+                parts.executionBrief.doctrine_bundle.active_lesson_ids,
+              taste_selection_count:
+                parts.executionBrief.taste_selection.selected.length,
+            }
+          : {}),
+        preflight_flags: parts.candidates.flatMap(candidatePreflightFlags),
+        models:
+          parts.engineVersion === 'evidence-agency-v6'
+            ? {
+                preparation: MODEL,
+                hook_and_writers: WRITER_MODEL,
+                independent_judges: V6_JUDGE_MODEL,
+              }
+            : { preparation: MODEL, independent_judges: LEGACY_JUDGE_MODEL },
       },
       user_message:
         outputStatus === 'ready_for_user'
@@ -369,7 +550,13 @@ export async function runAdCopyEvidence(
   input: EvidenceAdCopyInput
 ): Promise<{ output: Record<string, unknown>; usage: Usage; mode: 'real' }> {
   const vertical = input.verticalSlug ?? input.offer.vertical ?? undefined
+  const agencyV6Enabled = Boolean(
+    Deno.env.get('AD_COPY_AGENCY_V6_ENABLED') === 'true' ||
+    input.promptVersions?.CopyDirectorOrchestrator === 'v2' ||
+    input.promptContents?.CopyDirectorOrchestrator?.includes('Copy Director v2')
+  )
   const agencyEnabled = Boolean(
+    agencyV6Enabled ||
     Deno.env.get('AD_COPY_AGENCY_V5_ENABLED') === 'true' ||
     input.promptContents?.CopyDirectorOrchestrator ||
     input.promptVersions?.CopyDirectorOrchestrator
@@ -377,10 +564,30 @@ export async function runAdCopyEvidence(
   const costCap = agencyEnabled
     ? Number(Deno.env.get('AD_COPY_AGENCY_MAX_USD') ?? '2.25')
     : MAX_USD
-  const compiled = input.brainSnapshot
-    ? compileCopyBrainContext(input.brainSnapshot)
+  const preparedSnapshot = snapshotWithCampaignInput(input)
+  if (agencyV6Enabled && !preparedSnapshot) {
+    throw new Error('Copy brain v6 requires a frozen CopyBrainInputSnapshotV1.')
+  }
+  const executionBrief = preparedSnapshot
+    ? compileCopyExecutionBriefV2(preparedSnapshot)
     : null
-  const research = input.brainSnapshot
+  if (
+    agencyV6Enabled &&
+    executionBrief?.readiness_status !== 'ready_to_write'
+  ) {
+    return {
+      output: assembleInputBlocked(executionBrief!) as unknown as Record<
+        string,
+        unknown
+      >,
+      usage: { input_tokens: 0, output_tokens: 0, cost_usd: 0 },
+      mode: 'real',
+    }
+  }
+  const compiled = preparedSnapshot
+    ? compileCopyBrainContext(preparedSnapshot)
+    : null
+  const research = preparedSnapshot
     ? []
     : await gatherCopyResearch({
         offerName: input.offer.name,
@@ -408,6 +615,7 @@ export async function runAdCopyEvidence(
     vertical,
     payload: {
       offer: input.offer,
+      execution_brief: executionBrief,
       verified_context: compiled?.context ?? input.productContext ?? null,
       research_snapshots: research,
       optional_creative_hint: input.creativeHint ?? null,
@@ -416,7 +624,7 @@ export async function runAdCopyEvidence(
   })
   spend(evidence.usage)
 
-  const frozenAvatar = input.brainSnapshot?.avatar ?? null
+  const frozenAvatar = preparedSnapshot?.avatar ?? null
   const avatar = frozenAvatar
     ? {
         data: frozenAvatar,
@@ -450,6 +658,7 @@ export async function runAdCopyEvidence(
     vertical,
     payload: {
       offer: input.offer,
+      execution_brief: executionBrief,
       evidence_envelope: evidence.data,
       avatar: avatar.data,
       deep_brief: input.deepBriefContext ?? null,
@@ -457,6 +666,8 @@ export async function runAdCopyEvidence(
       spy: input.spyContext ?? null,
       optional_creative_hint: input.creativeHint ?? null,
       campaign_context: input.campaignContext ?? null,
+      taste_selection: executionBrief?.taste_selection ?? null,
+      doctrine_bundle: executionBrief?.doctrine_bundle ?? null,
     },
   })
   spend(angles.usage)
@@ -532,12 +743,16 @@ export async function runAdCopyEvidence(
     schema: HooksSchema,
     version: input.promptVersions?.CopyHookOrchestrator,
     frozenPromptContent: input.promptContents?.CopyHookOrchestrator,
+    model: agencyV6Enabled ? WRITER_MODEL : undefined,
     vertical,
     payload: {
       angles: angles.data.angles,
       selected_angle_index: selectedIndex,
       evidence_envelope: evidence.data,
       avatar: avatar.data,
+      execution_brief: executionBrief,
+      relevant_taste_examples: executionBrief?.taste_selection.selected ?? [],
+      doctrine_bundle: executionBrief?.doctrine_bundle ?? null,
     },
   })
   spend(hooks.usage)
@@ -554,15 +769,19 @@ export async function runAdCopyEvidence(
       vertical,
       payload: {
         offer: input.offer,
+        execution_brief: executionBrief,
         evidence_envelope: evidence.data,
         avatar: avatar.data,
         angles: angles.data.angles,
         campaign_context: input.campaignContext ?? null,
-        spy_intelligence: input.brainSnapshot
+        relevant_taste_examples: executionBrief?.taste_selection.selected ?? [],
+        doctrine_bundle: executionBrief?.doctrine_bundle ?? null,
+        latest_quality_baseline: 'michael-v5-positive / round5-negative',
+        spy_intelligence: preparedSnapshot
           ? {
-              analyses: input.brainSnapshot.spy_analyses,
-              market_examples: input.brainSnapshot.market_examples,
-              measured_winners: input.brainSnapshot.performance_winners,
+              analyses: preparedSnapshot.spy_analyses,
+              market_examples: preparedSnapshot.market_examples,
+              measured_winners: preparedSnapshot.performance_winners,
             }
           : (input.spyContext ?? null),
       },
@@ -579,11 +798,11 @@ export async function runAdCopyEvidence(
     for (const brief of directed.data.candidate_briefs) {
       const angle = angles.data.angles[brief.angle_index]
       if (!angle) continue
-      const deterministicFlags = validateNarrativePolicy(
+      const narrativePolicyFlags = validateNarrativePolicy(
         evidence.data,
         angle.narrative_license
       )
-      if (deterministicFlags.length > 0) continue
+      if (narrativePolicyFlags.length > 0) continue
       const orchestrator = writerBySpecialist[brief.specialist]
       const written = await stage({
         orchestrator,
@@ -592,10 +811,12 @@ export async function runAdCopyEvidence(
         schema: AgencyEvidenceVariantSchema,
         version: input.promptVersions?.[orchestrator],
         frozenPromptContent: input.promptContents?.[orchestrator],
+        model: agencyV6Enabled ? WRITER_MODEL : undefined,
         vertical,
         payload: {
           candidate_brief: brief,
           offer: input.offer,
+          execution_brief: executionBrief,
           evidence_envelope: evidence.data,
           narrative_license: angle.narrative_license,
           conversion_spine: angle.conversion_spine,
@@ -605,6 +826,12 @@ export async function runAdCopyEvidence(
               (hook) => hook.angle_index === brief.angle_index
             ) ?? hooks.data.hooks[0],
           campaign_context: input.campaignContext ?? null,
+          deep_brief: executionBrief?.upstream_context.deep_brief ?? null,
+          test_kit: executionBrief?.upstream_context.test_kit ?? null,
+          relevant_taste_examples:
+            executionBrief?.taste_selection.selected ?? [],
+          doctrine_bundle: executionBrief?.doctrine_bundle ?? null,
+          latest_quality_baseline: 'michael-v5-positive / round5-negative',
         },
       })
       spend(written.usage)
@@ -628,6 +855,7 @@ export async function runAdCopyEvidence(
         payload: {
           text: candidate.primary_text,
           block_ids: candidate.block_ids,
+          target_reader: executionBrief?.audience ?? null,
         },
       })
       spend(read.usage)
@@ -640,11 +868,16 @@ export async function runAdCopyEvidence(
         frozenPromptContent: input.promptContents?.CopyCriticOrchestrator,
         vertical,
         payload: {
+          variant: candidate,
+          execution_brief: executionBrief,
           evidence_envelope: evidence.data,
           narrative_license: angle.narrative_license,
           conversion_spine: angle.conversion_spine,
           line_purpose_map: candidate.line_purpose_map,
           reader_report: read.data,
+          doctrine_bundle: executionBrief?.doctrine_bundle ?? null,
+          relevant_taste_examples:
+            executionBrief?.taste_selection.selected ?? [],
         },
       })
       spend(critiqued.usage)
@@ -655,24 +888,45 @@ export async function runAdCopyEvidence(
         schema: EvidenceJudgeSchema,
         version: input.promptVersions?.CopyJudgeOrchestrator,
         frozenPromptContent: input.promptContents?.CopyJudgeOrchestrator,
-        model: JUDGE_MODEL,
+        model: agencyV6Enabled ? V6_JUDGE_MODEL : LEGACY_JUDGE_MODEL,
         vertical,
         payload: {
           variant: candidate,
+          execution_brief: executionBrief,
           evidence_envelope: evidence.data,
           narrative_license: angle.narrative_license,
           conversion_spine: angle.conversion_spine,
           reader_report: read.data,
           critic_report: critiqued.data,
           campaign_context: input.campaignContext ?? null,
+          doctrine_bundle: executionBrief?.doctrine_bundle ?? null,
+          deterministic_preflight_flags: candidatePreflightFlags(candidate),
         },
       })
       spend(judged.usage)
+      const deterministicFlags = agencyV6Enabled
+        ? candidatePreflightFlags(candidate)
+        : []
+      const judgedData = EvidenceJudgeSchema.parse(
+        deterministicFlags.length
+          ? {
+              ...judged.data,
+              overall: 'fail',
+              kill_flags: [
+                ...new Set([...judged.data.kill_flags, ...deterministicFlags]),
+              ],
+              evidence: [
+                ...judged.data.evidence,
+                'Deterministic candidate preflight failed.',
+              ],
+            }
+          : judged.data
+      )
       reviews.push({
         candidate_id: brief.candidate_id,
         reader: read.data,
         critic: critiqued.data,
-        judge: judged.data,
+        judge: judgedData,
       })
     }
 
@@ -687,7 +941,7 @@ export async function runAdCopyEvidence(
             version: input.promptVersions?.CopyPortfolioJudgeOrchestrator,
             frozenPromptContent:
               input.promptContents?.CopyPortfolioJudgeOrchestrator,
-            model: JUDGE_MODEL,
+            model: agencyV6Enabled ? V6_JUDGE_MODEL : LEGACY_JUDGE_MODEL,
             vertical,
             payload: {
               department_plan: directed.data,
@@ -695,6 +949,8 @@ export async function runAdCopyEvidence(
               independent_reviews: reviews,
               evidence_envelope: evidence.data,
               campaign_context: input.campaignContext ?? null,
+              execution_brief: executionBrief,
+              doctrine_bundle: executionBrief?.doctrine_bundle ?? null,
             },
           })
         : {
@@ -713,6 +969,10 @@ export async function runAdCopyEvidence(
           }
     spend(portfolio.usage)
     const output = assembleAgency({
+      executionBrief,
+      engineVersion: agencyV6Enabled
+        ? 'evidence-agency-v6'
+        : 'evidence-agency-v5',
       envelope: evidence.data,
       angles: angles.data.angles,
       hooks: hooks.data.hooks,
@@ -802,7 +1062,7 @@ export async function runAdCopyEvidence(
       schema: EvidenceJudgeSchema,
       version: input.promptVersions?.CopyJudgeOrchestrator,
       frozenPromptContent: input.promptContents?.CopyJudgeOrchestrator,
-      model: JUDGE_MODEL,
+      model: LEGACY_JUDGE_MODEL,
       vertical,
       payload: {
         variant: variants.variants[0],
@@ -942,8 +1202,18 @@ export async function runAdCopyEvidenceAgencyStep(
   if (!input.brainSnapshot) {
     throw new Error('Resumable agency eval requires a frozen brain snapshot')
   }
-  if (!input.brainSnapshot.avatar) {
-    throw new Error('Resumable agency eval requires the frozen avatar v2')
+  const preparedSnapshot = snapshotWithCampaignInput(input)!
+  const executionBrief = compileCopyExecutionBriefV2(preparedSnapshot)
+  if (executionBrief.readiness_status !== 'ready_to_write') {
+    return {
+      done: true,
+      output: assembleInputBlocked(executionBrief) as unknown as Record<
+        string,
+        unknown
+      >,
+      usage: zeroUsage(),
+      mode: 'real',
+    }
   }
   const vertical = input.verticalSlug ?? input.offer.vertical ?? undefined
   const costCap = Number(Deno.env.get('AD_COPY_AGENCY_MAX_USD') ?? '2.25')
@@ -964,7 +1234,7 @@ export async function runAdCopyEvidenceAgencyStep(
   })
 
   if (checkpoint.stage === 'evidence') {
-    const compiled = compileCopyBrainContext(input.brainSnapshot)
+    const compiled = compileCopyBrainContext(preparedSnapshot)
     const evidence = await stage({
       orchestrator: 'CopyExcavateProductOrchestrator',
       tool: 'submit_evidence_envelope',
@@ -976,6 +1246,7 @@ export async function runAdCopyEvidenceAgencyStep(
       vertical,
       payload: {
         offer: input.offer,
+        execution_brief: executionBrief,
         verified_context: compiled.context,
         research_snapshots: [],
         optional_creative_hint: input.creativeHint ?? null,
@@ -986,7 +1257,7 @@ export async function runAdCopyEvidenceAgencyStep(
       {
         stage: 'angles',
         evidence: evidence.data,
-        avatar: input.brainSnapshot.avatar,
+        avatar: preparedSnapshot.avatar,
       },
       evidence.usage
     )
@@ -1007,6 +1278,7 @@ export async function runAdCopyEvidenceAgencyStep(
       vertical,
       payload: {
         offer: input.offer,
+        execution_brief: executionBrief,
         evidence_envelope: evidence,
         avatar,
         deep_brief: input.deepBriefContext ?? null,
@@ -1014,6 +1286,8 @@ export async function runAdCopyEvidenceAgencyStep(
         spy: input.spyContext ?? null,
         optional_creative_hint: input.creativeHint ?? null,
         campaign_context: input.campaignContext ?? null,
+        taste_selection: executionBrief.taste_selection,
+        doctrine_bundle: executionBrief.doctrine_bundle,
       },
     })
     const selectedIndex = Math.max(
@@ -1044,7 +1318,7 @@ export async function runAdCopyEvidenceAgencyStep(
         ),
         selectedIndex,
         refineIterations: 0,
-        engineVersion: 'evidence-agency-v5',
+        engineVersion: 'evidence-agency-v6',
       })
       return {
         done: true,
@@ -1076,12 +1350,16 @@ export async function runAdCopyEvidenceAgencyStep(
       schema: HooksSchema,
       version: input.promptVersions?.CopyHookOrchestrator,
       frozenPromptContent: input.promptContents?.CopyHookOrchestrator,
+      model: WRITER_MODEL,
       vertical,
       payload: {
         angles,
         selected_angle_index: selectedIndex,
         evidence_envelope: evidence,
         avatar,
+        execution_brief: executionBrief,
+        relevant_taste_examples: executionBrief.taste_selection.selected,
+        doctrine_bundle: executionBrief.doctrine_bundle,
       },
     })
     return next({ stage: 'director', hooks: hooks.data.hooks }, hooks.usage)
@@ -1101,15 +1379,19 @@ export async function runAdCopyEvidenceAgencyStep(
       vertical,
       payload: {
         offer: input.offer,
+        execution_brief: executionBrief,
         evidence_envelope: evidence,
         avatar,
         angles,
         campaign_context: input.campaignContext ?? null,
         spy_intelligence: {
-          analyses: input.brainSnapshot.spy_analyses,
-          market_examples: input.brainSnapshot.market_examples,
-          measured_winners: input.brainSnapshot.performance_winners,
+          analyses: preparedSnapshot.spy_analyses,
+          market_examples: preparedSnapshot.market_examples,
+          measured_winners: preparedSnapshot.performance_winners,
         },
+        relevant_taste_examples: executionBrief.taste_selection.selected,
+        doctrine_bundle: executionBrief.doctrine_bundle,
+        latest_quality_baseline: 'michael-v5-positive / round5-negative',
       },
     })
     return next(
@@ -1156,10 +1438,14 @@ export async function runAdCopyEvidenceAgencyStep(
           schema: AgencyEvidenceVariantSchema,
           version: input.promptVersions?.[orchestrator],
           frozenPromptContent: input.promptContents?.[orchestrator],
+          model: WRITER_MODEL,
           vertical,
           payload: {
             candidate_brief: brief,
             offer: input.offer,
+            execution_brief: executionBrief,
+            deep_brief: executionBrief.upstream_context.deep_brief,
+            test_kit: executionBrief.upstream_context.test_kit,
             evidence_envelope: evidence,
             narrative_license: angle.narrative_license,
             conversion_spine: angle.conversion_spine,
@@ -1168,6 +1454,9 @@ export async function runAdCopyEvidenceAgencyStep(
               hooks.find((hook) => hook.angle_index === brief.angle_index) ??
               hooks[0],
             campaign_context: input.campaignContext ?? null,
+            relevant_taste_examples: executionBrief.taste_selection.selected,
+            doctrine_bundle: executionBrief.doctrine_bundle,
+            latest_quality_baseline: 'michael-v5-positive / round5-negative',
           },
         })
         const candidate = AgencyEvidenceVariantSchema.parse({
@@ -1199,6 +1488,8 @@ export async function runAdCopyEvidenceAgencyStep(
         })),
       }
       const output = assembleAgency({
+        executionBrief,
+        engineVersion: 'evidence-agency-v6',
         envelope: evidence,
         angles,
         hooks,
@@ -1225,18 +1516,22 @@ export async function runAdCopyEvidenceAgencyStep(
       schema: CopyPortfolioDecisionSchema,
       version: input.promptVersions?.CopyPortfolioJudgeOrchestrator,
       frozenPromptContent: input.promptContents?.CopyPortfolioJudgeOrchestrator,
-      model: JUDGE_MODEL,
+      model: V6_JUDGE_MODEL,
       vertical,
       payload: {
         department_plan: departmentPlan,
         candidates,
         independent_reviews: reviews,
         evidence_envelope: evidence,
+        execution_brief: executionBrief,
+        doctrine_bundle: executionBrief.doctrine_bundle,
         campaign_context: input.campaignContext ?? null,
       },
     })
     const total = addCheckpointUsage(checkpoint.total, portfolio.usage, costCap)
     const output = assembleAgency({
+      executionBrief,
+      engineVersion: 'evidence-agency-v6',
       envelope: evidence,
       angles,
       hooks,
@@ -1273,6 +1568,7 @@ export async function runAdCopyEvidenceAgencyStep(
       payload: {
         text: currentCandidate.primary_text,
         block_ids: currentCandidate.block_ids,
+        target_reader: executionBrief.audience,
       },
     })
     return next(
@@ -1293,11 +1589,15 @@ export async function runAdCopyEvidenceAgencyStep(
       frozenPromptContent: input.promptContents?.CopyCriticOrchestrator,
       vertical,
       payload: {
+        variant: currentCandidate,
+        execution_brief: executionBrief,
         evidence_envelope: evidence,
         narrative_license: angle.narrative_license,
         conversion_spine: angle.conversion_spine,
         line_purpose_map: currentCandidate.line_purpose_map,
         reader_report: currentReader,
+        doctrine_bundle: executionBrief.doctrine_bundle,
+        relevant_taste_examples: executionBrief.taste_selection.selected,
       },
     })
     return next(
@@ -1309,6 +1609,8 @@ export async function runAdCopyEvidenceAgencyStep(
   const currentCritic = EvidenceCriticSchema.parse(checkpoint.currentCritic)
 
   if (checkpoint.stage === 'candidate_judge') {
+    const deterministicPreflightFlags =
+      candidatePreflightFlags(currentCandidate)
     const judged = await stage({
       orchestrator: 'CopyJudgeOrchestrator',
       tool: 'submit_copy_judgment',
@@ -1316,17 +1618,35 @@ export async function runAdCopyEvidenceAgencyStep(
       schema: EvidenceJudgeSchema,
       version: input.promptVersions?.CopyJudgeOrchestrator,
       frozenPromptContent: input.promptContents?.CopyJudgeOrchestrator,
-      model: JUDGE_MODEL,
+      model: V6_JUDGE_MODEL,
       vertical,
       payload: {
         variant: currentCandidate,
+        execution_brief: executionBrief,
         evidence_envelope: evidence,
         narrative_license: angle.narrative_license,
         conversion_spine: angle.conversion_spine,
         reader_report: currentReader,
         critic_report: currentCritic,
+        doctrine_bundle: executionBrief.doctrine_bundle,
+        deterministic_preflight_flags: deterministicPreflightFlags,
         campaign_context: input.campaignContext ?? null,
       },
+    })
+    const judgedData = EvidenceJudgeSchema.parse({
+      ...judged.data,
+      overall:
+        deterministicPreflightFlags.length > 0 ? 'fail' : judged.data.overall,
+      kill_flags: Array.from(
+        new Set([...judged.data.kill_flags, ...deterministicPreflightFlags])
+      ),
+      evidence:
+        deterministicPreflightFlags.length > 0
+          ? [
+              ...judged.data.evidence,
+              `Deterministic preflight failed: ${deterministicPreflightFlags.join(', ')}`,
+            ]
+          : judged.data.evidence,
     })
     return next(
       {
@@ -1338,7 +1658,7 @@ export async function runAdCopyEvidenceAgencyStep(
             candidate_id: brief.candidate_id,
             reader: currentReader,
             critic: currentCritic,
-            judge: judged.data,
+            judge: judgedData,
           },
         ],
         briefIndex: briefIndex + 1,

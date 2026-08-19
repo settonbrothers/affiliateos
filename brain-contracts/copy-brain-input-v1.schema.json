@@ -35,7 +35,10 @@
       "required": ["channel", "geo", "audience", "generation_language"],
       "properties": {
         "channel": { "type": ["string", "null"] }, "geo": { "type": "array", "items": { "type": "string" } },
-        "audience": { "type": ["string", "null"] }, "generation_language": { "const": "he" }
+        "audience": { "type": ["string", "null"] }, "generation_language": { "const": "he" },
+        "objective_type": { "enum": ["sale", "lead", "donation", "trial", "signup", "affiliate_recruitment"] },
+        "desired_action": { "type": ["string", "null"] },
+        "audience_side": { "enum": ["consumer", "affiliate_marketer", "donor"] }
       }
     },
     "underwriting": { "type": ["object", "null"] },

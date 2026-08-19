@@ -163,7 +163,7 @@
       "source": "integration/copy-engine-v3/schemas/copy-brain-input-v1.schema.json",
       "target": "brain-contracts/copy-brain-input-v1.schema.json",
       "kind": "contract",
-      "sha256": "c447ebea5c6273985cf7dadf2a2df994b66b3698459a41028767b97be59a9ee5"
+      "sha256": "8a7790195d11427b03660748ace9f75b75c33a8dc00149a35fc784abb5cc6485"
     },
     {
       "source": "integration/copy-engine-v3/schemas/copy-execution-brief-v2.schema.json",
@@ -220,6 +220,12 @@
       "sha256": "22465abc8f6577e04f331d4e24892bfe98b57618e12bed5933a85793c5b64409"
     },
     {
+      "source": "integration/copy-engine-v3/fixtures/jasper-corrected-v3.snapshot.json",
+      "target": "brain-evals/jasper-corrected-v3.snapshot.json",
+      "kind": "eval_fixture",
+      "sha256": "46df3fea53d83bc4f640850e851394b040b17e87b6c764a9c03565eaf31fe422"
+    },
+    {
       "source": "tests/copy-system-v2/protocol.json",
       "target": "brain-evals/copy-system-v2.protocol.json",
       "kind": "eval",
@@ -233,8 +239,8 @@
     }
   ],
   "source_repository": "creation-engine",
-  "source_git_sha": "e5d4f04a7d150f0c02c409a6bd54d96e3f751eb3",
-  "compiled_at": "2026-08-19T18:05:45.728Z",
+  "source_git_sha": "0e7b544a3778ba0822d6a8588e31bf6f81b97d20",
+  "compiled_at": "2026-08-19T18:29:11.705Z",
   "regression_commands": [
     "node tests/run-conversion-regressions.mjs",
     "node tests/run-story-evidence-evals.mjs",
@@ -272,8 +278,8 @@
     {
       "command": "node integration/copy-engine-v3/scripts/check-package.mjs",
       "status": "passed",
-      "output": "PASS copy-brain-release-v3: 31 artifacts, 23 active lessons, compiled doctrine routes and Zod parity"
+      "output": "PASS copy-brain-release-v3: 32 artifacts, 23 active lessons, compiled doctrine routes and Zod parity"
     }
   ],
-  "manifest_sha256": "19f1b2ddc38c17a4a841353b2f79514f78232dd36080087c5ff323e9e8d65351"
+  "manifest_sha256": "461c11b5d6bf74623ffdc860cea15735a3aa4150fbd08c541a6f8575dcbc0188"
 }
