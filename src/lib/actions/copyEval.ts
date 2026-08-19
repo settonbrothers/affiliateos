@@ -14,6 +14,7 @@ import {
   sealCopyBrainSnapshot,
   upgradeStoredAvatarToV2,
 } from '@/lib/copy/copyBrainContext'
+import { buildLeanResumePlan } from '@/lib/copy/copyEvalLeanResume'
 import {
   selectAffxEvalOffers,
   type EvalOfferCandidate,
@@ -1116,5 +1117,87 @@ export async function retryFailedCopyEvalJobs(evalRunId: string) {
     .from('copy_eval_runs')
     .update({ status: 'running' })
     .eq('id', evalRunId)
+  revalidatePath(`/admin/eval/copy/${evalRunId}`)
+}
+
+/**
+ * Persists the minimal continuation list and budget boundary without queuing
+ * or running a single job. A separate, explicit action will arm it later.
+ */
+export async function prepareLeanCopyEvalResume(evalRunId: string) {
+  const db = await adminDb()
+  const [
+    { data: evalRun, error: runError },
+    { data: evalCases, error: casesError },
+    { data: evalJobs, error: jobsError },
+  ] = await Promise.all([
+    db.from('copy_eval_runs').select('metrics').eq('id', evalRunId).single(),
+    db
+      .from('copy_eval_cases')
+      .select('id,external_id,split,source_pack')
+      .like('external_id', `${COPY_EVAL_PREFIX}%`),
+    db
+      .from('copy_eval_jobs')
+      .select('id,case_id,engine,repetition,status,cost_usd,internal_trace')
+      .eq('eval_run_id', evalRunId),
+  ])
+  if (runError) throw runError
+  if (casesError) throw casesError
+  if (jobsError) throw jobsError
+
+  const plan = buildLeanResumePlan({
+    cases: (evalCases ?? []).map((evalCase) => ({
+      id: String(evalCase.id),
+      externalId: String(
+        asRecord(evalCase.source_pack)?.id ??
+          String(evalCase.external_id).replace(COPY_EVAL_PREFIX, '')
+      ),
+      split: evalCase.split as 'calibration' | 'holdout',
+    })),
+    jobs: (evalJobs ?? []).map((job) => ({
+      id: String(job.id),
+      caseId: String(job.case_id),
+      engine: job.engine as
+        | 'production_baseline_snapshot'
+        | 'copy_brain_candidate',
+      repetition: Number(job.repetition),
+      status: job.status as 'queued' | 'running' | 'completed' | 'failed',
+      costUsd: Number(job.cost_usd ?? 0),
+      hasCheckpoint: Boolean(
+        asRecord(job.internal_trace)?.candidate_checkpoint
+      ),
+    })),
+    preregisteredRepetitions:
+      protocol.preregistered_presented_repetition as Record<string, number>,
+  })
+  if (plan.status !== 'ready' || plan.selectedJobs.length === 0) {
+    throw new Error(
+      plan.blockers.join('; ') || 'No missing calibration jobs to prepare'
+    )
+  }
+  const baselineRecordedCostUsd = Number(
+    (evalJobs ?? [])
+      .reduce((sum, job) => sum + Number(job.cost_usd ?? 0), 0)
+      .toFixed(6)
+  )
+  const metrics = {
+    ...(asRecord(evalRun.metrics) ?? {}),
+    lean_resume: {
+      status: 'planned',
+      selected_job_ids: plan.selectedJobs.map((job) => job.jobId),
+      baseline_recorded_cost_usd: baselineRecordedCostUsd,
+      estimated_additional_cost_usd: plan.estimatedAdditionalCostUsd,
+      max_additional_cost_usd: plan.recommendedHardCapUsd,
+      minimum_remaining_usd_per_claim: 0.75,
+      ready_calibration_pairs: plan.readyCalibrationPairs,
+      untouched_holdout_cases: plan.untouchedHoldoutCases,
+      prepared_at: new Date().toISOString(),
+    },
+  }
+  const { error } = await db
+    .from('copy_eval_runs')
+    .update({ metrics })
+    .eq('id', evalRunId)
+  if (error) throw error
   revalidatePath(`/admin/eval/copy/${evalRunId}`)
 }
