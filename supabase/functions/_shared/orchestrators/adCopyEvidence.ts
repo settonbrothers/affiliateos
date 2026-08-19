@@ -1,6 +1,7 @@
 import { z, type ZodTypeAny } from 'npm:zod@^3.24.0'
 
 import { callAnthropicWithTool } from '../anthropicJson.ts'
+import { assertNotPaused } from '../killSwitch.ts'
 import { loadActivePrompt, loadPromptVersion } from '../loadActivePrompt.ts'
 import {
   AdCopyEvidenceResponseSchema,
@@ -62,7 +63,11 @@ export type EvidenceAdCopyInput = {
   promptContents?: Record<string, string>
 }
 
-type Usage = { input_tokens: number; output_tokens: number; cost_usd: number }
+export type Usage = {
+  input_tokens: number
+  output_tokens: number
+  cost_usd: number
+}
 
 async function stage<T extends ZodTypeAny>(args: {
   orchestrator: string
@@ -832,4 +837,518 @@ export async function runAdCopyEvidence(
     usage: total,
     mode: 'real',
   }
+}
+
+export type EvidenceAgencyCheckpoint = {
+  stage:
+    | 'evidence'
+    | 'angles'
+    | 'hooks'
+    | 'director'
+    | 'candidate_write'
+    | 'candidate_reader'
+    | 'candidate_critic'
+    | 'candidate_judge'
+    | 'portfolio'
+  total: Usage
+  evidence?: z.infer<typeof EvidenceEnvelopeSchema>
+  avatar?: unknown
+  angles?: z.infer<typeof EvidenceAngleSchema>[]
+  selectedIndex?: number
+  hooks?: z.infer<typeof EvidenceHookSchema>[]
+  departmentPlan?: z.infer<typeof CopyDepartmentPlanSchema>
+  candidates?: z.infer<typeof AgencyEvidenceVariantSchema>[]
+  reviews?: z.infer<typeof CopyCandidateReviewSchema>[]
+  briefIndex?: number
+  currentCandidate?: z.infer<typeof AgencyEvidenceVariantSchema>
+  currentReader?: z.infer<typeof BlindReaderSchema>
+  currentCritic?: z.infer<typeof EvidenceCriticSchema>
+}
+
+export type EvidenceAgencyStepResult =
+  | { done: false; checkpoint: EvidenceAgencyCheckpoint }
+  | {
+      done: true
+      output: Record<string, unknown>
+      usage: Usage
+      mode: 'real'
+    }
+
+const zeroUsage = (): Usage => ({
+  input_tokens: 0,
+  output_tokens: 0,
+  cost_usd: 0,
+})
+
+const addCheckpointUsage = (
+  previous: Usage,
+  current: Usage,
+  cap: number
+): Usage => {
+  const total = {
+    input_tokens: previous.input_tokens + current.input_tokens,
+    output_tokens: previous.output_tokens + current.output_tokens,
+    cost_usd: previous.cost_usd + current.cost_usd,
+  }
+  if (total.cost_usd >= cap) {
+    throw new Error(
+      `Evidence-story generation hit the $${cap.toFixed(2)} cost cap.`
+    )
+  }
+  return total
+}
+
+const checkpointEmptyJudge = (
+  envelope: z.infer<typeof EvidenceEnvelopeSchema>,
+  flags: z.infer<typeof EvidenceJudgeSchema>['kill_flags']
+): z.infer<typeof EvidenceJudgeSchema> => ({
+  principles: [
+    {
+      principle: 'product_understanding',
+      verdict: 'fail',
+      reason: 'Insufficient evidence.',
+    },
+    {
+      principle: 'eye_level_authentic',
+      verdict: 'fail',
+      reason: 'No publishable copy was generated.',
+    },
+    {
+      principle: 'depth_without_exaggeration',
+      verdict: 'fail',
+      reason: 'The engine stopped instead of exaggerating.',
+    },
+  ],
+  compliance_ok: true,
+  overall: 'fail',
+  calibrated: false,
+  notes: 'Evidence gate stopped generation.',
+  kill_flags: flags,
+  evidence: envelope.missing_data.length
+    ? envelope.missing_data
+    : ['The deterministic narrative policy rejected the selected license.'],
+})
+
+/**
+ * Runs at most one remote model call for the agency candidate and returns a
+ * JSON-serializable checkpoint. Eval workers persist the checkpoint between
+ * invocations so the full department is not coupled to one Edge lifetime.
+ */
+export async function runAdCopyEvidenceAgencyStep(
+  input: EvidenceAdCopyInput,
+  prior?: EvidenceAgencyCheckpoint | null
+): Promise<EvidenceAgencyStepResult> {
+  await assertNotPaused('AdCopyOrchestrator')
+  if (!input.brainSnapshot) {
+    throw new Error('Resumable agency eval requires a frozen brain snapshot')
+  }
+  if (!input.brainSnapshot.avatar) {
+    throw new Error('Resumable agency eval requires the frozen avatar v2')
+  }
+  const vertical = input.verticalSlug ?? input.offer.vertical ?? undefined
+  const costCap = Number(Deno.env.get('AD_COPY_AGENCY_MAX_USD') ?? '2.25')
+  const checkpoint: EvidenceAgencyCheckpoint = prior ?? {
+    stage: 'evidence',
+    total: zeroUsage(),
+  }
+  const next = (
+    patch: Partial<EvidenceAgencyCheckpoint>,
+    usage: Usage = zeroUsage()
+  ): EvidenceAgencyStepResult => ({
+    done: false,
+    checkpoint: {
+      ...checkpoint,
+      ...patch,
+      total: addCheckpointUsage(checkpoint.total, usage, costCap),
+    },
+  })
+
+  if (checkpoint.stage === 'evidence') {
+    const compiled = compileCopyBrainContext(input.brainSnapshot)
+    const evidence = await stage({
+      orchestrator: 'CopyExcavateProductOrchestrator',
+      tool: 'submit_evidence_envelope',
+      description: 'Submit the evidence envelope once.',
+      schema: EvidenceEnvelopeSchema,
+      version: input.promptVersions?.CopyExcavateProductOrchestrator,
+      frozenPromptContent:
+        input.promptContents?.CopyExcavateProductOrchestrator,
+      vertical,
+      payload: {
+        offer: input.offer,
+        verified_context: compiled.context,
+        research_snapshots: [],
+        optional_creative_hint: input.creativeHint ?? null,
+        campaign_context: input.campaignContext ?? null,
+      },
+    })
+    return next(
+      {
+        stage: 'angles',
+        evidence: evidence.data,
+        avatar: input.brainSnapshot.avatar,
+      },
+      evidence.usage
+    )
+  }
+
+  const evidence = EvidenceEnvelopeSchema.parse(checkpoint.evidence)
+  const avatar = checkpoint.avatar
+  if (!avatar) throw new Error('Agency checkpoint lost the frozen avatar')
+
+  if (checkpoint.stage === 'angles') {
+    const angles = await stage({
+      orchestrator: 'CopyAngleOrchestrator',
+      tool: 'submit_angles',
+      description: 'Submit evidence-licensed angles once.',
+      schema: AnglesSchema,
+      version: input.promptVersions?.CopyAngleOrchestrator,
+      frozenPromptContent: input.promptContents?.CopyAngleOrchestrator,
+      vertical,
+      payload: {
+        offer: input.offer,
+        evidence_envelope: evidence,
+        avatar,
+        deep_brief: input.deepBriefContext ?? null,
+        test_kit: input.testKit ?? null,
+        spy: input.spyContext ?? null,
+        optional_creative_hint: input.creativeHint ?? null,
+        campaign_context: input.campaignContext ?? null,
+      },
+    })
+    const selectedIndex = Math.max(
+      0,
+      angles.data.angles.findIndex((angle) => angle.is_recommended)
+    )
+    const selected = angles.data.angles[selectedIndex]
+    const policyFlags = validateNarrativePolicy(
+      evidence,
+      selected.narrative_license
+    ) as z.infer<typeof EvidenceJudgeSchema>['kill_flags']
+    const total = addCheckpointUsage(checkpoint.total, angles.usage, costCap)
+    if (
+      evidence.research_status === 'insufficient' ||
+      selected.narrative_license.mode === 'blocked' ||
+      policyFlags.length > 0
+    ) {
+      const output = assemble({
+        envelope: evidence,
+        angles: angles.data.angles,
+        hooks: [],
+        variants: [],
+        reader: null,
+        critic: null,
+        judge: checkpointEmptyJudge(
+          evidence,
+          policyFlags.length ? policyFlags : ['evidence_threshold_unmet']
+        ),
+        selectedIndex,
+        refineIterations: 0,
+        engineVersion: 'evidence-agency-v5',
+      })
+      return {
+        done: true,
+        output: output as unknown as Record<string, unknown>,
+        usage: total,
+        mode: 'real',
+      }
+    }
+    return {
+      done: false,
+      checkpoint: {
+        ...checkpoint,
+        stage: 'hooks',
+        angles: angles.data.angles,
+        selectedIndex,
+        total,
+      },
+    }
+  }
+
+  const angles = z.array(EvidenceAngleSchema).min(1).parse(checkpoint.angles)
+  const selectedIndex = checkpoint.selectedIndex ?? 0
+
+  if (checkpoint.stage === 'hooks') {
+    const hooks = await stage({
+      orchestrator: 'CopyHookOrchestrator',
+      tool: 'submit_hooks',
+      description: 'Submit Hebrew evidence-bound hooks once.',
+      schema: HooksSchema,
+      version: input.promptVersions?.CopyHookOrchestrator,
+      frozenPromptContent: input.promptContents?.CopyHookOrchestrator,
+      vertical,
+      payload: {
+        angles,
+        selected_angle_index: selectedIndex,
+        evidence_envelope: evidence,
+        avatar,
+      },
+    })
+    return next({ stage: 'director', hooks: hooks.data.hooks }, hooks.usage)
+  }
+
+  const hooks = z.array(EvidenceHookSchema).parse(checkpoint.hooks)
+
+  if (checkpoint.stage === 'director') {
+    const directed = await stage({
+      orchestrator: 'CopyDirectorOrchestrator',
+      tool: 'submit_copy_department_plan',
+      description:
+        'Route distinct evidence-bound candidates to specialist writers.',
+      schema: CopyDepartmentPlanSchema,
+      version: input.promptVersions?.CopyDirectorOrchestrator,
+      frozenPromptContent: input.promptContents?.CopyDirectorOrchestrator,
+      vertical,
+      payload: {
+        offer: input.offer,
+        evidence_envelope: evidence,
+        avatar,
+        angles,
+        campaign_context: input.campaignContext ?? null,
+        spy_intelligence: {
+          analyses: input.brainSnapshot.spy_analyses,
+          market_examples: input.brainSnapshot.market_examples,
+          measured_winners: input.brainSnapshot.performance_winners,
+        },
+      },
+    })
+    return next(
+      {
+        stage: 'candidate_write',
+        departmentPlan: directed.data,
+        candidates: [],
+        reviews: [],
+        briefIndex: 0,
+      },
+      directed.usage
+    )
+  }
+
+  const departmentPlan = CopyDepartmentPlanSchema.parse(
+    checkpoint.departmentPlan
+  )
+  const candidates = z
+    .array(AgencyEvidenceVariantSchema)
+    .parse(checkpoint.candidates ?? [])
+  const reviews = z
+    .array(CopyCandidateReviewSchema)
+    .parse(checkpoint.reviews ?? [])
+  const writerBySpecialist = {
+    storytelling: 'CopyStorytellingWriterOrchestrator',
+    direct_response: 'CopyDirectResponseWriterOrchestrator',
+    proof_mechanism: 'CopyProofMechanismWriterOrchestrator',
+  } as const
+
+  if (checkpoint.stage === 'candidate_write') {
+    let briefIndex = checkpoint.briefIndex ?? 0
+    while (briefIndex < departmentPlan.candidate_briefs.length) {
+      const brief = departmentPlan.candidate_briefs[briefIndex]
+      const angle = angles[brief.angle_index]
+      if (
+        angle &&
+        validateNarrativePolicy(evidence, angle.narrative_license).length === 0
+      ) {
+        const orchestrator = writerBySpecialist[brief.specialist]
+        const written = await stage({
+          orchestrator,
+          tool: 'submit_copy_candidate',
+          description: 'Submit one Hebrew specialist candidate.',
+          schema: AgencyEvidenceVariantSchema,
+          version: input.promptVersions?.[orchestrator],
+          frozenPromptContent: input.promptContents?.[orchestrator],
+          vertical,
+          payload: {
+            candidate_brief: brief,
+            offer: input.offer,
+            evidence_envelope: evidence,
+            narrative_license: angle.narrative_license,
+            conversion_spine: angle.conversion_spine,
+            avatar,
+            selected_hook:
+              hooks.find((hook) => hook.angle_index === brief.angle_index) ??
+              hooks[0],
+            campaign_context: input.campaignContext ?? null,
+          },
+        })
+        const candidate = AgencyEvidenceVariantSchema.parse({
+          ...written.data,
+          candidate_id: brief.candidate_id,
+          specialist: brief.specialist,
+          test_hypothesis: brief.test_hypothesis,
+          angle_index: brief.angle_index,
+        })
+        return next(
+          {
+            stage: 'candidate_reader',
+            briefIndex,
+            currentCandidate: candidate,
+          },
+          written.usage
+        )
+      }
+      briefIndex++
+    }
+    if (candidates.length === 0) {
+      const portfolio = {
+        ranked_candidate_ids: [],
+        selection_reason:
+          'All routed candidates failed deterministic policy validation.',
+        rejected_candidates: departmentPlan.candidate_briefs.map((brief) => ({
+          candidate_id: brief.candidate_id,
+          reason: 'deterministic_policy_rejection',
+        })),
+      }
+      const output = assembleAgency({
+        envelope: evidence,
+        angles,
+        hooks,
+        departmentPlan,
+        candidates,
+        reviews,
+        portfolio,
+      })
+      return {
+        done: true,
+        output: output as unknown as Record<string, unknown>,
+        usage: checkpoint.total,
+        mode: 'real',
+      }
+    }
+    return next({ stage: 'portfolio', briefIndex })
+  }
+
+  if (checkpoint.stage === 'portfolio') {
+    const portfolio = await stage({
+      orchestrator: 'CopyPortfolioJudgeOrchestrator',
+      tool: 'submit_copy_portfolio_decision',
+      description: 'Rank only safe and materially distinct copy candidates.',
+      schema: CopyPortfolioDecisionSchema,
+      version: input.promptVersions?.CopyPortfolioJudgeOrchestrator,
+      frozenPromptContent: input.promptContents?.CopyPortfolioJudgeOrchestrator,
+      model: JUDGE_MODEL,
+      vertical,
+      payload: {
+        department_plan: departmentPlan,
+        candidates,
+        independent_reviews: reviews,
+        evidence_envelope: evidence,
+        campaign_context: input.campaignContext ?? null,
+      },
+    })
+    const total = addCheckpointUsage(checkpoint.total, portfolio.usage, costCap)
+    const output = assembleAgency({
+      envelope: evidence,
+      angles,
+      hooks,
+      departmentPlan,
+      candidates,
+      reviews,
+      portfolio: portfolio.data,
+    })
+    return {
+      done: true,
+      output: output as unknown as Record<string, unknown>,
+      usage: total,
+      mode: 'real',
+    }
+  }
+
+  const briefIndex = checkpoint.briefIndex ?? 0
+  const brief = departmentPlan.candidate_briefs[briefIndex]
+  const angle = angles[brief?.angle_index]
+  const currentCandidate = AgencyEvidenceVariantSchema.parse(
+    checkpoint.currentCandidate
+  )
+  if (!brief || !angle) throw new Error('Agency checkpoint lost its brief')
+
+  if (checkpoint.stage === 'candidate_reader') {
+    const read = await stage({
+      orchestrator: 'CopyReaderOrchestrator',
+      tool: 'submit_reader_report',
+      description: 'Submit the blind reader report.',
+      schema: BlindReaderSchema,
+      version: input.promptVersions?.CopyReaderOrchestrator,
+      frozenPromptContent: input.promptContents?.CopyReaderOrchestrator,
+      vertical,
+      payload: {
+        text: currentCandidate.primary_text,
+        block_ids: currentCandidate.block_ids,
+      },
+    })
+    return next(
+      { stage: 'candidate_critic', currentReader: read.data },
+      read.usage
+    )
+  }
+
+  const currentReader = BlindReaderSchema.parse(checkpoint.currentReader)
+
+  if (checkpoint.stage === 'candidate_critic') {
+    const critiqued = await stage({
+      orchestrator: 'CopyCriticOrchestrator',
+      tool: 'submit_critic_report',
+      description: 'Submit the evidence critic report.',
+      schema: EvidenceCriticSchema,
+      version: input.promptVersions?.CopyCriticOrchestrator,
+      frozenPromptContent: input.promptContents?.CopyCriticOrchestrator,
+      vertical,
+      payload: {
+        evidence_envelope: evidence,
+        narrative_license: angle.narrative_license,
+        conversion_spine: angle.conversion_spine,
+        line_purpose_map: currentCandidate.line_purpose_map,
+        reader_report: currentReader,
+      },
+    })
+    return next(
+      { stage: 'candidate_judge', currentCritic: critiqued.data },
+      critiqued.usage
+    )
+  }
+
+  const currentCritic = EvidenceCriticSchema.parse(checkpoint.currentCritic)
+
+  if (checkpoint.stage === 'candidate_judge') {
+    const judged = await stage({
+      orchestrator: 'CopyJudgeOrchestrator',
+      tool: 'submit_copy_judgment',
+      description: 'Submit the structured copy judgment.',
+      schema: EvidenceJudgeSchema,
+      version: input.promptVersions?.CopyJudgeOrchestrator,
+      frozenPromptContent: input.promptContents?.CopyJudgeOrchestrator,
+      model: JUDGE_MODEL,
+      vertical,
+      payload: {
+        variant: currentCandidate,
+        evidence_envelope: evidence,
+        narrative_license: angle.narrative_license,
+        conversion_spine: angle.conversion_spine,
+        reader_report: currentReader,
+        critic_report: currentCritic,
+        campaign_context: input.campaignContext ?? null,
+      },
+    })
+    return next(
+      {
+        stage: 'candidate_write',
+        candidates: [...candidates, currentCandidate],
+        reviews: [
+          ...reviews,
+          {
+            candidate_id: brief.candidate_id,
+            reader: currentReader,
+            critic: currentCritic,
+            judge: judged.data,
+          },
+        ],
+        briefIndex: briefIndex + 1,
+        currentCandidate: undefined,
+        currentReader: undefined,
+        currentCritic: undefined,
+      },
+      judged.usage
+    )
+  }
+
+  throw new Error(`Unsupported agency checkpoint stage: ${checkpoint.stage}`)
 }
