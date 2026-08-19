@@ -6,8 +6,10 @@ import {
   CopyEvalReview,
   type BlindPair,
 } from '@/components/admin/CopyEvalReview'
+import { CopyEvalProgress } from '@/components/admin/CopyEvalProgress'
 import { CopyEvalRunner } from '@/components/admin/CopyEvalRunner'
 import { brainSha256 } from '@/lib/copy/copyBrainContext'
+import { buildLeanResumePlan } from '@/lib/copy/copyEvalLeanResume'
 import {
   isAnthropicCreditFailure,
   selectReviewablePairJobs,
@@ -31,6 +33,8 @@ type EvalJobRow = {
   repetition: number
   status: string
   output_payload: unknown
+  internal_trace: unknown
+  cost_usd: number | string | null
   error_message: string | null
 }
 type EvalScoreRow = { case_id: string }
@@ -68,7 +72,7 @@ export default async function CopyEvalRunPage({
       db
         .from('copy_eval_jobs')
         .select(
-          'id,case_id,engine,repetition,status,output_payload,error_message'
+          'id,case_id,engine,repetition,status,output_payload,internal_trace,cost_usd,error_message'
         )
         .eq('eval_run_id', id),
       db.from('copy_eval_owner_scores').select('case_id').eq('eval_run_id', id),
@@ -93,6 +97,29 @@ export default async function CopyEvalRunPage({
   const calibrationScored = [...scored].filter((caseId) =>
     calibrationIds.has(caseId)
   ).length
+  const leanResumePlan = buildLeanResumePlan({
+    cases: caseRows.map((evalCase) => ({
+      id: evalCase.id,
+      externalId: String(
+        record(evalCase.source_pack)?.id ??
+          evalCase.external_id.replace('copy-brain-v5:', '')
+      ),
+      split: evalCase.split as 'calibration' | 'holdout',
+    })),
+    jobs: jobRows.map((job) => ({
+      id: job.id,
+      caseId: job.case_id,
+      engine: job.engine as
+        | 'production_baseline_snapshot'
+        | 'copy_brain_candidate',
+      repetition: job.repetition,
+      status: job.status as 'queued' | 'running' | 'completed' | 'failed',
+      costUsd: Number(job.cost_usd ?? 0),
+      hasCheckpoint: Boolean(record(job.internal_trace)?.candidate_checkpoint),
+    })),
+    preregisteredRepetitions:
+      protocol.preregistered_presented_repetition as Record<string, number>,
+  })
   const pairs: BlindPair[] = []
   for (const evalCase of caseRows) {
     const pack = record(evalCase.source_pack)
@@ -143,12 +170,50 @@ export default async function CopyEvalRunPage({
           {scored.size}/8
         </p>
       </div>
+      <CopyEvalProgress
+        completed={complete}
+        failed={failed}
+        total={48}
+        active={!creditPaused && complete + failed < 48}
+      />
       <CopyEvalRunner
         runId={id}
         remaining={48 - complete - failed}
         failed={failed}
         creditPaused={creditPaused}
       />
+      <section className="rounded border border-[var(--color-border)] p-4 text-sm">
+        <h2 className="font-semibold">מסלול ההמשך החסכוני</h2>
+        {leanResumePlan.status === 'ready' ? (
+          <div className="mt-2 space-y-1 text-[var(--color-muted-foreground)]">
+            <p>
+              נבחרו {leanResumePlan.selectedJobs.length} משימות ממוקדות בלבד;
+              יתר {failed - leanResumePlan.selectedJobs.length} המשימות שנכשלו
+              יישארו סגורות.
+            </p>
+            <p>
+              {
+                leanResumePlan.selectedJobs.filter(
+                  (job) => job.resumesCheckpoint
+                ).length
+              }{' '}
+              מהמשימות ימשיכו מנקודת עצירה שנשמרה. שני מקרי ה־holdout אינם
+              נכללים בתוכנית.
+            </p>
+            <p>
+              אומדן לפי הריצה הנוכחית: $
+              {leanResumePlan.estimatedAdditionalCostUsd.toFixed(2)}. תקרת
+              ההוצאה המומלצת לפני הפעלה: $
+              {leanResumePlan.recommendedHardCapUsd.toFixed(2)}.
+            </p>
+            <p>זוהי תוכנית בלבד — שום משימה לא הוחזרה לתור.</p>
+          </div>
+        ) : (
+          <div className="mt-2 text-amber-700">
+            תוכנית ההמשך נעולה עד לפתרון: {leanResumePlan.blockers.join('; ')}
+          </div>
+        )}
+      </section>
       {pairs.length > 0 && (
         <CopyEvalReview
           runId={id}
