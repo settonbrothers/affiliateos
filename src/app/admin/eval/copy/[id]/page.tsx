@@ -8,8 +8,7 @@ import {
 } from '@/components/admin/CopyEvalReview'
 import { CopyEvalProgress } from '@/components/admin/CopyEvalProgress'
 import { CopyEvalRunner } from '@/components/admin/CopyEvalRunner'
-import { Button } from '@/components/ui/button'
-import { prepareLeanCopyEvalResume } from '@/lib/actions/copyEval'
+import { CopyEvalLeanPlanControl } from '@/components/admin/CopyEvalLeanPlanControl'
 import { brainSha256 } from '@/lib/copy/copyBrainContext'
 import { buildLeanResumePlan } from '@/lib/copy/copyEvalLeanResume'
 import {
@@ -210,17 +209,10 @@ export default async function CopyEvalRunPage({
               {leanResumePlan.recommendedHardCapUsd.toFixed(2)}.
             </p>
             <p>זוהי תוכנית בלבד — שום משימה לא הוחזרה לתור.</p>
-            {persistedLeanResume?.status === 'planned' ? (
-              <p className="font-medium text-emerald-700">
-                התוכנית ננעלה, אך אינה מופעלת. הפעלתה תדרוש פעולה נפרדת.
-              </p>
-            ) : (
-              <form action={prepareLeanCopyEvalResume.bind(null, id)}>
-                <Button className="mt-2" type="submit" variant="outline">
-                  נעל את התוכנית ללא הפעלת AI
-                </Button>
-              </form>
-            )}
+            <CopyEvalLeanPlanControl
+              runId={id}
+              initiallyLocked={persistedLeanResume?.status === 'planned'}
+            />
           </div>
         ) : (
           <div className="mt-2 text-amber-700">
