@@ -8,6 +8,8 @@ import {
 } from '@/components/admin/CopyEvalReview'
 import { CopyEvalProgress } from '@/components/admin/CopyEvalProgress'
 import { CopyEvalRunner } from '@/components/admin/CopyEvalRunner'
+import { Button } from '@/components/ui/button'
+import { prepareLeanCopyEvalResume } from '@/lib/actions/copyEval'
 import { brainSha256 } from '@/lib/copy/copyBrainContext'
 import { buildLeanResumePlan } from '@/lib/copy/copyEvalLeanResume'
 import {
@@ -17,7 +19,7 @@ import {
 import { createClient } from '@/lib/supabase/server'
 
 type RecordValue = Record<string, unknown>
-type EvalRunRow = { id: string; status: string }
+type EvalRunRow = { id: string; status: string; metrics: unknown }
 type EvalCaseRow = {
   id: string
   external_id: string
@@ -120,6 +122,7 @@ export default async function CopyEvalRunPage({
     preregisteredRepetitions:
       protocol.preregistered_presented_repetition as Record<string, number>,
   })
+  const persistedLeanResume = record(record(evalRun.metrics)?.lean_resume)
   const pairs: BlindPair[] = []
   for (const evalCase of caseRows) {
     const pack = record(evalCase.source_pack)
@@ -207,6 +210,17 @@ export default async function CopyEvalRunPage({
               {leanResumePlan.recommendedHardCapUsd.toFixed(2)}.
             </p>
             <p>זוהי תוכנית בלבד — שום משימה לא הוחזרה לתור.</p>
+            {persistedLeanResume?.status === 'planned' ? (
+              <p className="font-medium text-emerald-700">
+                התוכנית ננעלה, אך אינה מופעלת. הפעלתה תדרוש פעולה נפרדת.
+              </p>
+            ) : (
+              <form action={prepareLeanCopyEvalResume.bind(null, id)}>
+                <Button className="mt-2" type="submit" variant="outline">
+                  נעל את התוכנית ללא הפעלת AI
+                </Button>
+              </form>
+            )}
           </div>
         ) : (
           <div className="mt-2 text-amber-700">

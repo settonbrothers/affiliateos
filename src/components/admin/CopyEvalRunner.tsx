@@ -45,6 +45,23 @@ export function CopyEvalRunner({
         }),
       ])
       router.refresh()
+      const pauseReason = results
+        .map((result) => result.data?.reason)
+        .find((reason) =>
+          [
+            'lean_not_armed',
+            'lean_policy_invalid',
+            'lean_budget_boundary',
+          ].includes(reason)
+        )
+      if (pauseReason) {
+        setMessage(
+          pauseReason === 'lean_budget_boundary'
+            ? 'העיבוד נעצר בגבול התקציב שנקבע. לא נפתחה קריאת AI נוספת.'
+            : 'תכנית ההמשך אינה פעילה או אינה תקינה, ולכן לא נפתחה קריאת AI.'
+        )
+        break
+      }
       if (results.every((result) => result.data?.claimed === false)) {
         const pending = Math.max(
           ...results.map((result) => Number(result.data?.pending ?? 0))
@@ -57,8 +74,10 @@ export function CopyEvalRunner({
     }
     active.current = false
     setRunning(false)
-    setMessage(
-      'העיבוד נעצר או שאין כרגע jobs פנויים. רענון יציג את המצב העדכני.'
+    setMessage((current) =>
+      current.includes('קריאת AI')
+        ? current
+        : 'העיבוד נעצר או שאין כרגע jobs פנויים. רענון יציג את המצב העדכני.'
     )
     router.refresh()
   }

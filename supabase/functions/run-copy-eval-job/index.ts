@@ -3,6 +3,7 @@ import {
   requireAdmin,
   UnauthorizedError,
 } from '../_shared/auth.ts'
+import { resolveCopyEvalLeanExecutionPolicy } from '../_shared/copyEvalLeanBudget.ts'
 import { handleCors, jsonResponse } from '../_shared/cors.ts'
 import { runAdCopy } from '../_shared/orchestrators/adCopy.ts'
 import {
@@ -71,18 +72,63 @@ const extractDecision = (output: JsonRecord) => {
   }
 }
 
-async function claimJob(runId?: string) {
+class CopyEvalClaimPausedError extends Error {
+  constructor(
+    public readonly reason:
+      | 'lean_not_armed'
+      | 'lean_policy_invalid'
+      | 'lean_budget_boundary'
+  ) {
+    super(reason)
+    this.name = 'CopyEvalClaimPausedError'
+  }
+}
+
+async function claimJob(runId: string) {
   const admin = getAdminClient()
-  if (runId) {
-    const { count, error: countError } = await admin
+  const now = new Date().toISOString()
+  const [
+    { data: evalRun, error: runError },
+    { data: costs, error: costsError },
+    { count: activeCount, error: activeError },
+  ] = await Promise.all([
+    admin.from('copy_eval_runs').select('metrics').eq('id', runId).single(),
+    admin.from('copy_eval_jobs').select('cost_usd').eq('eval_run_id', runId),
+    admin
       .from('copy_eval_jobs')
       .select('id', { count: 'exact', head: true })
       .eq('eval_run_id', runId)
       .eq('status', 'running')
-      .gt('lease_expires_at', new Date().toISOString())
-    if (countError) throw countError
-    if ((count ?? 0) >= 2) return null
+      .gt('lease_expires_at', now),
+  ])
+  if (runError) throw runError
+  if (costsError) throw costsError
+  if (activeError) throw activeError
+  const recordedCostUsd = (costs ?? []).reduce(
+    (sum, row) => sum + Number(row.cost_usd ?? 0),
+    0
+  )
+  const executionPolicy = resolveCopyEvalLeanExecutionPolicy({
+    metrics: evalRun.metrics,
+    recordedCostUsd,
+    activeJobs: activeCount ?? 0,
+  })
+  if (executionPolicy.mode === 'disabled') {
+    throw new CopyEvalClaimPausedError(
+      executionPolicy.reason === 'invalid_policy'
+        ? 'lean_policy_invalid'
+        : 'lean_not_armed'
+    )
   }
+  if (executionPolicy.mode === 'lean' && !executionPolicy.canClaim) {
+    if (executionPolicy.reason === 'budget_boundary')
+      throw new CopyEvalClaimPausedError('lean_budget_boundary')
+    return null
+  }
+  const concurrencyLimit = executionPolicy.mode === 'lean' ? 1 : 2
+  if ((activeCount ?? 0) >= concurrencyLimit) return null
+  const selectedJobIds =
+    executionPolicy.mode === 'lean' ? executionPolicy.selectedJobIds : null
   const jobFields =
     'id,eval_run_id,case_id,engine,repetition,status,attempt_count,lease_expires_at,internal_trace,tokens_input,tokens_output,cost_usd'
   let expiredQuery = admin
@@ -92,7 +138,8 @@ async function claimJob(runId?: string) {
     .lt('lease_expires_at', new Date().toISOString())
     .order('lease_expires_at', { ascending: true })
     .limit(1)
-  if (runId) expiredQuery = expiredQuery.eq('eval_run_id', runId)
+    .eq('eval_run_id', runId)
+  if (selectedJobIds) expiredQuery = expiredQuery.in('id', selectedJobIds)
   const { data: expired, error: expiredError } = await expiredQuery
   if (expiredError) throw expiredError
   let candidate = expired?.[0]
@@ -104,7 +151,8 @@ async function claimJob(runId?: string) {
       .eq('status', 'queued')
       .order('created_at', { ascending: true })
       .limit(1)
-    if (runId) query = query.eq('eval_run_id', runId)
+      .eq('eval_run_id', runId)
+    if (selectedJobIds) query = query.in('id', selectedJobIds)
     const { data: candidates, error } = await query
     if (error) throw error
     candidate = candidates?.[0]
@@ -128,7 +176,7 @@ async function claimJob(runId?: string) {
     .select(`${jobFields},started_at`)
     .maybeSingle()
   if (claimError) throw claimError
-  if (claimed && runId) {
+  if (claimed) {
     const { count: activeCount, error: activeError } = await admin
       .from('copy_eval_jobs')
       .select('id', { count: 'exact', head: true })
@@ -136,7 +184,7 @@ async function claimJob(runId?: string) {
       .eq('status', 'running')
       .gt('lease_expires_at', new Date().toISOString())
     if (activeError) throw activeError
-    if ((activeCount ?? 0) > 2) {
+    if ((activeCount ?? 0) > concurrencyLimit) {
       const { error: releaseError } = await admin
         .from('copy_eval_jobs')
         .update({
@@ -375,6 +423,8 @@ Deno.serve(async (req: Request) => {
     const body = (await req.json().catch(() => ({}))) as {
       eval_run_id?: string
     }
+    if (!body.eval_run_id)
+      return jsonResponse({ error: 'eval_run_id is required' }, 400)
     claimed = await claimJob(body.eval_run_id)
     if (!claimed) {
       let pendingQuery = getAdminClient()
@@ -424,6 +474,9 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: error.message }, 401)
     if (error instanceof ForbiddenError)
       return jsonResponse({ error: error.message }, 403)
+    if (error instanceof CopyEvalClaimPausedError) {
+      return jsonResponse({ claimed: false, pending: 0, reason: error.reason })
+    }
     return jsonResponse(
       { error: error instanceof Error ? error.message : 'Internal error' },
       500
