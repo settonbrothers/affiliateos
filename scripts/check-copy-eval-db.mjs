@@ -47,6 +47,26 @@ const query = `
       )
       from public.copy_eval_jobs
       where status <> 'queued'
+    ),
+    'checkpoint_jobs', (
+      select coalesce(
+        json_agg(
+          json_build_object(
+            'engine', engine,
+            'status', status,
+            'repetition', repetition,
+            'attempt_count', attempt_count,
+            'checkpoint_stage', internal_trace->'candidate_checkpoint'->>'stage',
+            'candidate_latency_ms', internal_trace->>'candidate_latency_ms',
+            'candidate_cost_usd', internal_trace->>'candidate_cost_usd',
+            'lease_expires_at', lease_expires_at,
+            'error_message', error_message
+          ) order by created_at
+        ),
+        '[]'::json
+      )
+      from public.copy_eval_jobs
+      where internal_trace->'candidate_checkpoint' is not null
     )
   ) as diagnostic
 `
