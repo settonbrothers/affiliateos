@@ -35,6 +35,8 @@ jobs:
           FN="${{ github.event.inputs.function }}"
           if [ "$FN" = "__copy_eval_db_check__" ]; then
             node -e 'const run = async () => { const query = "select json_build_object('\''migrations'\'', (select coalesce(json_agg(json_build_object('\''version'\'', version, '\''name'\'', name) order by version), '\''[]'\''::json) from supabase_migrations.schema_migrations where version >= '\''0040'\''), '\''migration_columns'\'', (select coalesce(json_agg(column_name order by ordinal_position), '\''[]'\''::json) from information_schema.columns where table_schema = '\''supabase_migrations'\'' and table_name = '\''schema_migrations'\''), '\''copy_eval_cases_exists'\'', to_regclass('\''public.copy_eval_cases'\'') is not null, '\''offer_economics_exists'\'', to_regclass('\''public.offer_economics'\'') is not null, '\''negative_spend_rows'\'', (select count(*) from public.campaign_results where spend_usd < 0), '\''negative_revenue_rows'\'', (select count(*) from public.campaign_results where revenue_usd < 0)) as preflight"; const response = await fetch(`https://api.supabase.com/v1/projects/${process.env.PROJECT_REF}/database/query/read-only`, { method: "POST", headers: { authorization: `Bearer ${process.env.SUPABASE_ACCESS_TOKEN}`, "content-type": "application/json" }, body: JSON.stringify({ query }) }); const body = await response.text(); console.log(`Database migration check: HTTP ${response.status}`); console.log(body); if (!response.ok) process.exit(1) }; run()'
+          elif [ "$FN" = "__copy_eval_db_apply__" ]; then
+            node scripts/deploy-copy-eval-db.mjs
           elif [ -n "$FN" ]; then
             supabase functions deploy "$FN" --project-ref "$REF"
           else
