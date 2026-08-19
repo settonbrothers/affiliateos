@@ -33,7 +33,30 @@ jobs:
         run: |
           REF="${{ secrets.SUPABASE_PROJECT_REF }}"
           FN="${{ github.event.inputs.function }}"
-          if [ -n "$FN" ]; then
+          if [ "$FN" = "__copy_eval_db_check__" ]; then
+            node <<'NODE'
+            const ref = process.env.PROJECT_REF
+            const token = process.env.SUPABASE_ACCESS_TOKEN
+            const response = await fetch(
+              `https://api.supabase.com/v1/projects/${ref}/database/query/read-only`,
+              {
+                method: 'POST',
+                headers: {
+                  authorization: `Bearer ${token}`,
+                  'content-type': 'application/json',
+                },
+                body: JSON.stringify({
+                  query:
+                    "select version, name from supabase_migrations.schema_migrations where version >= '0040' order by version",
+                }),
+              }
+            )
+            const body = await response.text()
+            console.log(`Database migration check: HTTP ${response.status}`)
+            console.log(body)
+            if (!response.ok) process.exit(1)
+            NODE
+          elif [ -n "$FN" ]; then
             supabase functions deploy "$FN" --project-ref "$REF"
           else
             for dir in supabase/functions/*/; do
@@ -46,3 +69,5 @@ jobs:
               supabase functions deploy "$name" --project-ref "$REF"
             done
           fi
+        env:
+          PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
