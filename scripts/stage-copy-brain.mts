@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 
 import { createClient } from '@supabase/supabase-js'
@@ -10,6 +11,7 @@ if (!rawManifestPath) {
   throw new Error('Usage: pnpm brain:stage -- --package <manifest.json>')
 }
 const manifestPath = resolve(rawManifestPath)
+const repoRoot = resolve(import.meta.dirname, '..')
 const env: Record<string, string> = {
   ...(process.env as Record<string, string>),
 }
@@ -30,6 +32,7 @@ const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
     kind: string
     orchestrator?: string
     version?: string
+    sha256: string
   }>
 }
 const root = dirname(manifestPath)
@@ -42,7 +45,14 @@ for (const file of manifest.files.filter((item) => item.kind === 'prompt')) {
   if (!file.orchestrator || !file.version) {
     throw new Error(`${file.target}: prompt metadata missing`)
   }
-  const content = readFileSync(join(root, file.target), 'utf8')
+  const packagedPath = join(root, file.target)
+  const installedPath = join(repoRoot, file.target)
+  const contentPath = existsSync(packagedPath) ? packagedPath : installedPath
+  const content = readFileSync(contentPath, 'utf8')
+  const actualSha = createHash('sha256').update(content).digest('hex')
+  if (actualSha !== file.sha256) {
+    throw new Error(`${file.target}: staged prompt checksum mismatch`)
+  }
   const { data: existing, error } = await db
     .from('prompts')
     .select('id,is_active')
