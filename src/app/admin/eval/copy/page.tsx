@@ -11,7 +11,7 @@ export default async function CopyEvalPage() {
     db
       .from('copy_eval_cases')
       .select('id', { count: 'exact', head: true })
-      .like('external_id', 'copy-brain-v2:%'),
+      .like('external_id', 'copy-brain-v5:%'),
     db
       .from('copy_eval_runs')
       .select('id,status,engine_version,started_at,total_cost_usd')

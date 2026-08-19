@@ -50,23 +50,38 @@ export async function saveCampaignResults(
   input: CampaignResultsInput
 ): Promise<{ error: string } | void> {
   const parsed = CampaignResultsSchema.safeParse(input)
-  if (!parsed.success) return { error: parsed.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('; ') }
+  if (!parsed.success)
+    return {
+      error: parsed.error.errors
+        .map((e) => `${e.path.join('.')}: ${e.message}`)
+        .join('; '),
+    }
 
   const supabase = await createClient()
   const now = new Date().toISOString()
-  const { error } = await supabase
-    .from('campaign_results')
-    .upsert(
-      { campaign_id: campaignId, ...parsed.data, updated_at: now },
-      { onConflict: 'campaign_id' }
-    )
+  const legacyUsd = parsed.data.spend_currency === 'USD'
+  const legacyRevenueUsd = parsed.data.commission_currency === 'USD'
+  const { error } = await supabase.from('campaign_results').upsert(
+    {
+      campaign_id: campaignId,
+      ...parsed.data,
+      spend_usd: legacyUsd ? parsed.data.spend_amount : 0,
+      revenue_usd: legacyRevenueUsd ? parsed.data.commission_amount : 0,
+      updated_at: now,
+    } as never,
+    { onConflict: 'campaign_id' }
+  )
   if (error) return { error: error.message }
 
   // Advance status out of 'draft' once results exist (don't downgrade a
   // previously diagnosed campaign).
   await supabase
     .from('campaigns')
-    .update({ status: 'results_entered', updated_at: now })
+    .update({
+      status: 'results_entered',
+      reporting_currency: parsed.data.spend_currency,
+      updated_at: now,
+    } as never)
     .eq('id', campaignId)
     .eq('status', 'draft')
 

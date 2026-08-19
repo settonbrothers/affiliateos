@@ -146,7 +146,87 @@ export const EvidenceVariantSchema = z.object({
   angle_index: z.number().int().min(0),
   block_ids: z.array(z.string()),
   line_purpose_map: z.array(z.record(z.unknown())),
+  candidate_id: z.string().optional(),
+  specialist: z
+    .enum(['storytelling', 'direct_response', 'proof_mechanism'])
+    .optional(),
+  test_hypothesis: z.string().optional(),
 })
+
+export const CopySpecialistSchema = z.enum([
+  'storytelling',
+  'direct_response',
+  'proof_mechanism',
+])
+export const CopyCandidateBriefSchema = z.object({
+  candidate_id: z.string().min(1),
+  specialist: CopySpecialistSchema,
+  test_hypothesis: z.string().min(1),
+  reader_change: z.string().min(1),
+  evidence_anchor_ids: z.array(z.string().min(1)).min(1),
+  spy_influence: z.string(),
+  material_difference: z.string().min(1),
+  angle_index: z.number().int().min(0),
+})
+export const CopyDepartmentPlanSchema = z.object({
+  schema_version: z.literal('copy-department-v1'),
+  primary_specialist: CopySpecialistSchema,
+  challenger_specialist: CopySpecialistSchema.nullable(),
+  routing_reason: z.string().min(1),
+  candidate_briefs: z.array(CopyCandidateBriefSchema).min(1).max(3),
+  diversity_limitations: z.array(z.string()),
+})
+export const AgencyEvidenceVariantSchema = EvidenceVariantSchema.extend({
+  candidate_id: z.string().min(1),
+  specialist: CopySpecialistSchema,
+  test_hypothesis: z.string().min(1),
+})
+export const CopyPortfolioDecisionSchema = z.object({
+  ranked_candidate_ids: z.array(z.string()).max(3),
+  selection_reason: z.string(),
+  rejected_candidates: z.array(
+    z.object({
+      candidate_id: z.string(),
+      reason: z.string(),
+    })
+  ),
+})
+export const CreativeDepartmentFoundationSchema = z.object({
+  schema_version: z.literal('creative-department-foundation-v1'),
+  director: z.literal('creative_director'),
+  specialists: z.tuple([
+    z.literal('performance_visual'),
+    z.literal('native_visual_storytelling'),
+  ]),
+  review_dimensions: z
+    .array(
+      z.enum([
+        'truth',
+        'copy_fit',
+        'compliance',
+        'scroll_stop',
+        'visual_clarity',
+        'native_feel',
+      ])
+    )
+    .min(4),
+  activation: z.literal('foundation_only_not_runtime_enabled'),
+})
+export const CREATIVE_DEPARTMENT_FOUNDATION =
+  CreativeDepartmentFoundationSchema.parse({
+    schema_version: 'creative-department-foundation-v1',
+    director: 'creative_director',
+    specialists: ['performance_visual', 'native_visual_storytelling'],
+    review_dimensions: [
+      'truth',
+      'copy_fit',
+      'compliance',
+      'scroll_stop',
+      'visual_clarity',
+      'native_feel',
+    ],
+    activation: 'foundation_only_not_runtime_enabled',
+  })
 
 export const KillFlagV4Schema = z.enum([
   'no_dominant_peak',
@@ -209,9 +289,15 @@ export const EvidenceJudgeSchema = z.object({
   kill_flags: z.array(KillFlagV4Schema),
   evidence: z.array(z.string()),
 })
+export const CopyCandidateReviewSchema = z.object({
+  candidate_id: z.string(),
+  reader: BlindReaderSchema,
+  critic: EvidenceCriticSchema,
+  judge: EvidenceJudgeSchema,
+})
 
 export const AdCopyEvidencePayloadSchema = z.object({
-  engine_version: z.literal('evidence-story-v4'),
+  engine_version: z.enum(['evidence-story-v4', 'evidence-agency-v5']),
   output_status: z.enum([
     'ready_for_user',
     'needs_evidence',
@@ -223,6 +309,10 @@ export const AdCopyEvidencePayloadSchema = z.object({
   angles: z.array(EvidenceAngleSchema).min(1).max(5),
   hooks: z.array(EvidenceHookSchema),
   variants: z.array(EvidenceVariantSchema),
+  department_plan: CopyDepartmentPlanSchema.nullable().optional(),
+  recommended_candidate_id: z.string().nullable().optional(),
+  candidate_reviews: z.array(CopyCandidateReviewSchema).optional(),
+  portfolio_decision: CopyPortfolioDecisionSchema.nullable().optional(),
   reader_report: BlindReaderSchema.nullable(),
   critic_report: EvidenceCriticSchema.nullable(),
   judge: EvidenceJudgeSchema,
@@ -230,6 +320,7 @@ export const AdCopyEvidencePayloadSchema = z.object({
   trace: z.object({
     source_snapshot_refs: z.array(z.string()),
     selected_angle_index: z.number().int().min(0).nullable(),
+    candidate_ids: z.array(z.string()).optional(),
   }),
   user_message: z.string(),
 })

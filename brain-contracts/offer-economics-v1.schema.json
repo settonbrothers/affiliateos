@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://affx.local/schemas/offer-economics-v1.schema.json",
+  "title": "OfferEconomicsV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "internal_only", "commission_model", "commission_event",
+    "payout_currency", "fixed_payout_per_event", "revenue_share_rate",
+    "average_order_value", "approval_rate", "reversal_rate",
+    "variable_fee_per_approved_conversion", "recurring_value", "payout_delay_days",
+    "network_epc", "fx_to_reporting_currency", "sources", "missing_inputs"
+  ],
+  "properties": {
+    "schema_version": { "const": "offer-economics-v1" },
+    "internal_only": { "const": true },
+    "commission_model": { "enum": ["fixed_per_conversion", "revenue_share", "recurring", "hybrid", "unknown"] },
+    "commission_event": { "enum": ["raw_conversion", "approved_conversion", "sale", "unknown"] },
+    "payout_currency": { "type": ["string", "null"], "pattern": "^[A-Z]{3}$" },
+    "fixed_payout_per_event": { "type": ["number", "null"], "minimum": 0 },
+    "revenue_share_rate": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+    "average_order_value": { "type": ["number", "null"], "minimum": 0 },
+    "approval_rate": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+    "reversal_rate": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+    "variable_fee_per_approved_conversion": { "type": ["number", "null"], "minimum": 0 },
+    "recurring_value": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["amount_per_period", "period", "validated_retention_periods"],
+      "properties": {
+        "amount_per_period": { "type": ["number", "null"], "minimum": 0 },
+        "period": { "enum": ["month", "year", "unknown"] },
+        "validated_retention_periods": { "type": ["number", "null"], "minimum": 0 }
+      }
+    },
+    "payout_delay_days": { "type": ["integer", "null"], "minimum": 0 },
+    "network_epc": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["amount", "currency", "basis"],
+      "properties": {
+        "amount": { "type": ["number", "null"], "minimum": 0 },
+        "currency": { "type": ["string", "null"], "pattern": "^[A-Z]{3}$" },
+        "basis": { "enum": ["network_reported", "measured_campaign", "unknown"] }
+      }
+    },
+    "fx_to_reporting_currency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reporting_currency", "rate", "source", "captured_at"],
+      "properties": {
+        "reporting_currency": { "type": ["string", "null"], "pattern": "^[A-Z]{3}$" },
+        "rate": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+        "source": { "type": ["string", "null"] },
+        "captured_at": { "type": ["string", "null"], "format": "date-time" }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source_id", "field", "verified", "confidence", "as_of"],
+        "properties": {
+          "source_id": { "type": "string", "minLength": 1 },
+          "field": { "type": "string", "minLength": 1 },
+          "verified": { "type": "boolean" },
+          "confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "as_of": { "type": ["string", "null"], "format": "date-time" }
+        }
+      }
+    },
+    "missing_inputs": { "type": "array", "items": { "type": "string" } }
+  }
+}

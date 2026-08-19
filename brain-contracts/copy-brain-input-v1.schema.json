@@ -8,7 +8,7 @@
     "schema_version", "snapshot_id", "captured_at", "origin", "fixture_only",
     "offer", "campaign_context", "underwriting", "compliance", "sources",
     "research_documents", "deep_brief", "spy_analyses", "market_examples",
-    "performance_winners", "avatar", "test_kit", "taste_corpus", "hook_library",
+    "performance_winners", "avatar", "test_kit", "offer_economics", "taste_corpus", "hook_library",
     "creative_hint", "missing_inputs", "omitted_context", "snapshot_sha256"
   ],
   "properties": {
@@ -48,6 +48,13 @@
     "performance_winners": { "type": "array", "items": { "$ref": "#/$defs/winner" } },
     "avatar": { "type": ["object", "null"] },
     "test_kit": { "type": ["object", "null"] },
+    "offer_economics": {
+      "oneOf": [
+        { "$ref": "offer-economics-v1.schema.json" },
+        { "type": "null" }
+      ],
+      "description": "Internal operator economics. It may guide campaign planning and diagnosis but must never become consumer-facing proof or copy."
+    },
     "taste_corpus": { "type": "array", "items": { "type": "object" } },
     "hook_library": { "type": "array", "items": { "type": "object" } },
     "creative_hint": { "type": ["string", "null"] },

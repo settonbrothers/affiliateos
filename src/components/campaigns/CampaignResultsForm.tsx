@@ -14,13 +14,19 @@ import {
   type CampaignResultsInput,
 } from '@/lib/validations/campaign'
 
-const FIELDS: Array<{ key: keyof CampaignResultsInput; labelKey: string }> = [
-  { key: 'spend_usd', labelKey: 'fieldSpend' },
-  { key: 'revenue_usd', labelKey: 'fieldRevenue' },
+const NUMBER_FIELDS: Array<{
+  key: keyof CampaignResultsInput
+  labelKey: string
+}> = [
+  { key: 'spend_amount', labelKey: 'fieldSpend' },
+  { key: 'commission_amount', labelKey: 'fieldCommission' },
   { key: 'impressions', labelKey: 'fieldImpressions' },
   { key: 'clicks', labelKey: 'fieldClicks' },
   { key: 'landing_views', labelKey: 'fieldLandingViews' },
+  { key: 'affiliate_clicks', labelKey: 'fieldAffiliateClicks' },
   { key: 'conversions', labelKey: 'fieldConversions' },
+  { key: 'approved_conversions', labelKey: 'fieldApprovedConversions' },
+  { key: 'reversed_conversions', labelKey: 'fieldReversedConversions' },
   { key: 'days_running', labelKey: 'fieldDaysRunning' },
 ]
 
@@ -29,7 +35,7 @@ export function CampaignResultsForm({
   initial,
 }: {
   campaignId: string
-  initial?: Partial<Record<keyof CampaignResultsInput, number | string>>
+  initial?: Partial<Record<keyof CampaignResultsInput, number | string | null>>
 }) {
   const t = useTranslations('campaigns')
   const [isPending, startTransition] = useTransition()
@@ -43,12 +49,19 @@ export function CampaignResultsForm({
   } = useForm<CampaignResultsInput>({
     resolver: zodResolver(CampaignResultsSchema),
     defaultValues: {
-      spend_usd: Number(initial?.spend_usd ?? 0),
-      revenue_usd: Number(initial?.revenue_usd ?? 0),
+      spend_amount: Number(initial?.spend_amount ?? 0),
+      spend_currency: String(initial?.spend_currency ?? 'USD'),
+      commission_amount: Number(initial?.commission_amount ?? 0),
+      commission_currency: String(
+        initial?.commission_currency ?? initial?.spend_currency ?? 'USD'
+      ),
       impressions: Number(initial?.impressions ?? 0),
       clicks: Number(initial?.clicks ?? 0),
       landing_views: Number(initial?.landing_views ?? 0),
+      affiliate_clicks: Number(initial?.affiliate_clicks ?? 0),
       conversions: Number(initial?.conversions ?? 0),
+      approved_conversions: Number(initial?.approved_conversions ?? 0),
+      reversed_conversions: Number(initial?.reversed_conversions ?? 0),
       days_running: Number(initial?.days_running ?? 0),
     },
   })
@@ -74,8 +87,17 @@ export function CampaignResultsForm({
           border: '1px solid #DED8CB',
         }}
       >
-        {FIELDS.map((f) => (
-          <div key={f.key} style={{ background: '#F6F4EF', padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {NUMBER_FIELDS.map((f) => (
+          <div
+            key={f.key}
+            style={{
+              background: '#F6F4EF',
+              padding: '16px 18px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+            }}
+          >
             <Label
               htmlFor={f.key}
               style={{
@@ -96,13 +118,59 @@ export function CampaignResultsForm({
               {...register(f.key)}
             />
             {errors[f.key] && (
-              <p style={{ fontSize: '12px', color: '#B4232A' }}>{errors[f.key]?.message}</p>
+              <p style={{ fontSize: '12px', color: '#B4232A' }}>
+                {errors[f.key]?.message}
+              </p>
+            )}
+          </div>
+        ))}
+        {(['spend_currency', 'commission_currency'] as const).map((key) => (
+          <div
+            key={key}
+            style={{
+              background: '#F6F4EF',
+              padding: '16px 18px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+            }}
+          >
+            <Label
+              htmlFor={key}
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '9.5px',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                color: '#6B6459',
+              }}
+            >
+              {t(
+                key === 'spend_currency'
+                  ? 'fieldSpendCurrency'
+                  : 'fieldCommissionCurrency'
+              )}
+            </Label>
+            <Input
+              id={key}
+              maxLength={3}
+              className="bg-white border-[#D8D2C6] uppercase"
+              {...register(key)}
+            />
+            {errors[key] && (
+              <p style={{ fontSize: '12px', color: '#B4232A' }}>
+                {errors[key]?.message}
+              </p>
             )}
           </div>
         ))}
       </div>
-      {serverError && <p style={{ fontSize: '13px', color: '#B4232A' }}>{serverError}</p>}
-      {saved && <p style={{ fontSize: '13px', color: '#1F7A3D' }}>{t('saved')}</p>}
+      {serverError && (
+        <p style={{ fontSize: '13px', color: '#B4232A' }}>{serverError}</p>
+      )}
+      {saved && (
+        <p style={{ fontSize: '13px', color: '#1F7A3D' }}>{t('saved')}</p>
+      )}
       <div>
         <Button type="submit" disabled={isPending}>
           {isPending ? t('saving') : t('saveResults')}

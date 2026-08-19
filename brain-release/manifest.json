@@ -1,6 +1,6 @@
 {
-  "release_version": "copy-brain-v4.1.0-eval",
-  "engine_version": "evidence-story-v4",
+  "release_version": "copy-brain-v5.0.0-agency-eval",
+  "engine_version": "evidence-agency-v5",
   "activation": "blocked_pending_8_case_eval",
   "files": [
     {
@@ -60,6 +60,54 @@
       "sha256": "9058c5baf991d8cea0c05a7f6164b9da82b24e0f033629bc7e0c6df7e08f7302"
     },
     {
+      "source": "integration/copy-engine-v3/prompts/copy_director/v1.md",
+      "target": "prompts/copy_director/v1.md",
+      "kind": "prompt",
+      "orchestrator": "CopyDirectorOrchestrator",
+      "version": "v1",
+      "sha256": "12671cc840521262b6d99b2e7296d6998c2e038e208350b959e5772fefbfb6d2"
+    },
+    {
+      "source": "integration/copy-engine-v3/prompts/copy_write_storytelling/v1.md",
+      "target": "prompts/copy_write_storytelling/v1.md",
+      "kind": "prompt",
+      "orchestrator": "CopyStorytellingWriterOrchestrator",
+      "version": "v1",
+      "sha256": "774299b1ea6f0f65b0bd5dec4d63637c0e9b47ea444c058fd94b0fb5b3846f84"
+    },
+    {
+      "source": "integration/copy-engine-v3/prompts/copy_write_direct_response/v1.md",
+      "target": "prompts/copy_write_direct_response/v1.md",
+      "kind": "prompt",
+      "orchestrator": "CopyDirectResponseWriterOrchestrator",
+      "version": "v1",
+      "sha256": "682b7ea4e11c915757a2e237bbf1fd0db4083e45794bb6f740db12a4ea2713bd"
+    },
+    {
+      "source": "integration/copy-engine-v3/prompts/copy_write_proof_mechanism/v1.md",
+      "target": "prompts/copy_write_proof_mechanism/v1.md",
+      "kind": "prompt",
+      "orchestrator": "CopyProofMechanismWriterOrchestrator",
+      "version": "v1",
+      "sha256": "f37d6b1c7d8128ad3f3ad5a8660dbca1f9d92946f388295fb8f1aa9e5661587f"
+    },
+    {
+      "source": "integration/copy-engine-v3/prompts/copy_portfolio_judge/v1.md",
+      "target": "prompts/copy_portfolio_judge/v1.md",
+      "kind": "prompt",
+      "orchestrator": "CopyPortfolioJudgeOrchestrator",
+      "version": "v1",
+      "sha256": "f69e551eb3fcd92fcd5648804636871298699d968f8ca4981fc590a1d3456276"
+    },
+    {
+      "source": "integration/copy-engine-v3/prompts/diagnosis/v2.md",
+      "target": "prompts/diagnosis/v2.md",
+      "kind": "prompt",
+      "orchestrator": "DiagnosisOrchestrator",
+      "version": "v2",
+      "sha256": "69b97daba717e7507e093b4b3aa281114e72b1f9898dc7529f3427b34a4a1c0e"
+    },
+    {
       "source": "integration/copy-engine-v3/prompts/avatar_builder/v2.md",
       "target": "prompts/avatar_builder/v2.md",
       "kind": "prompt",
@@ -77,13 +125,43 @@
       "source": "integration/copy-engine-v3/schemas/copy-brain-input-v1.schema.json",
       "target": "brain-contracts/copy-brain-input-v1.schema.json",
       "kind": "contract",
-      "sha256": "bcc51f95089dbaa802b964e0c559b5845870715d9a5e8f6edc52a474f65268f3"
+      "sha256": "c447ebea5c6273985cf7dadf2a2df994b66b3698459a41028767b97be59a9ee5"
     },
     {
       "source": "integration/copy-engine-v3/schemas/ad-copy-v4.schema.json",
       "target": "brain-contracts/ad-copy-v4.schema.json",
       "kind": "contract",
       "sha256": "355a9045f3107b2e8a346582762074fd80fb1dd067601217095de9ffd1fc7e98"
+    },
+    {
+      "source": "integration/copy-engine-v3/schemas/ad-copy-v5.schema.json",
+      "target": "brain-contracts/ad-copy-v5.schema.json",
+      "kind": "contract",
+      "sha256": "6ffe52f2200018e6a5be2ef3f84c9543798c396e8c51b12a8155c1b03a683a1c"
+    },
+    {
+      "source": "integration/copy-engine-v3/schemas/offer-economics-v1.schema.json",
+      "target": "brain-contracts/offer-economics-v1.schema.json",
+      "kind": "contract",
+      "sha256": "df93e7216c627547cdd8ab0d3a3b6d14bb4359ce80aa2a99c050048b61b5f85e"
+    },
+    {
+      "source": "integration/copy-engine-v3/schemas/copy-department-v1.schema.json",
+      "target": "brain-contracts/copy-department-v1.schema.json",
+      "kind": "contract",
+      "sha256": "5771e0c0003b19de550cb1bcd761c64703f3cda39da2a93e574d0cbff4fb4319"
+    },
+    {
+      "source": "integration/copy-engine-v3/schemas/creative-department-v1.schema.json",
+      "target": "brain-contracts/creative-department-v1.schema.json",
+      "kind": "contract",
+      "sha256": "9551a18d7f91d23cc3a42ce15d13f883e75535eb2eeac05d8d11f9ba5126ca99"
+    },
+    {
+      "source": "integration/copy-engine-v3/schemas/campaign-intelligence-v1.schema.json",
+      "target": "brain-contracts/campaign-intelligence-v1.schema.json",
+      "kind": "contract",
+      "sha256": "f6e98394ab32408df8922a3dc815093d6a614d0b3b431d88e0a82e2dc2ff0553"
     },
     {
       "source": "tests/copy-system-v2/protocol.json",
@@ -99,12 +177,13 @@
     }
   ],
   "source_repository": "creation-engine",
-  "source_git_sha": "45f6c224c709dd5add422916093b4567b2b14279",
-  "compiled_at": "2026-08-18T15:20:11.893Z",
+  "source_git_sha": "14aae1878ff795fc5f9fc960ad822503dc225155",
+  "compiled_at": "2026-08-19T09:02:26.888Z",
   "regression_commands": [
     "node tests/run-conversion-regressions.mjs",
     "node tests/run-story-evidence-evals.mjs",
     "node tests/run-copy-system-v2.mjs",
+    "node tests/run-agency-economics-contracts.mjs",
     "node integration/copy-engine-v3/scripts/check-package.mjs"
   ],
   "regression_results": [
@@ -124,10 +203,15 @@
       "output": "PASS copy-system-v2: 8 cases, 48 preregistered jobs, sha256=0efa1706a80924948c612ba159b9eebaf79cbd6ea8a75c4fbeb11e36dfb07e3e\nPENDING live AffX snapshots, generation and owner scoring"
     },
     {
+      "command": "node tests/run-agency-economics-contracts.mjs",
+      "status": "passed",
+      "output": "PASS agency/economics contracts: routed specialists, internal economics, creative foundation, release coverage"
+    },
+    {
       "command": "node integration/copy-engine-v3/scripts/check-package.mjs",
       "status": "passed",
       "output": "PASS copy-engine-v4-local: 9 checksums, schema valid, placeholders clean, Zod parity exact"
     }
   ],
-  "manifest_sha256": "569464395783b4ab4c49bb0ec7e37a42c72e2cc0d32a30b74d0dc1f73e750a2a"
+  "manifest_sha256": "78467148c5295ec10a4fbb16144b43ed021988c352ab9fd9693cf4ec27075ec7"
 }

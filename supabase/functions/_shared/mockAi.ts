@@ -47,22 +47,39 @@ export function mockUnderwriting(
       ? ['Mock output — no verified facts attached to this offer.']
       : [`Mock output — informed by ${inputFacts.length} verified fact(s).`],
     human_review_required: noFacts,
-    human_review_reasons: noFacts ? ['No verified facts available for this offer.'] : [],
+    human_review_reasons: noFacts
+      ? ['No verified facts available for this offer.']
+      : [],
     payload: {
       // {score, reasoning} per dimension, matching the real contract — the mock
       // has to exercise the shape the UI renders, or dev never sees the
       // reasoning path at all.
       scores: {
-        economics: { score: 74, reasoning: 'Mock: payout supports a workable EPC.' },
+        economics: {
+          score: 74,
+          reasoning: 'Mock: payout supports a workable EPC.',
+        },
         demand: { score: 78, reasoning: 'Mock: category demand is growing.' },
-        competition: { score: 52, reasoning: 'Mock: crowded but not saturated.' },
+        competition: {
+          score: 52,
+          reasoning: 'Mock: crowded but not saturated.',
+        },
         creative_opportunity: {
           score: 68,
           reasoning: 'Mock: several untested angles remain.',
         },
-        funnel_fit: { score: 70, reasoning: 'Mock: landing page converts cleanly.' },
-        compliance: { score: 88, reasoning: 'Mock: no regulated claims detected.' },
-        operator_fit: { score: 70, reasoning: 'Mock: matches the stated channels.' },
+        funnel_fit: {
+          score: 70,
+          reasoning: 'Mock: landing page converts cleanly.',
+        },
+        compliance: {
+          score: 88,
+          reasoning: 'Mock: no regulated claims detected.',
+        },
+        operator_fit: {
+          score: 70,
+          reasoning: 'Mock: matches the stated channels.',
+        },
         data_confidence: {
           score: dataConfidence,
           reasoning: noFacts
@@ -89,16 +106,27 @@ export function mockUnderwriting(
       recommended_test_budget_usd: 750,
       main_reason_to_test:
         'Recurring commission on a category-leading brand with an engaged community.',
-      main_reason_to_avoid: 'Category is saturated; creative differentiation is the bottleneck.',
+      main_reason_to_avoid:
+        'Category is saturated; creative differentiation is the bottleneck.',
       warnings: {
         trust: null,
         scale: null,
         cashflow: null,
-        compliance: noFacts ? 'No verified facts — review claims before scaling.' : null,
+        compliance: noFacts
+          ? 'No verified facts — review claims before scaling.'
+          : null,
       },
-      kill_criteria: ['CPA above $90 after $300 spend', 'CTR below 0.8% after 10k impressions'],
-      scale_criteria: ['EPC above $1.20 across 3 angles', 'Stable CVR over 5 days'],
-      verdict_caps_applied: noFacts ? ['capped to watch — no verified facts'] : [],
+      kill_criteria: [
+        'CPA above $90 after $300 spend',
+        'CTR below 0.8% after 10k impressions',
+      ],
+      scale_criteria: [
+        'EPC above $1.20 across 3 angles',
+        'Stable CVR over 5 days',
+      ],
+      verdict_caps_applied: noFacts
+        ? ['capped to watch — no verified facts']
+        : [],
     },
   }
 }
@@ -115,7 +143,8 @@ export function mockSourceExtraction(): Record<string, unknown> {
         {
           fact_type: 'commission_type',
           fact_value: 'recurring',
-          source_quote: 'Earn 30% recurring commission for the lifetime of the customer.',
+          source_quote:
+            'Earn 30% recurring commission for the lifetime of the customer.',
           confidence_score: 90,
         },
         {
@@ -146,12 +175,14 @@ export function mockTestKit(): Record<string, unknown> {
         minimum_usd: 300,
         recommended_usd: 750,
         max_initial_usd: 1000,
-        reasoning: 'Enough spend to clear 3 angles past statistical noise without overcommitting.',
+        reasoning:
+          'Enough spend to clear 3 angles past statistical noise without overcommitting.',
       },
       geo_plan: {
         primary: ['US', 'CA'],
         secondary: ['UK', 'AU'],
-        reasoning: 'Tier-1 English GEOs with the highest expected EPC for this category.',
+        reasoning:
+          'Tier-1 English GEOs with the highest expected EPC for this category.',
       },
       audience_direction:
         'Problem-aware adults who have tried a cheaper alternative and were disappointed.',
@@ -173,11 +204,31 @@ export function mockTestKit(): Record<string, unknown> {
         },
       ],
       hooks: [
-        { text: 'Still doing this by hand?', angle_index: 0, format: 'headline' },
-        { text: 'The old way costs more than you think.', angle_index: 1, format: 'headline' },
-        { text: 'Here is what changed after one week.', angle_index: 0, format: 'first_line' },
-        { text: 'Most people get this wrong on day one.', angle_index: 2, format: 'video_opener' },
-        { text: 'Trusted by teams who hate wasting time.', angle_index: 2, format: 'headline' },
+        {
+          text: 'Still doing this by hand?',
+          angle_index: 0,
+          format: 'headline',
+        },
+        {
+          text: 'The old way costs more than you think.',
+          angle_index: 1,
+          format: 'headline',
+        },
+        {
+          text: 'Here is what changed after one week.',
+          angle_index: 0,
+          format: 'first_line',
+        },
+        {
+          text: 'Most people get this wrong on day one.',
+          angle_index: 2,
+          format: 'video_opener',
+        },
+        {
+          text: 'Trusted by teams who hate wasting time.',
+          angle_index: 2,
+          format: 'headline',
+        },
       ],
       ad_copy_variants: [
         {
@@ -202,29 +253,41 @@ export function mockTestKit(): Record<string, unknown> {
       creative_briefs: [
         {
           format: 'UGC video',
-          description: 'Operator talks through their before/after in a casual selfie style.',
-          key_visual: 'Split screen: cluttered manual process vs clean dashboard.',
+          description:
+            'Operator talks through their before/after in a casual selfie style.',
+          key_visual:
+            'Split screen: cluttered manual process vs clean dashboard.',
           tone: 'Honest, relatable.',
         },
         {
           format: 'Static carousel',
-          description: 'Swipe-through of 3 cost-of-inaction stats ending on the offer.',
+          description:
+            'Swipe-through of 3 cost-of-inaction stats ending on the offer.',
           key_visual: 'Bold numbers on a clean background.',
           tone: 'Direct, data-led.',
         },
         {
           format: 'Founder explainer',
-          description: 'Short talking-head establishing credibility and track record.',
+          description:
+            'Short talking-head establishing credibility and track record.',
           key_visual: 'Founder on camera with logo lower-third.',
           tone: 'Confident, trustworthy.',
         },
       ],
       landing_structure: {
         above_fold: 'Lead with the time-saved promise + a single clear CTA.',
-        main_argument: 'The manual way is slow and costly; this is the verifiable faster path.',
-        proof_elements: ['Verified results', 'Recognizable customers', 'Clear refund policy'],
+        main_argument:
+          'The manual way is slow and costly; this is the verifiable faster path.',
+        proof_elements: [
+          'Verified results',
+          'Recognizable customers',
+          'Clear refund policy',
+        ],
         cta: 'Start now',
-        objections_addressed: ['Is it worth the price?', 'Will it actually work for me?'],
+        objections_addressed: [
+          'Is it worth the price?',
+          'Will it actually work for me?',
+        ],
       },
       tracking_plan: {
         primary_kpi: 'EPC',
@@ -237,9 +300,17 @@ export function mockTestKit(): Record<string, unknown> {
         cvr_target: 3.0,
         epc_target: 1.2,
       },
-      kill_criteria: ['EPC below $0.60 after $300 spend', 'CTR below 0.8% after 10k impressions'],
-      scale_criteria: ['EPC above $1.20 across 2+ angles', 'Stable CVR over 5 days'],
-      compliance_warnings: ['Mock output — review all copy against the vertical compliance rules.'],
+      kill_criteria: [
+        'EPC below $0.60 after $300 spend',
+        'CTR below 0.8% after 10k impressions',
+      ],
+      scale_criteria: [
+        'EPC above $1.20 across 2+ angles',
+        'Stable CVR over 5 days',
+      ],
+      compliance_warnings: [
+        'Mock output — review all copy against the vertical compliance rules.',
+      ],
     },
   }
 }
@@ -249,7 +320,10 @@ export type DiagnosisResultsInput = {
   impressions: number
   clicks: number
   landing_views: number
+  affiliate_clicks?: number
   conversions: number
+  approved_conversions?: number
+  reversed_conversions?: number
   revenue_usd: number
   days_running: number
 }
@@ -262,7 +336,10 @@ export function mockDiagnosis(
     impressions: 100000,
     clicks: 900,
     landing_views: 800,
+    affiliate_clicks: 600,
     conversions: 6,
+    approved_conversions: 5,
+    reversed_conversions: 0,
     revenue_usd: 420,
     days_running: 5,
   }
@@ -270,15 +347,15 @@ export function mockDiagnosis(
   const cpc = r.clicks ? r.spend_usd / r.clicks : 0
   const cvr = r.clicks ? (r.conversions / r.clicks) * 100 : 0
   const epc = r.clicks ? r.revenue_usd / r.clicks : 0
-  const clickout = r.clicks ? (r.landing_views / r.clicks) * 100 : 0
+  const clickout = r.landing_views
+    ? ((r.affiliate_clicks ?? r.landing_views) / r.landing_views) * 100
+    : 0
   const thin = r.clicks < 100 || r.conversions < 5
   const m = (actual: number, lo: number, hi: number) => ({
     actual: Math.round(actual * 100) / 100,
     expected: [lo, hi] as [number, number],
     verdict: (actual < lo ? 'below' : actual > hi ? 'above' : 'within') as
-      | 'below'
-      | 'within'
-      | 'above',
+      'below' | 'within' | 'above',
   })
 
   return {
@@ -315,8 +392,10 @@ export function mockDiagnosis(
         : [
             {
               area: 'landing_page',
-              action: 'Tighten the above-fold promise and add proof near the CTA.',
-              reasoning: 'CTR is fine but CVR is below range — the drop-off is post-click.',
+              action:
+                'Tighten the above-fold promise and add proof near the CTA.',
+              reasoning:
+                'CTR is fine but CVR is below range — the drop-off is post-click.',
             },
           ],
       not_enough_data: thin,
@@ -327,9 +406,7 @@ export function mockDiagnosis(
   }
 }
 
-export function mockCompliance(
-  verticalSlug?: string
-): Record<string, unknown> {
+export function mockCompliance(verticalSlug?: string): Record<string, unknown> {
   const health = verticalSlug === 'health' || verticalSlug === 'mental_wellness'
   return {
     ...envelope('ComplianceCheckOrchestrator'),
@@ -346,7 +423,8 @@ export function mockCompliance(
               risk_level: 'high',
               why_risky:
                 'Implies a disease/treatment benefit — FDA/FTC and Meta health-policy violation.',
-              safe_framing: 'Part of a healthy lifestyle; describe ingredients, not outcomes.',
+              safe_framing:
+                'Part of a healthy lifestyle; describe ingredients, not outcomes.',
               forbidden_framing: 'Cures, detoxifies, or treats any condition.',
               requires_disclaimer: true,
             },
@@ -389,7 +467,8 @@ export function mockDiscoveryTriage(count: number): Record<string, unknown> {
 export function mockDiscoveryDeep(): Record<string, unknown> {
   return {
     overall_score: 78,
-    summary: 'Mock deep analysis: solid recurring program, decent operator fit.',
+    summary:
+      'Mock deep analysis: solid recurring program, decent operator fit.',
     key_strengths: ['Recurring commission', 'Growing category'],
     key_risks: ['Smaller, lesser-known brand'],
     estimated_commission: '20% lifetime recurring',
@@ -497,8 +576,16 @@ export function mockAdCopy(): Record<string, unknown> {
         voice_of_customer: ['dead offer', 'test budget'],
       },
       angles: [
-        { name: 'Risk reversal', positioning: 'Know before you spend', rooted_in: 'pain: burning budget' },
-        { name: 'Speed', positioning: 'Find winners faster', rooted_in: 'desire: faster winner' },
+        {
+          name: 'Risk reversal',
+          positioning: 'Know before you spend',
+          rooted_in: 'pain: burning budget',
+        },
+        {
+          name: 'Speed',
+          positioning: 'Find winners faster',
+          rooted_in: 'desire: faster winner',
+        },
       ],
       hooks: [
         { text: 'Stop burning test budget.', angle_index: 0, lang: 'en' },
@@ -507,14 +594,38 @@ export function mockAdCopy(): Record<string, unknown> {
         { text: 'מצא את המנצח הבא מהר יותר.', angle_index: 1, lang: 'he' },
       ],
       variants: [
-        { lang: 'en', primary_text: 'Most offers fail before they scale...', headline: 'Underwrite first', hook: 'Stop burning test budget.', angle_index: 0 },
-        { lang: 'he', primary_text: 'רוב האופרים נכשלים עוד לפני שהם מתרחבים...', headline: 'תבדוק לפני', hook: 'תפסיק לשרוף תקציב בדיקות.', angle_index: 0 },
+        {
+          lang: 'en',
+          primary_text: 'Most offers fail before they scale...',
+          headline: 'Underwrite first',
+          hook: 'Stop burning test budget.',
+          angle_index: 0,
+        },
+        {
+          lang: 'he',
+          primary_text: 'רוב האופרים נכשלים עוד לפני שהם מתרחבים...',
+          headline: 'תבדוק לפני',
+          hook: 'תפסיק לשרוף תקציב בדיקות.',
+          angle_index: 0,
+        },
       ],
       judge: {
         principles: [
-          { principle: 'product_understanding', verdict: 'pass', reason: 'Starts from the real problem.' },
-          { principle: 'eye_level_authentic', verdict: 'pass', reason: 'Speaks plainly, no hype.' },
-          { principle: 'depth_without_exaggeration', verdict: 'pass', reason: 'No income claims.' },
+          {
+            principle: 'product_understanding',
+            verdict: 'pass',
+            reason: 'Starts from the real problem.',
+          },
+          {
+            principle: 'eye_level_authentic',
+            verdict: 'pass',
+            reason: 'Speaks plainly, no hype.',
+          },
+          {
+            principle: 'depth_without_exaggeration',
+            verdict: 'pass',
+            reason: 'No income claims.',
+          },
         ],
         compliance_ok: true,
         overall: 'advisory',
@@ -526,7 +637,9 @@ export function mockAdCopy(): Record<string, unknown> {
   }
 }
 
-export function mockForOrchestrator(orchestratorName: string): Record<string, unknown> {
+export function mockForOrchestrator(
+  orchestratorName: string
+): Record<string, unknown> {
   switch (orchestratorName) {
     case 'SourceExtractionOrchestrator':
       return mockSourceExtraction()

@@ -24,9 +24,14 @@ import {
   StoredAvatarSchema,
   type CopyBrainInputSnapshotV1,
 } from '@/types/agents/copyBrain'
+import {
+  OfferEconomicsV1Schema,
+  type OfferEconomicsV1,
+} from '@/types/agents/offerEconomics'
 
 type JsonRecord = Record<string, unknown>
 type Row = JsonRecord & { id: string }
+const COPY_EVAL_PREFIX = 'copy-brain-v5:'
 
 const asRecord = (value: unknown): JsonRecord | null =>
   value && typeof value === 'object' && !Array.isArray(value)
@@ -69,6 +74,45 @@ const groupBy = (rows: JsonRecord[], key: string) => {
 
 const shaText = (value: string) =>
   createHash('sha256').update(value).digest('hex')
+
+function syntheticEconomics(packId: string): OfferEconomicsV1 {
+  return OfferEconomicsV1Schema.parse({
+    schema_version: 'offer-economics-v1',
+    internal_only: true,
+    commission_model: 'fixed_per_conversion',
+    commission_event: 'approved_conversion',
+    payout_currency: 'USD',
+    fixed_payout_per_event: packId.includes('donation') ? 0 : 45,
+    revenue_share_rate: null,
+    average_order_value: null,
+    approval_rate: packId.includes('digital-extreme') ? null : 0.85,
+    reversal_rate: 0.05,
+    variable_fee_per_approved_conversion: 0,
+    recurring_value: {
+      amount_per_period: null,
+      period: 'unknown',
+      validated_retention_periods: null,
+    },
+    payout_delay_days: 30,
+    network_epc: { amount: null, currency: null, basis: 'unknown' },
+    fx_to_reporting_currency: {
+      reporting_currency: 'USD',
+      rate: 1,
+      source: 'controlled_fixture',
+      captured_at: null,
+    },
+    sources: [
+      {
+        source_id: `fixture-economics-${packId}`,
+        field: 'fixed_payout_per_event',
+        verified: true,
+        confidence: 100,
+        as_of: null,
+      },
+    ],
+    missing_inputs: packId.includes('digital-extreme') ? ['approval_rate'] : [],
+  })
+}
 
 function syntheticAvatar(offerId: string, name: string, vertical: string) {
   return upgradeStoredAvatarToV2(offerId, {
@@ -158,6 +202,7 @@ async function buildSyntheticSnapshot(pack: JsonRecord) {
     compliance: Array.isArray(pack.forbidden_claims)
       ? { forbidden_claims: pack.forbidden_claims }
       : null,
+    offer_economics: syntheticEconomics(String(pack.id)),
     sources,
     research_documents: rawSources as JsonRecord[],
     deep_brief: {
@@ -185,7 +230,7 @@ export async function prepareCopyEvalSuite(): Promise<{
   const { data: existing } = await db
     .from('copy_eval_cases')
     .select('external_id')
-    .like('external_id', 'copy-brain-v2:%')
+    .like('external_id', `${COPY_EVAL_PREFIX}%`)
   if ((existing ?? []).length === 8) {
     return { created: 0, selectedAffx: [] }
   }
@@ -205,6 +250,7 @@ export async function prepareCopyEvalSuite(): Promise<{
     diagnosesRes,
     corpusRes,
     hookLibraryRes,
+    economicsRes,
   ] = await Promise.all([
     db
       .from('offers')
@@ -254,7 +300,7 @@ export async function prepareCopyEvalSuite(): Promise<{
     db
       .from('campaign_results')
       .select(
-        'campaign_id,spend_usd,impressions,clicks,landing_views,conversions,revenue_usd,days_running'
+        'campaign_id,spend_amount,spend_currency,impressions,clicks,landing_views,affiliate_clicks,conversions,approved_conversions,reversed_conversions,commission_amount,commission_currency,days_running'
       ),
     db.from('result_diagnoses').select('campaign_id,creative_analysis'),
     db
@@ -266,6 +312,10 @@ export async function prepareCopyEvalSuite(): Promise<{
       .from('copy_hook_library')
       .select('text,lang,hook_type,label')
       .order('created_at', { ascending: false }),
+    db
+      .from('offer_economics')
+      .select('offer_id,payload,captured_at')
+      .eq('is_current', true),
   ])
   for (const result of [
     offersRes,
@@ -282,6 +332,7 @@ export async function prepareCopyEvalSuite(): Promise<{
     diagnosesRes,
     corpusRes,
     hookLibraryRes,
+    economicsRes,
   ]) {
     if (result.error) throw result.error
   }
@@ -292,6 +343,7 @@ export async function prepareCopyEvalSuite(): Promise<{
   const kits = latestByOffer((kitsRes.data ?? []) as JsonRecord[])
   const compliance = latestByOffer((complianceRes.data ?? []) as JsonRecord[])
   const underwriting = latestByOffer((runsRes.data ?? []) as JsonRecord[])
+  const economics = latestByOffer((economicsRes.data ?? []) as JsonRecord[])
   const spies = (spiesRes.data ?? []) as JsonRecord[]
   const factsByOffer = groupBy(facts, 'offer_id')
   const spiesByOffer = groupBy(spies, 'offer_id')
@@ -321,7 +373,12 @@ export async function prepareCopyEvalSuite(): Promise<{
     const count = analysis.filter(
       (item) => asRecord(item)?.is_winner === true
     ).length
-    if (resultsByCampaign.has(String(diagnosis.campaign_id))) {
+    const result = resultsByCampaign.get(String(diagnosis.campaign_id))
+    const measuredWinnerEligible =
+      Number(result?.clicks ?? 0) >= 100 &&
+      Number(result?.approved_conversions ?? 0) >= 5 &&
+      Number(result?.commission_amount ?? 0) > Number(result?.spend_amount ?? 0)
+    if (measuredWinnerEligible) {
       winnerCount.set(offerId, (winnerCount.get(offerId) ?? 0) + count)
     }
     diagnosesByOffer.set(offerId, [
@@ -406,12 +463,18 @@ export async function prepareCopyEvalSuite(): Promise<{
       const result = resultsByCampaign.get(campaignId)
       if (!result) continue
       const metrics = {
-        spend_usd: Number(result.spend_usd ?? 0),
+        spend_amount: Number(result.spend_amount ?? 0),
         impressions: Number(result.impressions ?? 0),
         clicks: Number(result.clicks ?? 0),
+        affiliate_clicks: Number(result.affiliate_clicks ?? 0),
         conversions: Number(result.conversions ?? 0),
-        revenue_usd: Number(result.revenue_usd ?? 0),
+        approved_conversions: Number(result.approved_conversions ?? 0),
+        commission_amount: Number(result.commission_amount ?? 0),
       }
+      const measuredWinnerEligible =
+        metrics.clicks >= 100 &&
+        metrics.approved_conversions >= 5 &&
+        metrics.commission_amount > metrics.spend_amount
       const sourceRef = `campaign-${campaignId}`
       sources.push({
         source_id: sourceRef,
@@ -428,7 +491,11 @@ export async function prepareCopyEvalSuite(): Promise<{
         : []
       for (const [winnerIndex, item] of analysis.entries()) {
         const winner = asRecord(item)
-        if (winner?.is_winner !== true || typeof winner.hook !== 'string')
+        if (
+          winner?.is_winner !== true ||
+          typeof winner.hook !== 'string' ||
+          !measuredWinnerEligible
+        )
           continue
         performanceWinners.push({
           winner_id: `${campaignId}-${winnerIndex}`,
@@ -440,7 +507,7 @@ export async function prepareCopyEvalSuite(): Promise<{
           decision_rule:
             typeof winner.winner_reason === 'string'
               ? winner.winner_reason
-              : 'Diagnosis winner backed by measured campaign results.',
+              : 'Measured winner with sufficient volume and positive campaign profit.',
           source_ref: sourceRef,
         })
       }
@@ -491,6 +558,12 @@ export async function prepareCopyEvalSuite(): Promise<{
         underwriting.get(selection.offerId)?.output_payload
       ),
       compliance: asRecord(compliance.get(selection.offerId)?.payload),
+      offer_economics: (() => {
+        const parsed = OfferEconomicsV1Schema.safeParse(
+          economics.get(selection.offerId)?.payload
+        )
+        return parsed.success ? parsed.data : null
+      })(),
       sources,
       research_documents: ((sourceDocsRes.data ?? []) as JsonRecord[]).filter(
         (document) => document.offer_id === selection.offerId
@@ -514,6 +587,7 @@ export async function prepareCopyEvalSuite(): Promise<{
         !briefs.has(selection.offerId) ? 'deep_brief' : null,
         !spiesByOffer.get(selection.offerId)?.length ? 'spy_analyses' : null,
         !kits.has(selection.offerId) ? 'test_kit' : null,
+        !economics.has(selection.offerId) ? 'offer_economics' : null,
       ].filter((item): item is string => item !== null),
       omitted_context: [],
     })
@@ -533,7 +607,7 @@ export async function prepareCopyEvalSuite(): Promise<{
     })
   }
   const rows = cases.map(({ pack, snapshot, profile, score }) => ({
-    external_id: `copy-brain-v2:${String(pack.id)}`,
+    external_id: `${COPY_EVAL_PREFIX}${String(pack.id)}`,
     domain: pack.domain === 'donation' ? 'donation' : 'product',
     split: String(pack.split),
     source_pack: pack,
@@ -559,7 +633,7 @@ export async function startCopyEvalRun(): Promise<{ runId: string }> {
   const { data: cases, error: caseError } = await db
     .from('copy_eval_cases')
     .select('id,external_id,input_snapshot,sealed_sha256')
-    .like('external_id', 'copy-brain-v2:%')
+    .like('external_id', `${COPY_EVAL_PREFIX}%`)
     .order('external_id')
   if (caseError) throw caseError
   if ((cases ?? []).length !== 8)
@@ -713,7 +787,7 @@ async function finalizeCopyEvalRun(db: SupabaseClient, evalRunId: string) {
     db
       .from('copy_eval_cases')
       .select('id,split')
-      .like('external_id', 'copy-brain-v2:%'),
+      .like('external_id', `${COPY_EVAL_PREFIX}%`),
     db.from('copy_eval_runs').select('metrics').eq('id', evalRunId).single(),
   ])
   if ((ownerScores ?? []).length !== 8 || (jobs ?? []).length !== 48) return
@@ -896,7 +970,7 @@ export async function submitCopyOwnerScore(input: {
     .from('copy_eval_cases')
     .select('id')
     .eq('split', 'calibration')
-    .like('external_id', 'copy-brain-v2:%')
+    .like('external_id', `${COPY_EVAL_PREFIX}%`)
   const calibrationIds = (calibrationCases ?? []).map((item) => item.id)
   if (calibrationIds.length === 6) {
     const { count } = await db
@@ -909,7 +983,7 @@ export async function submitCopyOwnerScore(input: {
         .from('copy_eval_cases')
         .update({ revealed_at: new Date().toISOString() })
         .eq('split', 'holdout')
-        .like('external_id', 'copy-brain-v2:%')
+        .like('external_id', `${COPY_EVAL_PREFIX}%`)
       await db
         .from('copy_eval_runs')
         .update({ status: 'awaiting_owner' })
