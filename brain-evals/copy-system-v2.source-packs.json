@@ -1,38 +1,66 @@
 {
   "suite": "copy-brain-system-v2",
-  "notice": "Four AffX selectors plus four controlled fixtures. Synthetic statements are test data and must never be published as real claims or testimonials.",
+  "notice": "Four AffX offers frozen from the 2026-08-19 production inventory plus four controlled fixtures. Missing Spy, Test Kit or measured-winner data stays missing; it must never be synthesized. Synthetic statements are test data and must never be published as real claims or testimonials.",
   "packs": [
     {
-      "id": "affx-full-with-winner",
+      "id": "affx-jasper-best-available",
       "origin": "affx",
       "domain": "commercial",
       "split": "calibration",
-      "selector": { "profile": "full_context_with_measured_winner", "distinct_vertical": true },
-      "expected_input": ["underwriting", "verified_sources", "deep_brief", "avatar", "spy_analyses", "test_kit", "performance_winners"]
+      "selector": {
+        "offer_id": "8b790326-9138-41b7-ae6e-00704cfd0c3b",
+        "offer_name": "Jasper AI",
+        "profile": "best_available_context",
+        "inventory_as_of": "2026-08-19"
+      },
+      "expected_input": ["underwriting", "deep_brief", "avatar"],
+      "expected_missing": ["verified_sources", "spy_analyses", "test_kit", "performance_winners"],
+      "expected_behavior": "use_available_context_without_inventing_proof_or_winners"
     },
     {
-      "id": "affx-full-no-winner",
+      "id": "affx-activecampaign-verified-missing-upstream",
       "origin": "affx",
       "domain": "commercial",
       "split": "calibration",
-      "selector": { "profile": "full_context_without_measured_winner", "distinct_vertical": true },
-      "expected_input": ["underwriting", "verified_sources", "deep_brief", "avatar", "spy_analyses", "test_kit"]
+      "selector": {
+        "offer_id": "b4b660f8-5501-43b8-8401-51e1abf3e55f",
+        "offer_name": "ActiveCampaign",
+        "profile": "verified_evidence_missing_optional_upstream",
+        "inventory_as_of": "2026-08-19"
+      },
+      "expected_input": ["underwriting", "verified_sources", "deep_brief"],
+      "expected_missing": ["avatar", "spy_analyses", "test_kit", "performance_winners"],
+      "expected_behavior": "bounded_copy_from_verified_evidence"
     },
     {
-      "id": "affx-good-evidence-missing-spy",
+      "id": "affx-systeme-conflicting-economics",
       "origin": "affx",
       "domain": "commercial",
       "split": "calibration",
-      "selector": { "profile": "good_evidence_missing_optional_upstream", "distinct_vertical": true },
-      "expected_missing_any": ["spy_analyses", "performance_winners"]
+      "selector": {
+        "offer_id": "0df4fa99-a206-42e0-9334-0c568c10623f",
+        "offer_name": "Systeme.io funnel builder",
+        "profile": "conflicting_vendor_economics",
+        "inventory_as_of": "2026-08-19"
+      },
+      "expected_input": ["underwriting", "operator_notes"],
+      "expected_missing": ["verified_sources", "avatar", "spy_analyses", "test_kit", "performance_winners"],
+      "expected_behavior": "do_not_resolve_commission_conflict_by_model_confidence"
     },
     {
-      "id": "affx-thin-or-compliance",
+      "id": "affx-femicore-thin-health-claims",
       "origin": "affx",
       "domain": "commercial",
       "split": "holdout",
-      "selector": { "profile": "thin_conflicting_or_compliance_risk", "distinct_vertical": true },
-      "expected_behavior": "narrow_non_story_or_block"
+      "selector": {
+        "offer_id": "b0da2972-d58f-43af-8b2b-224cf8d2b8e9",
+        "offer_name": "FemiCore bladder reset formula",
+        "profile": "thin_health_claims_vendor_only",
+        "inventory_as_of": "2026-08-19"
+      },
+      "expected_input": ["underwriting", "deep_brief", "operator_notes"],
+      "expected_missing": ["verified_sources", "spy_analyses", "test_kit", "performance_winners"],
+      "expected_behavior": "narrow_non_story_or_block_health_outcome"
     },
     {
       "id": "fixture-sleep-evidence",
