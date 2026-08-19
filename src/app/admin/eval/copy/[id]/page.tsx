@@ -8,6 +8,10 @@ import {
 } from '@/components/admin/CopyEvalReview'
 import { CopyEvalRunner } from '@/components/admin/CopyEvalRunner'
 import { brainSha256 } from '@/lib/copy/copyBrainContext'
+import {
+  isAnthropicCreditFailure,
+  selectReviewablePairJobs,
+} from '@/lib/copy/copyEvalReviewPolicy'
 import { createClient } from '@/lib/supabase/server'
 
 type RecordValue = Record<string, unknown>
@@ -76,6 +80,10 @@ export default async function CopyEvalRunPage({
   const scoreRows = (scores ?? []) as EvalScoreRow[]
   const complete = jobRows.filter((job) => job.status === 'completed').length
   const failed = jobRows.filter((job) => job.status === 'failed').length
+  const creditPaused = jobRows.some(
+    (job) =>
+      job.status === 'failed' && isAnthropicCreditFailure(job.error_message)
+  )
   const scored = new Set(scoreRows.map((score) => score.case_id))
   const calibrationIds = new Set(
     caseRows
@@ -87,7 +95,6 @@ export default async function CopyEvalRunPage({
   ).length
   const pairs: BlindPair[] = []
   for (const evalCase of caseRows) {
-    if (evalCase.split === 'holdout' && calibrationScored < 6) continue
     const pack = record(evalCase.source_pack)
     const packId = String(
       pack?.id ?? evalCase.external_id.replace('copy-brain-v5:', '')
@@ -97,19 +104,14 @@ export default async function CopyEvalRunPage({
         packId
       ] ?? 0
     )
-    const pairJobs = jobRows.filter(
-      (job) =>
-        job.case_id === evalCase.id &&
-        job.repetition === repetition &&
-        job.status === 'completed'
-    )
-    if (pairJobs.length !== 2) continue
-    const baseline = pairJobs.find(
-      (job) => job.engine === 'production_baseline_snapshot'
-    )!
-    const candidate = pairJobs.find(
-      (job) => job.engine === 'copy_brain_candidate'
-    )!
+    const pair = selectReviewablePairJobs({
+      evalCase,
+      jobs: jobRows,
+      preregisteredRepetition: repetition,
+      calibrationScored,
+    })
+    if (!pair) continue
+    const { baseline, candidate } = pair
     const candidateLeft =
       Number.parseInt(
         brainSha256(`${protocol.blind_order_seed}:${packId}`).slice(0, 2),
@@ -145,12 +147,19 @@ export default async function CopyEvalRunPage({
         runId={id}
         remaining={48 - complete - failed}
         failed={failed}
+        creditPaused={creditPaused}
       />
-      {complete === 48 && <CopyEvalReview runId={id} pairs={pairs} />}
-      {complete < 48 && (
+      {pairs.length > 0 && (
+        <CopyEvalReview
+          runId={id}
+          pairs={pairs}
+          reviewMode={complete === 48 ? 'full' : 'partial_calibration'}
+        />
+      )}
+      {complete < 48 && pairs.length === 0 && (
         <p className="text-sm text-[var(--color-muted-foreground)]">
-          הזוגות ייחשפו רק אחרי שכל 48 הריצות הסתיימו. שני מקרי holdout יישארו
-          נעולים עד שש הכרעות calibration.
+          אין כרגע זוג כיול שנבחר מראש והושלם בשני המנועים. שני מקרי holdout
+          נשארים נעולים עד שש הכרעות calibration והקפאה מפורשת.
         </p>
       )}
     </div>

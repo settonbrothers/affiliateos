@@ -34,9 +34,11 @@ export type BlindPair = {
 export function CopyEvalReview({
   runId,
   pairs,
+  reviewMode,
 }: {
   runId: string
   pairs: BlindPair[]
+  reviewMode: 'full' | 'partial_calibration'
 }) {
   const router = useRouter()
   const [pending, transition] = useTransition()
@@ -92,6 +94,13 @@ export function CopyEvalReview({
 
   return (
     <section className="space-y-5" dir="rtl">
+      {reviewMode === 'partial_calibration' && (
+        <div className="rounded border border-blue-300 bg-blue-50 p-4 text-sm text-blue-950">
+          ביקורת ביניים חסכונית: מוצג רק זוג calibration שהחזרה שלו נקבעה מראש
+          ושני צדדיו כבר הושלמו. המשוב נשמר, אך אינו מסיים את הניסוי ואינו חושף
+          את מקרי ה־holdout.
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold">{pair.caseName}</h2>
