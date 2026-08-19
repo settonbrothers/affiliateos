@@ -248,6 +248,14 @@ export const KillFlagV4Schema = z.enum([
   'no_soul',
   'low_momentum',
   'boring',
+  'hook_body_duplicate',
+  'objective_unknown',
+  'audience_unknown',
+  'objective_mismatch',
+  'doctrine_bundle_mismatch',
+  'taste_not_loaded',
+  'generic_angle',
+  'latest_baseline_regression',
 ])
 export const BlindReaderSchema = z.object({
   perceived_attribution: z.enum([
@@ -296,34 +304,54 @@ export const CopyCandidateReviewSchema = z.object({
   judge: EvidenceJudgeSchema,
 })
 
-export const AdCopyEvidencePayloadSchema = z.object({
-  engine_version: z.enum(['evidence-story-v4', 'evidence-agency-v5']),
-  output_status: z.enum([
-    'ready_for_user',
-    'needs_evidence',
-    'compliance_review',
-    'blocked',
-  ]),
-  evidence_envelope: EvidenceEnvelopeSchema,
-  narrative_license: NarrativeLicenseSchema,
-  angles: z.array(EvidenceAngleSchema).min(1).max(5),
-  hooks: z.array(EvidenceHookSchema),
-  variants: z.array(EvidenceVariantSchema),
-  department_plan: CopyDepartmentPlanSchema.nullable().optional(),
-  recommended_candidate_id: z.string().nullable().optional(),
-  candidate_reviews: z.array(CopyCandidateReviewSchema).optional(),
-  portfolio_decision: CopyPortfolioDecisionSchema.nullable().optional(),
-  reader_report: BlindReaderSchema.nullable(),
-  critic_report: EvidenceCriticSchema.nullable(),
-  judge: EvidenceJudgeSchema,
-  refine_iterations: z.number().int().min(0).max(2),
-  trace: z.object({
-    source_snapshot_refs: z.array(z.string()),
-    selected_angle_index: z.number().int().min(0).nullable(),
-    candidate_ids: z.array(z.string()).optional(),
-  }),
-  user_message: z.string(),
-})
+export const AdCopyEvidencePayloadSchema = z
+  .object({
+    engine_version: z.enum([
+      'evidence-story-v4',
+      'evidence-agency-v5',
+      'evidence-agency-v6',
+    ]),
+    output_status: z.enum([
+      'ready_for_user',
+      'needs_evidence',
+      'compliance_review',
+      'blocked',
+    ]),
+    evidence_envelope: EvidenceEnvelopeSchema,
+    narrative_license: NarrativeLicenseSchema,
+    angles: z.array(EvidenceAngleSchema).max(5),
+    hooks: z.array(EvidenceHookSchema),
+    variants: z.array(EvidenceVariantSchema),
+    department_plan: CopyDepartmentPlanSchema.nullable().optional(),
+    recommended_candidate_id: z.string().nullable().optional(),
+    candidate_reviews: z.array(CopyCandidateReviewSchema).optional(),
+    portfolio_decision: CopyPortfolioDecisionSchema.nullable().optional(),
+    reader_report: BlindReaderSchema.nullable(),
+    critic_report: EvidenceCriticSchema.nullable(),
+    judge: EvidenceJudgeSchema,
+    refine_iterations: z.number().int().min(0).max(2),
+    trace: z.object({
+      source_snapshot_refs: z.array(z.string()),
+      selected_angle_index: z.number().int().min(0).nullable(),
+      candidate_ids: z.array(z.string()).optional(),
+      execution_brief: z.record(z.unknown()).optional(),
+      doctrine_lesson_ids: z.array(z.string()).optional(),
+      taste_selection_count: z.number().int().min(0).optional(),
+      preflight_flags: z.array(z.string()).optional(),
+      models: z.record(z.string()).optional(),
+    }),
+    user_message: z.string(),
+  })
+  .superRefine((payload, ctx) => {
+    if (
+      payload.output_status === 'ready_for_user' &&
+      payload.angles.length === 0
+    )
+      ctx.addIssue({
+        code: 'custom',
+        message: 'ready copy requires at least one evidence-bound angle',
+      })
+  })
 
 export const AdCopyEvidenceResponseSchema = UniversalEnvelopeSchema.extend({
   payload: AdCopyEvidencePayloadSchema,

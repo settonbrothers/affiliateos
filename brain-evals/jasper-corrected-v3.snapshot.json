@@ -1,0 +1,242 @@
+{
+  "schema_version": "copy-brain-input-v1",
+  "snapshot_id": "copy-brain-v3:jasper-corrected:2026-08-19",
+  "captured_at": "2026-08-19T18:30:00.000Z",
+  "origin": "affx",
+  "fixture_only": true,
+  "offer": {
+    "id": "8b790326-9138-41b7-ae6e-00704cfd0c3b",
+    "name": "Jasper",
+    "website_url": "https://www.jasper.ai/platform",
+    "affiliate_program_url": "https://www.jasper.ai/partners",
+    "network": "PartnerStack",
+    "vendor_name": "Jasper AI, Inc.",
+    "vertical": "ai_saas",
+    "primary_language": "en",
+    "description": "A marketing platform that combines agents, content workflows and brand context in one workspace."
+  },
+  "campaign_context": {
+    "channel": "meta",
+    "geo": ["US"],
+    "audience": "Hands-on content marketing leads at small and mid-sized teams who already use general AI but still rewrite outputs to fit their brand",
+    "generation_language": "he",
+    "objective_type": "trial",
+    "desired_action": "Start Jasper's 7-day Pro trial",
+    "audience_side": "consumer"
+  },
+  "underwriting": {
+    "verdict": "small_paid_test",
+    "note": "Affiliate economics remain internal and are not evidence for consumer copy."
+  },
+  "compliance": {
+    "forbidden_claims": [
+      "Guaranteed revenue, conversion lift or ranking improvement",
+      "Factually accurate without human review",
+      "No editing required",
+      "A synthetic scene presented as a real customer testimonial",
+      "Affiliate payout or commission terms used as consumer-facing proof"
+    ]
+  },
+  "offer_economics": null,
+  "sources": [
+    {
+      "source_id": "jasper-platform-official",
+      "source_type": "first_party_document",
+      "source_url": "https://www.jasper.ai/platform",
+      "source_quote": "Jasper connects your marketing team, brand, content, workflows, agents, knowledge, context, and rules in one workspace.",
+      "claim": "Jasper combines marketing agents, content workflows and brand context in one workspace.",
+      "priority": 3,
+      "verified": true,
+      "snapshot_sha256": "d2a59afe7b9cf5e19eec3811673d8e745654044f1c70b3993732f1fcc78d6aaa"
+    },
+    {
+      "source_id": "jasper-brand-voice-help",
+      "source_type": "first_party_document",
+      "source_url": "https://help.jasper.ai/hc/en-us/articles/18618693085339-Brand-Voice",
+      "source_quote": "Upload examples of your writing and Jasper analyzes tone, style, and key characteristics to develop a personalized brand voice.",
+      "claim": "Brand Voice is created from writing examples or URLs and can be applied to generated content.",
+      "priority": 3,
+      "verified": true,
+      "snapshot_sha256": "3ac08dab699094772856a5d1ead4e4fd82dcd87d2c5e38b14c99be4266a04277"
+    },
+    {
+      "source_id": "jasper-pricing-official",
+      "source_type": "first_party_document",
+      "source_url": "https://www.jasper.ai/pricing",
+      "source_quote": "The Pro plan offers a free 7-day trial and includes Canvas, core marketing agents, Brand Voices, Knowledge assets and Audiences.",
+      "claim": "A 7-day Pro trial is available and includes tools for on-brand marketing creation.",
+      "priority": 3,
+      "verified": true,
+      "snapshot_sha256": "643cc06da62444ce275de37311eb0a3cad59e047b706627a95d0457b6da07f04"
+    },
+    {
+      "source_id": "g2-review-rafael-2026",
+      "source_type": "independent_review",
+      "source_url": "https://www.g2.com/products/jasper-ai/reviews",
+      "source_quote": "Different content formats for ads, blogs, or social media made the process faster and more consistent.",
+      "claim": "A verified reviewer reported faster, more consistent creation across several marketing formats.",
+      "priority": 2,
+      "verified": true,
+      "snapshot_sha256": "20d089e100ff6ae7153ebec167fbb3231ea31e688287829103d83c17e993c1b7"
+    },
+    {
+      "source_id": "g2-review-nabin-2026",
+      "source_type": "independent_review",
+      "source_url": "https://www.g2.com/products/jasper-ai/reviews",
+      "source_quote": "It speeds up writing and helps maintain a consistent tone, but technical topics can require extra editing.",
+      "claim": "A verified reviewer reported faster drafting and tone consistency, with extra editing still needed for technical work.",
+      "priority": 2,
+      "verified": true,
+      "snapshot_sha256": "aec6d6c681c406d5fbe4fb0d75450eb0f1a2dd6d80ffb2f4ddc2ebb8bbb3689f"
+    },
+    {
+      "source_id": "capterra-review-daniel-2024",
+      "source_type": "independent_review",
+      "source_url": "https://www.capterra.com/p/217242/Jasper/reviews/",
+      "source_quote": "It helped cut down outline and drafting time, especially when working with external writers.",
+      "claim": "A verified reviewer reported less outline and drafting time and the ability to train the product on brand voice.",
+      "priority": 2,
+      "verified": true,
+      "snapshot_sha256": "8fe05931615848a63cd64fdb7f853b68a6348d17d3850f302ee86c919072cf31"
+    },
+    {
+      "source_id": "capterra-review-vp-marketing-2025",
+      "source_type": "independent_review",
+      "source_url": "https://www.capterra.com/p/217242/Jasper/reviews/",
+      "source_quote": "It creates a first draft and keeps brand tone consistent, but parts still need rewriting to sound natural.",
+      "claim": "A verified marketing reviewer described a useful first-draft workflow with brand consistency and continued human editing.",
+      "priority": 2,
+      "verified": true,
+      "snapshot_sha256": "583660f5b515e5537864b0f21dbc5781c5d691c37fe422f940d3c939fea51b15"
+    }
+  ],
+  "research_documents": [
+    {
+      "document_id": "jasper-product-research-v3",
+      "source_ids": ["jasper-platform-official", "jasper-brand-voice-help", "jasper-pricing-official"],
+      "summary": "The consumer product is a marketing workspace. Its relevant mechanism is combining brand inputs, audiences and workflows with AI drafting. The requested action is a product trial, not joining its affiliate program."
+    },
+    {
+      "document_id": "jasper-review-convergence-v3",
+      "source_ids": ["g2-review-rafael-2026", "g2-review-nabin-2026", "capterra-review-daniel-2024", "capterra-review-vp-marketing-2025"],
+      "summary": "Independent reviews converge on faster first drafts and better consistency across content formats. They also converge on a credible limitation: human editing and fact checking remain necessary."
+    }
+  ],
+  "deep_brief": {
+    "consumer_product": "Jasper marketing platform",
+    "explicit_non_target": "Jasper affiliate or partner recruitment",
+    "objective": "Move an experienced content marketer from skepticism about generic AI to starting a 7-day product trial.",
+    "audience": "A hands-on content lead responsible for producing multiple assets while protecting a recognizable brand voice.",
+    "awareness": "solution_aware",
+    "sophistication": 4,
+    "live_problem": "The team can produce raw AI text quickly, but the content lead still starts many assets from a blank brief and repeatedly repairs generic, inconsistent drafts.",
+    "mechanism": "The user supplies brand voice, knowledge and audience context once, then applies that context across agents and content workflows.",
+    "supported_result": "A faster path to usable first drafts with more consistent brand direction across formats, while preserving human review.",
+    "honest_limit": "Jasper can still produce generic or repetitive material and does not remove the need for editing or fact checking.",
+    "decision_point": "Whether a single 7-day trial is worth testing on one real campaign workflow.",
+    "conversion_spine": {
+      "person": "A content lead who is the final quality checkpoint for every channel.",
+      "unmet_need": "Turn one campaign direction into several recognizable first drafts without rebuilding brand context each time.",
+      "scene_evidence": "A representative work session moving between an ad, email and landing-page brief while repeatedly correcting tone.",
+      "consequence_without_offer": "The content lead remains the manual rewrite bottleneck.",
+      "causal_solution": "Jasper stores and applies brand and audience context across the drafting workflow.",
+      "open_at_cta": "The team has not yet tested whether one live campaign can move through the workflow with fewer restarts.",
+      "swap_test": "Replacing Jasper with a generic writing tool breaks the specific brand-context and workflow mechanism."
+    }
+  },
+  "spy_analyses": [],
+  "market_examples": [],
+  "performance_winners": [],
+  "avatar": {
+    "schema_version": "deep-avatar-v2",
+    "offer_id": "8b790326-9138-41b7-ae6e-00704cfd0c3b",
+    "segment_name": "The hands-on content lead who has tried generic AI and still owns the final rewrite",
+    "identity": {
+      "portrait": { "value": "A content marketing lead in a small or mid-sized team who both plans campaigns and edits the final assets.", "anchor": "category_inference", "source": "Independent review roles and product positioning" },
+      "week_texture": { "value": "Moves among campaign briefs, ads, email, landing pages and review comments, often across the same launch.", "anchor": "category_inference", "source": "Product workflows and multi-format review use cases" },
+      "identity_gap": { "value": "Wants to be the person shaping the campaign, but keeps becoming the person who repairs every first draft.", "anchor": "category_inference", "source": "Review convergence on speed, consistency and continued editing" }
+    },
+    "emotion_map": {
+      "fear_ladder": {
+        "surface_fear": { "value": "The next AI draft will sound generic and create another editing pass.", "anchor": "category_inference", "source": "G2 and Capterra limitations" },
+        "deep_fear": { "value": "Scaling output will dilute the brand and make the team harder to trust.", "anchor": "category_inference", "source": "Brand Voice positioning and reviewer concerns" },
+        "wordless_fear": { "value": "If every draft still depends on their rewrite, they are not leading a system; they are the system.", "anchor": "category_inference", "source": "Derived from the manual bottleneck described across reviews" }
+      },
+      "three_am_thoughts": { "value": null, "anchor": "unknown", "source": null },
+      "shame_and_hiding": { "value": "Avoids admitting how much supposedly automated copy is still rebuilt by hand.", "anchor": "category_inference", "source": "Derived from reported generic output and extra editing" },
+      "dreams": {
+        "near_dream": { "value": "Open a useful first draft instead of another blank document.", "anchor": "category_inference", "source": "Review convergence on first drafts" },
+        "deep_dream": { "value": "Let teammates create without losing the brand voice at every handoff.", "anchor": "category_inference", "source": "Brand Voice and collaboration evidence" },
+        "identity_dream": { "value": "Become the campaign editor and strategist, not the permanent rewrite bottleneck.", "anchor": "category_inference", "source": "Derived from audience role and supported workflow outcome" }
+      },
+      "envy_comparison": { "value": "Notices teams that publish across channels without every asset waiting on one senior editor.", "anchor": "category_inference", "source": "Derived from multi-channel workflow evidence" }
+    },
+    "belief_map": {
+      "cause_theory": { "value": "General AI lacks enough persistent brand, audience and workflow context.", "anchor": "category_inference", "source": "Official product mechanism and independent limitations" },
+      "who_is_blamed": { "value": "The tools for producing generic text and the team for treating prompts as a process.", "anchor": "category_inference", "source": "Derived from sophistication level" },
+      "solution_beliefs": { "value": "A useful system must carry brand rules and campaign context across formats, not just write faster.", "anchor": "category_inference", "source": "Official Brand Voice and platform documentation" },
+      "past_attempts_scars": { "value": "Has already tried general AI and learned that fast output can create slow editing.", "anchor": "category_inference", "source": "Independent reviews mentioning generic, repetitive output and extra editing" }
+    },
+    "market_position": {
+      "awareness_sophistication": {
+        "awareness_stage": "solution_aware",
+        "sophistication_stage": 4,
+        "entry_point_note": "Do not sell AI writing. Sell a controlled campaign workflow that acknowledges editing still exists.",
+        "anchor": "category_inference"
+      },
+      "already_seen": { "value": "Claims that AI writes content faster, beats the blank page and sounds exactly like the brand.", "anchor": "category_inference", "source": "Category language and review skepticism" },
+      "consumer_trust_wounds": { "value": "Promises of human-sounding, factually accurate copy that still arrives generic or needs correction.", "anchor": "category_inference", "source": "Independent review limitations" }
+    },
+    "buying_psychology": {
+      "stated_vs_real_objection": {
+        "stated": "We already have ChatGPT.",
+        "real": "I do not want to pay for another interface that gives me the same generic draft.",
+        "anchor": "category_inference"
+      },
+      "purchase_context": { "value": "Most credible when tested on one current campaign rather than evaluated through a generic demo prompt.", "anchor": "category_inference", "source": "Trial CTA and sophistication level" },
+      "internal_price_anchor": { "value": "Compares the subscription with the recurring cost of senior editing time, while remaining sensitive to price.", "anchor": "category_inference", "source": "Capterra price objections and time-saving reviews" },
+      "permission_needed": { "value": "Permission to test the workflow without pretending the tool replaces judgment or editing.", "anchor": "category_inference", "source": "Review convergence on value plus limitations" },
+      "decision_moment": { "value": "Chooses one real campaign and decides whether to run it through the 7-day trial.", "anchor": "category_inference", "source": "Official trial availability" }
+    },
+    "action_fields": {
+      "voc_lines": [
+        { "line": "Sometimes the content needs manual editing to sound more natural.", "anchor": "quote", "source": "g2-review-nabin-2026" },
+        { "line": "It helped cut down on outline and drafting time.", "anchor": "quote", "source": "capterra-review-daniel-2024" },
+        { "line": "You still need to tweak and rewrite parts to make it more natural.", "anchor": "quote", "source": "capterra-review-vp-marketing-2025" }
+      ],
+      "the_one_trigger": { "value": "Seeing the same campaign brief produce several channel drafts while retaining one defined voice.", "anchor": "category_inference", "source": "Mechanism plus multi-format reviews" },
+      "transformation_arc": { "value": "From manually rescuing isolated AI drafts to directing a context-aware content workflow.", "anchor": "category_inference", "source": "Official platform mechanism and independent outcomes" },
+      "forbidden_word": { "value": "effortless", "anchor": "category_inference", "source": "Contradicted by the documented need for setup, editing and fact checking" }
+    },
+    "summary": {
+      "core_identity": "A hands-on content lead who protects the brand while carrying too much of the final drafting burden.",
+      "current_state": ["Uses or has tested general AI", "Produces several campaign formats", "Still repairs generic or inconsistent drafts"],
+      "central_problem_in_their_words": "Fast output is not useful if I still have to rebuild the voice and context every time.",
+      "pains": ["Blank-page restarts", "Repeated tone corrections", "Manual handoff bottleneck", "Distrust of generic AI promises"],
+      "psychological_drivers": ["Control", "Consistency", "Professional credibility", "Time returned to strategy"],
+      "desired_result": "A faster first-draft workflow that carries brand and audience context across campaign assets.",
+      "product_meaning": "Not another writer, but a testable system for reducing context resets while the marketer keeps final judgment."
+    },
+    "declared_gaps": ["No verified performance lift", "No verified ROI outcome", "No permission to claim editing disappears"]
+  },
+  "test_kit": {
+    "primary_hypothesis": "A context-reset bottleneck is more credible and differentiated than a generic speed promise.",
+    "candidate_routes": [
+      { "specialist": "proof_mechanism", "hypothesis": "Show how Brand Voice, Audiences and Knowledge change the first-draft workflow." },
+      { "specialist": "direct_response", "hypothesis": "Name the expensive pattern: fast AI output followed by slow senior rewriting." },
+      { "specialist": "storytelling", "hypothesis": "Use a clearly representative work scene, not a customer testimonial or invented result." }
+    ],
+    "required_honesty": "Acknowledge that human editing and fact checking remain part of the workflow.",
+    "cta": "Start a 7-day Pro trial with one real campaign."
+  },
+  "taste_corpus": [],
+  "hook_library": [],
+  "creative_hint": "Avoid any hook comparing a list of AI tools or claiming that every tool sounds the same. Begin inside the audience's real rewrite bottleneck.",
+  "missing_inputs": ["spy_analyses", "performance_winners", "approved_same-vertical_taste_example"],
+  "omitted_context": [
+    { "section": "spy_analyses", "reason": "No frozen Spy source was available; no competitor winner was invented.", "source_refs": [] },
+    { "section": "performance_winners", "reason": "No campaign metrics were available; market examples are not labeled winners.", "source_refs": [] },
+    { "section": "affiliate_economics", "reason": "Affiliate terms are intentionally excluded from consumer copy until separately reverified.", "source_refs": [] }
+  ],
+  "snapshot_sha256": "ab6a2fb345dbb07408815944a95075e9e7cceba8b8dbb16850cc164ad558c9ab"
+}

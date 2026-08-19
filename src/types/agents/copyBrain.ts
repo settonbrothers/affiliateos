@@ -183,6 +183,20 @@ export const CopyBrainInputSnapshotV1Schema = z.object({
     geo: z.array(z.string()),
     audience: z.string().nullable(),
     generation_language: z.literal('he'),
+    objective_type: z
+      .enum([
+        'sale',
+        'lead',
+        'donation',
+        'trial',
+        'signup',
+        'affiliate_recruitment',
+      ])
+      .optional(),
+    desired_action: z.string().nullable().optional(),
+    audience_side: z
+      .enum(['consumer', 'affiliate_marketer', 'donor'])
+      .optional(),
   }),
   underwriting: z.record(z.string(), z.unknown()).nullable(),
   compliance: z.record(z.string(), z.unknown()).nullable(),

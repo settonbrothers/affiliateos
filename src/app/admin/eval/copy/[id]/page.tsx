@@ -11,6 +11,7 @@ import { CopyEvalRunner } from '@/components/admin/CopyEvalRunner'
 import { CopyEvalLeanPlanControl } from '@/components/admin/CopyEvalLeanPlanControl'
 import { brainSha256 } from '@/lib/copy/copyBrainContext'
 import { buildLeanResumePlan } from '@/lib/copy/copyEvalLeanResume'
+import { renderCopyEvalOutput } from '@/lib/copy/renderCopyEvalOutput'
 import {
   isAnthropicCreditFailure,
   selectReviewablePairJobs,
@@ -43,18 +44,6 @@ const record = (value: unknown): RecordValue | null =>
   value && typeof value === 'object' && !Array.isArray(value)
     ? (value as RecordValue)
     : null
-const copyText = (output: unknown) => {
-  const payload = record(record(output)?.payload)
-  const variants = Array.isArray(payload?.variants) ? payload.variants : []
-  const hebrew =
-    variants.map(record).find((item) => item?.lang === 'he') ??
-    variants.map(record).find(Boolean)
-  if (!hebrew) return '[המנוע עצר לפני יצירת קופי]'
-  return [hebrew.hook, hebrew.primary_text, hebrew.headline]
-    .filter((item) => typeof item === 'string')
-    .join('\n\n')
-}
-
 export default async function CopyEvalRunPage({
   params,
 }: {
@@ -150,6 +139,11 @@ export default async function CopyEvalRunPage({
       0
     const left = candidateLeft ? candidate : baseline
     const right = candidateLeft ? baseline : candidate
+    const leftCopy = renderCopyEvalOutput(left.output_payload)
+    const rightCopy = renderCopyEvalOutput(right.output_payload)
+    // A stopped engine is a diagnostic result, not copy that Noam should be
+    // forced to score against a completed ad.
+    if (!leftCopy.reviewable || !rightCopy.reviewable) continue
     pairs.push({
       caseId: evalCase.id,
       caseName: String(pack?.name ?? packId),
@@ -157,8 +151,8 @@ export default async function CopyEvalRunPage({
       repetition,
       leftId: left.id,
       rightId: right.id,
-      leftText: copyText(left.output_payload),
-      rightText: copyText(right.output_payload),
+      leftText: leftCopy.text,
+      rightText: rightCopy.text,
       snapshot: evalCase.input_snapshot,
       alreadyScored: scored.has(evalCase.id),
     })
