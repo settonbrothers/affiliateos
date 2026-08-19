@@ -38,6 +38,26 @@ export default async function CopyEvalPage() {
         המקרים במעבדה: {caseCount ?? 0}/8. Fixtures מסומנים ואינם ניתנים לפרסום.
         הריצות אינן יוצרות offers ואינן מעדכנות Taste Corpus.
       </p>
+      <Link
+        href="/admin/eval/copy/readiness"
+        className="group grid gap-4 border border-[#f4bd21]/35 bg-[#f4bd21]/[0.045] p-5 no-underline transition-colors hover:bg-[#f4bd21]/[0.075] md:grid-cols-[1fr_auto] md:items-center"
+      >
+        <div>
+          <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#f4bd21]">
+            Ready for inspection · $0.00
+          </div>
+          <h2 className="mt-2 text-lg font-semibold text-white">
+            תיק Jasper המתוקן מוכן לבדיקה לפני ריצת AI
+          </h2>
+          <p className="mt-2 text-sm text-[var(--color-muted-foreground)]">
+            מוצר, קהל, מטרה, 7 מקורות, אווטאר עמוק, גבולות אמת ו־trace של התורה
+            שתגיע לסוכנים.
+          </p>
+        </div>
+        <span className="font-mono text-xs text-[#f4bd21] transition-transform group-hover:-translate-x-1">
+          פתיחת התיק ←
+        </span>
+      </Link>
       {setupError && (
         <div className="rounded border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
           המעבדה מותקנת בקוד אך טבלאות הניסוי עדיין לא הותקנו במסד הנתונים.
@@ -46,7 +66,9 @@ export default async function CopyEvalPage() {
       )}
       <CopyEvalControls
         disabledReason={
-          setupError ? 'ממתין להתקנת טבלאות הניסוי — אין כתיבה למסד הנתונים.' : null
+          setupError
+            ? 'ממתין להתקנת טבלאות הניסוי — אין כתיבה למסד הנתונים.'
+            : null
         }
       />
       <div className="space-y-2">
