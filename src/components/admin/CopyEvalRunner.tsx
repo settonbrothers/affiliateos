@@ -11,10 +11,12 @@ export function CopyEvalRunner({
   runId,
   remaining,
   failed,
+  creditPaused,
 }: {
   runId: string
   remaining: number
   failed: number
+  creditPaused: boolean
 }) {
   const router = useRouter()
   const active = useRef(false)
@@ -60,6 +62,14 @@ export function CopyEvalRunner({
     )
     router.refresh()
   }
+
+  if (creditPaused)
+    return (
+      <div className="rounded border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+        הריצה מושהית כדי לשמור על התקציב לאחר שיתרת Anthropic הסתיימה. אין כרגע
+        קריאות AI פעילות, והמשימות שנכשלו לא יוחזרו לתור מהמסך הזה.
+      </div>
+    )
 
   return (
     <div className="flex flex-wrap items-center gap-3">

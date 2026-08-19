@@ -18,6 +18,7 @@ import {
   selectAffxEvalOffers,
   type EvalOfferCandidate,
 } from '@/lib/copy/copyEvalSelection'
+import { selectReviewablePairJobs } from '@/lib/copy/copyEvalReviewPolicy'
 import { createClient } from '@/lib/supabase/server'
 import {
   CopyBrainInputSnapshotV1Schema,
@@ -957,6 +958,92 @@ export async function submitCopyOwnerScore(input: {
     data: { user },
   } = await db.auth.getUser()
   if (!user) throw new Error('Not authenticated')
+
+  const [
+    { data: evalRun },
+    { data: evalCase },
+    { data: submittedJobs },
+    { data: calibrationCases },
+  ] = await Promise.all([
+    db
+      .from('copy_eval_runs')
+      .select('id,status')
+      .eq('id', input.evalRunId)
+      .maybeSingle(),
+    db
+      .from('copy_eval_cases')
+      .select('id,external_id,split,revealed_at')
+      .eq('id', input.caseId)
+      .maybeSingle(),
+    db
+      .from('copy_eval_jobs')
+      .select('id,case_id,engine,repetition,status')
+      .eq('eval_run_id', input.evalRunId)
+      .eq('case_id', input.caseId)
+      .eq('repetition', input.presentedRepetition),
+    db
+      .from('copy_eval_cases')
+      .select('id')
+      .eq('split', 'calibration')
+      .like('external_id', `${COPY_EVAL_PREFIX}%`),
+  ])
+  if (!evalRun || !evalCase) throw new Error('Eval run or case not found')
+  const packId = String(evalCase.external_id).replace(COPY_EVAL_PREFIX, '')
+  const preregisteredRepetition = Number(
+    (protocol.preregistered_presented_repetition as Record<string, number>)[
+      packId
+    ]
+  )
+  if (
+    !Number.isInteger(preregisteredRepetition) ||
+    input.presentedRepetition !== preregisteredRepetition
+  ) {
+    throw new Error('Only the preregistered repetition may be scored')
+  }
+  const calibrationIds = (calibrationCases ?? []).map((item) => item.id)
+  const { count: calibrationScoredBefore } = calibrationIds.length
+    ? await db
+        .from('copy_eval_owner_scores')
+        .select('id', { count: 'exact', head: true })
+        .eq('eval_run_id', input.evalRunId)
+        .in('case_id', calibrationIds)
+    : { count: 0 }
+  const reviewable = selectReviewablePairJobs({
+    evalCase,
+    jobs: submittedJobs ?? [],
+    preregisteredRepetition,
+    calibrationScored: calibrationScoredBefore ?? 0,
+  })
+  if (!reviewable) throw new Error('This blind pair is not reviewable yet')
+  const expectedJobIds = new Set([
+    reviewable.baseline.id,
+    reviewable.candidate.id,
+  ])
+  if (
+    !expectedJobIds.has(input.leftId) ||
+    !expectedJobIds.has(input.rightId) ||
+    input.leftId === input.rightId
+  ) {
+    throw new Error('Submitted blind pair does not match the frozen jobs')
+  }
+  const scoreKeys = [
+    'scroll_stop',
+    'curiosity',
+    'emotional_peak',
+    'tangible_need',
+    'causal_solution',
+    'credibility',
+    'power',
+    'publishability',
+  ]
+  for (const side of ['left', 'right']) {
+    for (const key of scoreKeys) {
+      const value = Number(input.scores[`${side}_${key}`])
+      if (!Number.isInteger(value) || value < 1 || value > 5) {
+        throw new Error('Every blind-review dimension must be scored 1–5')
+      }
+    }
+  }
   const { error } = await db.from('copy_eval_owner_scores').upsert(
     {
       eval_run_id: input.evalRunId,
@@ -979,19 +1066,13 @@ export async function submitCopyOwnerScore(input: {
     { onConflict: 'eval_run_id,case_id' }
   )
   if (error) throw error
-  const { data: calibrationCases } = await db
-    .from('copy_eval_cases')
-    .select('id')
-    .eq('split', 'calibration')
-    .like('external_id', `${COPY_EVAL_PREFIX}%`)
-  const calibrationIds = (calibrationCases ?? []).map((item) => item.id)
   if (calibrationIds.length === 6) {
     const { count } = await db
       .from('copy_eval_owner_scores')
       .select('id', { count: 'exact', head: true })
       .eq('eval_run_id', input.evalRunId)
       .in('case_id', calibrationIds)
-    if (count === 6) {
+    if (count === 6 && evalRun.status === 'calibration_ready') {
       await db
         .from('copy_eval_cases')
         .update({ revealed_at: new Date().toISOString() })
@@ -1007,7 +1088,14 @@ export async function submitCopyOwnerScore(input: {
     .from('copy_eval_owner_scores')
     .select('id', { count: 'exact', head: true })
     .eq('eval_run_id', input.evalRunId)
-  if (totalScores === 8) await finalizeCopyEvalRun(db, input.evalRunId)
+  if (totalScores === 8) {
+    const { count: completedJobs } = await db
+      .from('copy_eval_jobs')
+      .select('id', { count: 'exact', head: true })
+      .eq('eval_run_id', input.evalRunId)
+      .eq('status', 'completed')
+    if (completedJobs === 48) await finalizeCopyEvalRun(db, input.evalRunId)
+  }
   revalidatePath(`/admin/eval/copy/${input.evalRunId}`)
 }
 
