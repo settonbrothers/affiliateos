@@ -25,6 +25,7 @@ const allowed = [
   /^prompts\/avatar_builder\//,
   /^prompts\/diagnosis\//,
   /^brain-contracts\//,
+  /^brain-knowledge\//,
   /^brain-evals\//,
   /^brain-release\//,
 ]

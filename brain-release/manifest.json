@@ -1,7 +1,7 @@
 {
-  "release_version": "copy-brain-v5.0.0-agency-eval",
-  "engine_version": "evidence-agency-v5",
-  "activation": "blocked_pending_8_case_eval",
+  "release_version": "copy-brain-release-v3",
+  "engine_version": "evidence-agency-v6",
+  "activation": "blocked_pending_clean_8_case_eval",
   "files": [
     {
       "source": "integration/copy-engine-v3/prompts/copy_excavate_product/v3.md",
@@ -9,95 +9,107 @@
       "kind": "prompt",
       "orchestrator": "CopyExcavateProductOrchestrator",
       "version": "v3",
+      "source_sha256": "37cb09ca1362ca436e63270ab041ce47d10b8b136382a342c2b7d8c30e02791d",
       "sha256": "37cb09ca1362ca436e63270ab041ce47d10b8b136382a342c2b7d8c30e02791d"
     },
     {
-      "source": "integration/copy-engine-v3/prompts/copy_angle/v4.md",
-      "target": "prompts/copy_angle/v4.md",
+      "source": "integration/copy-engine-v3/prompts/copy_angle/v5.md",
+      "target": "prompts/copy_angle/v5.md",
       "kind": "prompt",
       "orchestrator": "CopyAngleOrchestrator",
-      "version": "v4",
-      "sha256": "ad42538a7a9b068fc49d6651b16e231cf44ffa8c860717e289901c11f786404c"
+      "version": "v5",
+      "source_sha256": "e97359fd7fa4b0fc023b3f9b82ece6cafc6baee69c9aaaf5ad3a3125c62baebc",
+      "sha256": "4bf155b207803c583416a62fc64d42adbfa9e3baa174a5c467ce6a6c5759a001"
     },
     {
-      "source": "integration/copy-engine-v3/prompts/copy_hook/v4.md",
-      "target": "prompts/copy_hook/v4.md",
+      "source": "integration/copy-engine-v3/prompts/copy_hook/v5.md",
+      "target": "prompts/copy_hook/v5.md",
       "kind": "prompt",
       "orchestrator": "CopyHookOrchestrator",
-      "version": "v4",
-      "sha256": "875eadc35d417866b4c748f7a3eaeab34beae519c0c0b5e42df1d4601baf1952"
+      "version": "v5",
+      "source_sha256": "cf525a908d58f1aca34fcd18d89a4965e6b224a01316234557caee18485eb66b",
+      "sha256": "f44ac0d90e37c03f9dc37b3da5cb5ef2b7cec6dcfbef83df7e12e7f850e0bc89"
     },
     {
-      "source": "integration/copy-engine-v3/prompts/copy_write/v4.md",
-      "target": "prompts/copy_write/v4.md",
+      "source": "integration/copy-engine-v3/prompts/copy_write/v5.md",
+      "target": "prompts/copy_write/v5.md",
       "kind": "prompt",
       "orchestrator": "CopyWriteOrchestrator",
-      "version": "v4",
-      "sha256": "006259ac392d1abd71763a3a5e48a391f11ade8ead0c809a959a83cfc252315b"
+      "version": "v5",
+      "source_sha256": "767137facd7d072d1f5072c0af23348497da2054980553593572c00212b5dd9c",
+      "sha256": "5ffa070cdc151d065b7d3d3dc41cc7fd9fe3a37000cebe959595e704d6749c61"
     },
     {
-      "source": "integration/copy-engine-v3/prompts/copy_reader/v1.md",
-      "target": "prompts/copy_reader/v1.md",
+      "source": "integration/copy-engine-v3/prompts/copy_reader/v2.md",
+      "target": "prompts/copy_reader/v2.md",
       "kind": "prompt",
       "orchestrator": "CopyReaderOrchestrator",
-      "version": "v1",
-      "sha256": "2b84d1b9433ecbc4ef010f1d95fa6ed2fa097e2663978ba97a186036c17996fb"
+      "version": "v2",
+      "source_sha256": "d37025c791e2ce9ab9548935702ee25a0cf822edcab77db8bf6c9fd304b917d9",
+      "sha256": "39f2493164672fde69661b65f534e9f0ae2a536fca8509cc19793d977a538dca"
     },
     {
-      "source": "integration/copy-engine-v3/prompts/copy_critic/v1.md",
-      "target": "prompts/copy_critic/v1.md",
+      "source": "integration/copy-engine-v3/prompts/copy_critic/v2.md",
+      "target": "prompts/copy_critic/v2.md",
       "kind": "prompt",
       "orchestrator": "CopyCriticOrchestrator",
-      "version": "v1",
-      "sha256": "d994c9ada30f2bd0959eeffc824438b4fa23394a903003e3dd917f57940a0d98"
+      "version": "v2",
+      "source_sha256": "2fe6353cbd673c574a11ca1e5374d62f09d676640b520f66ecd7ea412014df0e",
+      "sha256": "69ab83d8d3347311b7f3ed58985f0630241a0f346b2d84c1cfd7abeae1b9fad2"
     },
     {
-      "source": "integration/copy-engine-v3/prompts/copy_judge/v3.md",
-      "target": "prompts/copy_judge/v3.md",
+      "source": "integration/copy-engine-v3/prompts/copy_judge/v4.md",
+      "target": "prompts/copy_judge/v4.md",
       "kind": "prompt",
       "orchestrator": "CopyJudgeOrchestrator",
-      "version": "v3",
-      "sha256": "9058c5baf991d8cea0c05a7f6164b9da82b24e0f033629bc7e0c6df7e08f7302"
+      "version": "v4",
+      "source_sha256": "3d1291390dae4b882f4650fe6750dadea65f0fc2ff177c32e1d85cd866dcc4a3",
+      "sha256": "af35881921c838023bd6f179445549c12016d500dbed46d56d42296c71535d0e"
     },
     {
-      "source": "integration/copy-engine-v3/prompts/copy_director/v1.md",
-      "target": "prompts/copy_director/v1.md",
+      "source": "integration/copy-engine-v3/prompts/copy_director/v2.md",
+      "target": "prompts/copy_director/v2.md",
       "kind": "prompt",
       "orchestrator": "CopyDirectorOrchestrator",
-      "version": "v1",
-      "sha256": "12671cc840521262b6d99b2e7296d6998c2e038e208350b959e5772fefbfb6d2"
+      "version": "v2",
+      "source_sha256": "d12f0949496aead5b7cba2e61103da935acb5baa09c38592506e4fffb90b4187",
+      "sha256": "d92ad97eaa3b0be83f0e0edff3d2882c83cfae90b57958f8da0ebc10f33513a0"
     },
     {
-      "source": "integration/copy-engine-v3/prompts/copy_write_storytelling/v1.md",
-      "target": "prompts/copy_write_storytelling/v1.md",
+      "source": "integration/copy-engine-v3/prompts/copy_write_storytelling/v2.md",
+      "target": "prompts/copy_write_storytelling/v2.md",
       "kind": "prompt",
       "orchestrator": "CopyStorytellingWriterOrchestrator",
-      "version": "v1",
-      "sha256": "774299b1ea6f0f65b0bd5dec4d63637c0e9b47ea444c058fd94b0fb5b3846f84"
+      "version": "v2",
+      "source_sha256": "cb9359f90da2116d3bed42ca8780a150488769452a7ebd8cfe0b63a8ac0f81c0",
+      "sha256": "3067c861c4cdac6c628e368b68e19c570c6f933b30c8f887fa6a7dec321d036b"
     },
     {
-      "source": "integration/copy-engine-v3/prompts/copy_write_direct_response/v1.md",
-      "target": "prompts/copy_write_direct_response/v1.md",
+      "source": "integration/copy-engine-v3/prompts/copy_write_direct_response/v2.md",
+      "target": "prompts/copy_write_direct_response/v2.md",
       "kind": "prompt",
       "orchestrator": "CopyDirectResponseWriterOrchestrator",
-      "version": "v1",
-      "sha256": "682b7ea4e11c915757a2e237bbf1fd0db4083e45794bb6f740db12a4ea2713bd"
+      "version": "v2",
+      "source_sha256": "8b9f50623f73cb86e49d10ba140c8db7fb5cc9c253a6fb4a12d4596d32233f62",
+      "sha256": "e055e97a59e59e44c4035ef2b5ccf491e08ba4a66673aba0e520d332f1ab8fa3"
     },
     {
-      "source": "integration/copy-engine-v3/prompts/copy_write_proof_mechanism/v1.md",
-      "target": "prompts/copy_write_proof_mechanism/v1.md",
+      "source": "integration/copy-engine-v3/prompts/copy_write_proof_mechanism/v2.md",
+      "target": "prompts/copy_write_proof_mechanism/v2.md",
       "kind": "prompt",
       "orchestrator": "CopyProofMechanismWriterOrchestrator",
-      "version": "v1",
-      "sha256": "f37d6b1c7d8128ad3f3ad5a8660dbca1f9d92946f388295fb8f1aa9e5661587f"
+      "version": "v2",
+      "source_sha256": "c9b7551b92e5f85c321118b9c107b47130190d427c8756833447c680ac3709cf",
+      "sha256": "8f1433ef1a00cfb6747f1602e77e064e12fd15e8999716952a8fef02d6e7327c"
     },
     {
-      "source": "integration/copy-engine-v3/prompts/copy_portfolio_judge/v1.md",
-      "target": "prompts/copy_portfolio_judge/v1.md",
+      "source": "integration/copy-engine-v3/prompts/copy_portfolio_judge/v2.md",
+      "target": "prompts/copy_portfolio_judge/v2.md",
       "kind": "prompt",
       "orchestrator": "CopyPortfolioJudgeOrchestrator",
-      "version": "v1",
-      "sha256": "f69e551eb3fcd92fcd5648804636871298699d968f8ca4981fc590a1d3456276"
+      "version": "v2",
+      "source_sha256": "add325b7e854c7f695141f6a327f663b60cf438a3400fba872701dd0d0b02599",
+      "sha256": "59d8aed092947f68cbd26c88728bc3223ce4893b8b2ad4e690cb1cb4d294720f"
     },
     {
       "source": "integration/copy-engine-v3/prompts/diagnosis/v2.md",
@@ -105,15 +117,41 @@
       "kind": "prompt",
       "orchestrator": "DiagnosisOrchestrator",
       "version": "v2",
+      "source_sha256": "69b97daba717e7507e093b4b3aa281114e72b1f9898dc7529f3427b34a4a1c0e",
       "sha256": "69b97daba717e7507e093b4b3aa281114e72b1f9898dc7529f3427b34a4a1c0e"
     },
     {
-      "source": "integration/copy-engine-v3/prompts/avatar_builder/v2.md",
-      "target": "prompts/avatar_builder/v2.md",
+      "source": "integration/copy-engine-v3/prompts/avatar_builder/v3.md",
+      "target": "prompts/avatar_builder/v3.md",
       "kind": "prompt",
       "orchestrator": "AvatarBuilderOrchestrator",
-      "version": "v2",
-      "sha256": "12fc393d7fdd78a684a777e97d442ead3bdaf4f57cd3c2043ca8f0064ad828bf"
+      "version": "v3",
+      "source_sha256": "2bf9cb63229ebbf416b7e5ec56a6f92f4a36f1d3eaa8d3fae13d8990cc624d58",
+      "sha256": "804e325f5187b23a10438e5b81a24cc7c7fc0ac6067544027c607dd00762f566"
+    },
+    {
+      "source": "brain/knowledge/latest-owner-doctrine-v3.md",
+      "target": "brain-knowledge/latest-owner-doctrine-v3.md",
+      "kind": "knowledge",
+      "sha256": "ce1470eef7b1bc818ea02f8f30822fea584ab51aa58074b0d3a25873a41cb6cc"
+    },
+    {
+      "source": "brain/knowledge/quality-baseline-v3.md",
+      "target": "brain-knowledge/quality-baseline-v3.md",
+      "kind": "knowledge",
+      "sha256": "fe6ed6b4293d5b8ddef5258a8486e93a726770deffb84d9edc6ee5ad075c5fa9"
+    },
+    {
+      "source": "brain/knowledge/lesson-registry-v3.json",
+      "target": "brain-knowledge/lesson-registry-v3.json",
+      "kind": "knowledge",
+      "sha256": "30b1e296462b6c2c6d09120d4690bee24cb6aa9f19d60a5f477b153f83070a45"
+    },
+    {
+      "source": "brain/knowledge/session-source-manifest-v3.json",
+      "target": "brain-knowledge/session-source-manifest-v3.json",
+      "kind": "knowledge",
+      "sha256": "ba51a02e61e05fda8ebe0ce44b7927c2262e52f00a591b0a55853b1dc450bb79"
     },
     {
       "source": "schemas/deep-avatar.schema.json",
@@ -126,6 +164,12 @@
       "target": "brain-contracts/copy-brain-input-v1.schema.json",
       "kind": "contract",
       "sha256": "c447ebea5c6273985cf7dadf2a2df994b66b3698459a41028767b97be59a9ee5"
+    },
+    {
+      "source": "integration/copy-engine-v3/schemas/copy-execution-brief-v2.schema.json",
+      "target": "brain-contracts/copy-execution-brief-v2.schema.json",
+      "kind": "contract",
+      "sha256": "f2063cec9da304fe85e75dcb1be3e440bc4cf7baa1984b6f225fdfa64fc56969"
     },
     {
       "source": "integration/copy-engine-v3/schemas/ad-copy-v4.schema.json",
@@ -164,6 +208,18 @@
       "sha256": "f6e98394ab32408df8922a3dc815093d6a614d0b3b431d88e0a82e2dc2ff0553"
     },
     {
+      "source": "integration/copy-engine-v3/types/copyExecutionBriefV2.node.ts",
+      "target": "brain-contracts/copyExecutionBriefV2.node.ts",
+      "kind": "contract_mapping",
+      "sha256": "76d5bda5729bed00314fcbb606c4f7a4b306d6c862614d943e54654ca2784450"
+    },
+    {
+      "source": "integration/copy-engine-v3/types/copyExecutionBriefV2.deno.ts",
+      "target": "brain-contracts/copyExecutionBriefV2.deno.ts",
+      "kind": "contract_mapping",
+      "sha256": "22465abc8f6577e04f331d4e24892bfe98b57618e12bed5933a85793c5b64409"
+    },
+    {
       "source": "tests/copy-system-v2/protocol.json",
       "target": "brain-evals/copy-system-v2.protocol.json",
       "kind": "eval",
@@ -177,13 +233,14 @@
     }
   ],
   "source_repository": "creation-engine",
-  "source_git_sha": "8faacfc8907325ad5d0c8606f176a3e45347c89a",
-  "compiled_at": "2026-08-19T09:47:30.654Z",
+  "source_git_sha": "e5d4f04a7d150f0c02c409a6bd54d96e3f751eb3",
+  "compiled_at": "2026-08-19T18:05:45.728Z",
   "regression_commands": [
     "node tests/run-conversion-regressions.mjs",
     "node tests/run-story-evidence-evals.mjs",
     "node tests/run-copy-system-v2.mjs",
     "node tests/run-agency-economics-contracts.mjs",
+    "node tests/run-copy-brain-v3.mjs",
     "node integration/copy-engine-v3/scripts/check-package.mjs"
   ],
   "regression_results": [
@@ -208,10 +265,15 @@
       "output": "PASS agency/economics contracts: routed specialists, internal economics, creative foundation, release coverage"
     },
     {
+      "command": "node tests/run-copy-brain-v3.mjs",
+      "status": "passed",
+      "output": "PASS copy brain v3: recency, input readiness, objective separation, taste relevance and duplicate-hook preflight"
+    },
+    {
       "command": "node integration/copy-engine-v3/scripts/check-package.mjs",
       "status": "passed",
-      "output": "PASS copy-engine-v4-local: 9 checksums, schema valid, placeholders clean, Zod parity exact"
+      "output": "PASS copy-brain-release-v3: 31 artifacts, 23 active lessons, compiled doctrine routes and Zod parity"
     }
   ],
-  "manifest_sha256": "5640a64e6a5fd6f23de8135d57434ee1fb18319d476baa85de9e6e024930e7c4"
+  "manifest_sha256": "19f1b2ddc38c17a4a841353b2f79514f78232dd36080087c5ff323e9e8d65351"
 }
