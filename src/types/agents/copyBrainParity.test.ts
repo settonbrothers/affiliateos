@@ -26,6 +26,7 @@ describe('CopyBrainInputSnapshotV1 contract parity', () => {
         'hook_library',
         'missing_inputs',
         'omitted_context',
+        'offer_economics',
       ])
     )
     expect(schema.$defs.source.properties.source_type.enum).toContain(
@@ -50,6 +51,7 @@ describe('CopyBrainInputSnapshotV1 contract parity', () => {
       'hook_library',
       'campaign_result',
       'snapshot_sha256',
+      'offer_economics',
     ]) {
       expect(node).toContain(token)
       expect(deno).toContain(token)

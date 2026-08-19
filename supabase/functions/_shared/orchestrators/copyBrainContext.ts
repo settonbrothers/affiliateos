@@ -85,6 +85,14 @@ export function compileCopyBrainContext(
     missing_inputs: snapshot.missing_inputs,
   }
   const omitted = [...snapshot.omitted_context]
+  if (snapshot.offer_economics)
+    omitted.push({
+      section: 'offer_economics',
+      reason: 'internal_operator_context_not_exposed_to_copy',
+      source_refs: snapshot.offer_economics.sources.map(
+        (source) => source.source_id
+      ),
+    })
   if (
     snapshot.research_documents.some(
       (document) => typeof document.raw_text === 'string'

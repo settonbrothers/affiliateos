@@ -33,6 +33,7 @@ const base = (): Omit<CopyBrainInputSnapshotV1, 'snapshot_sha256'> => ({
   },
   underwriting: null,
   compliance: null,
+  offer_economics: null,
   sources: [
     {
       source_id: 'campaign-1',
@@ -113,6 +114,56 @@ describe('copy brain context', () => {
       expect.arrayContaining([
         expect.objectContaining({ section: 'research_documents.raw_text' }),
       ])
+    )
+  })
+
+  it('keeps offer economics in the sealed input but out of consumer copy context', () => {
+    const input = base()
+    input.offer_economics = {
+      schema_version: 'offer-economics-v1',
+      internal_only: true,
+      commission_model: 'fixed_per_conversion',
+      commission_event: 'approved_conversion',
+      payout_currency: 'USD',
+      fixed_payout_per_event: 30,
+      revenue_share_rate: null,
+      average_order_value: null,
+      approval_rate: 0.8,
+      reversal_rate: 0.05,
+      variable_fee_per_approved_conversion: 0,
+      recurring_value: {
+        amount_per_period: null,
+        period: 'unknown',
+        validated_retention_periods: null,
+      },
+      payout_delay_days: 30,
+      network_epc: { amount: null, currency: null, basis: 'unknown' },
+      fx_to_reporting_currency: {
+        reporting_currency: 'USD',
+        rate: 1,
+        source: 'network',
+        captured_at: null,
+      },
+      sources: [
+        {
+          source_id: 'network-commission',
+          field: 'fixed_payout_per_event',
+          verified: true,
+          confidence: 100,
+          as_of: null,
+        },
+      ],
+      missing_inputs: [],
+    }
+    const sealed = sealCopyBrainSnapshot(input)
+    const compiled = compileCopyBrainContext(sealed)
+    expect(sealed.offer_economics?.fixed_payout_per_event).toBe(30)
+    expect(compiled.context).not.toHaveProperty('offer_economics')
+    expect(compiled.omitted).toContainEqual(
+      expect.objectContaining({
+        section: 'offer_economics',
+        reason: 'internal_operator_context_not_exposed_to_copy',
+      })
     )
   })
 })

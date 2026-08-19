@@ -40,12 +40,17 @@ export async function getCampaign(id: string): Promise<CampaignRow | null> {
 }
 
 export type CampaignResultsRow = {
-  spend_usd: number | string
+  spend_amount: number | string
+  spend_currency: string
   impressions: number
   clicks: number
   landing_views: number
+  affiliate_clicks: number
   conversions: number
-  revenue_usd: number | string
+  approved_conversions: number
+  reversed_conversions: number
+  commission_amount: number | string | null
+  commission_currency: string | null
   days_running: number
 } | null
 
@@ -56,7 +61,7 @@ export async function getCampaignResults(
   const { data, error } = await supabase
     .from('campaign_results')
     .select(
-      'spend_usd, impressions, clicks, landing_views, conversions, revenue_usd, days_running'
+      'spend_amount, spend_currency, impressions, clicks, landing_views, affiliate_clicks, conversions, approved_conversions, reversed_conversions, commission_amount, commission_currency, days_running'
     )
     .eq('campaign_id', campaignId)
     .maybeSingle()
@@ -64,9 +69,7 @@ export async function getCampaignResults(
   return (data as CampaignResultsRow) ?? null
 }
 
-export async function getLatestDiagnosis(
-  campaignId: string
-): Promise<{
+export async function getLatestDiagnosis(campaignId: string): Promise<{
   id: string
   payload: unknown
   created_at: string
@@ -78,7 +81,9 @@ export async function getLatestDiagnosis(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('result_diagnoses')
-    .select('id, payload, created_at, creative_analysis, winning_hooks, winners_added_to_library')
+    .select(
+      'id, payload, created_at, creative_analysis, winning_hooks, winners_added_to_library'
+    )
     .eq('campaign_id', campaignId)
     .order('created_at', { ascending: false })
     .limit(1)

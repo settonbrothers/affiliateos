@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://affx.local/schemas/campaign-intelligence-v1.schema.json",
+  "title": "CampaignIntelligencePackageV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "offer", "research", "avatar", "spy", "economics", "traffic_constraints", "compliance", "missing_inputs"],
+  "properties": {
+    "schema_version": { "const": "campaign-intelligence-v1" },
+    "offer": { "type": "object" },
+    "research": { "type": "object" },
+    "avatar": { "type": ["object", "null"] },
+    "spy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["available", "observed_patterns", "measured_winners"],
+      "properties": {
+        "available": { "type": "boolean" },
+        "observed_patterns": { "type": "array", "items": { "type": "object" } },
+        "measured_winners": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "economics": { "$ref": "offer-economics-v1.schema.json" },
+    "traffic_constraints": { "type": "object" },
+    "compliance": { "type": ["object", "null"] },
+    "missing_inputs": { "type": "array", "items": { "type": "string" } }
+  }
+}

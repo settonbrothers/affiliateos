@@ -3,6 +3,7 @@
 import { z } from 'npm:zod@^3.24.0'
 
 import { UniversalEnvelopeSchema } from './envelope.ts'
+import { CampaignEconomicsAssessmentSchema } from './offerEconomics.ts'
 
 export const PRIMARY_BOTTLENECKS = [
   'offer',
@@ -17,6 +18,7 @@ export const PRIMARY_BOTTLENECKS = [
   'tracking',
   'compliance',
   'cashflow',
+  'unit_economics',
   'not_enough_data',
 ] as const
 
@@ -64,6 +66,7 @@ export const DiagnosisPayloadSchema = z.object({
   ),
   not_enough_data: z.boolean(),
   not_enough_data_reason: z.string().nullable(),
+  economics_assessment: CampaignEconomicsAssessmentSchema.nullable().optional(),
 })
 
 export const DiagnosisResponseSchema = UniversalEnvelopeSchema.extend({

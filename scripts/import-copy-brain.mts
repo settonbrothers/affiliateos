@@ -23,6 +23,7 @@ const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
 const allowed = [
   /^prompts\/copy_/,
   /^prompts\/avatar_builder\//,
+  /^prompts\/diagnosis\//,
   /^brain-contracts\//,
   /^brain-evals\//,
   /^brain-release\//,

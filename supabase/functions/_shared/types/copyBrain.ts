@@ -1,5 +1,7 @@
 import { z } from 'npm:zod@^3.24.0'
 
+import { OfferEconomicsV1Schema } from './offerEconomics.ts'
+
 export const BrainAnchorSchema = z.enum([
   'quote',
   'category_inference',
@@ -175,6 +177,7 @@ export const CopyBrainInputSnapshotV1Schema = z.object({
   }),
   underwriting: z.record(z.string(), z.unknown()).nullable(),
   compliance: z.record(z.string(), z.unknown()).nullable(),
+  offer_economics: OfferEconomicsV1Schema.nullable(),
   sources: z.array(BrainSourceSchema),
   research_documents: z.array(z.record(z.string(), z.unknown())),
   deep_brief: z.record(z.string(), z.unknown()).nullable(),

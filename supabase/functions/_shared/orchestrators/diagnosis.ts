@@ -2,7 +2,9 @@ import { callAnthropicWithTool } from '../anthropicJson.ts'
 import { assertNotPaused } from '../killSwitch.ts'
 import { loadActivePrompt } from '../loadActivePrompt.ts'
 import { mockDiagnosis, type DiagnosisResultsInput } from '../mockAi.ts'
+import { applyDeterministicEconomics } from '../diagnosisEconomics.ts'
 import { DiagnosisResponseSchema } from '../types/diagnosis.ts'
+import type { CampaignEconomicsAssessment } from '../types/offerEconomics.ts'
 
 export { OrchestratorPausedError } from '../killSwitch.ts'
 
@@ -22,6 +24,7 @@ type DiagnosisInput = {
   testKit?: Record<string, unknown> | null
   results: DiagnosisResultsInput
   dataQualityScore: number
+  economicsAssessment: CampaignEconomicsAssessment
 }
 
 export type OrchestratorResult = {
@@ -36,7 +39,13 @@ export async function runDiagnosis(
   await assertNotPaused('DiagnosisOrchestrator')
 
   if (!Deno.env.get('ANTHROPIC_API_KEY')) {
-    return { output: mockDiagnosis(input.results), mode: 'mock' }
+    return {
+      output: applyDeterministicEconomics(
+        mockDiagnosis(input.results),
+        input.economicsAssessment
+      ),
+      mode: 'mock',
+    }
   }
 
   const systemPrompt = await loadActivePrompt(
@@ -60,6 +69,7 @@ export async function runDiagnosis(
       vertical: input.verticalSlug ?? null,
       test_kit: testKitPayload,
       results: input.results,
+      deterministic_economics: input.economicsAssessment,
       data_quality_score: input.dataQualityScore,
     },
     null,
@@ -77,7 +87,10 @@ export async function runDiagnosis(
   })
 
   return {
-    output: result.data as unknown as Record<string, unknown>,
+    output: applyDeterministicEconomics(
+      result.data as unknown as Record<string, unknown>,
+      input.economicsAssessment
+    ),
     usage: {
       input_tokens: result.usage.input_tokens,
       output_tokens: result.usage.output_tokens,

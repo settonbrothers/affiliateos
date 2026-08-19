@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://affx.local/schemas/creative-department-v1.schema.json",
+  "title": "CreativeDepartmentFoundationV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "director", "specialists", "review_dimensions", "activation"],
+  "properties": {
+    "schema_version": { "const": "creative-department-foundation-v1" },
+    "director": { "const": "creative_director" },
+    "specialists": {
+      "type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true,
+      "items": { "enum": ["performance_visual", "native_visual_storytelling"] }
+    },
+    "review_dimensions": {
+      "type": "array", "minItems": 4, "uniqueItems": true,
+      "items": { "enum": ["truth", "copy_fit", "compliance", "scroll_stop", "visual_clarity", "native_feel"] }
+    },
+    "activation": { "const": "foundation_only_not_runtime_enabled" }
+  }
+}

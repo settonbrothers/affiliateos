@@ -91,6 +91,19 @@ export async function AdCopyView({
               mode: p.narrative_license.mode,
             })}
           </p>
+          {'department_plan' in p && p.department_plan && (
+            <div
+              style={{ marginTop: '12px', fontSize: '13px', color: '#6B6459' }}
+            >
+              <strong style={{ color: '#1F1B16' }}>Copy Director:</strong>{' '}
+              {p.department_plan.primary_specialist}
+              {p.department_plan.challenger_specialist
+                ? ` + ${p.department_plan.challenger_specialist}`
+                : ''}
+              {' · '}
+              {p.department_plan.routing_reason}
+            </div>
+          )}
           {p.judge.kill_flags.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
               {p.judge.kill_flags.map((flag) => (
@@ -182,9 +195,30 @@ export async function AdCopyView({
             style={{ marginBottom: '12px' }}
           >
             <Pill>{v.lang.toUpperCase()}</Pill>
+            {'candidate_id' in v && v.candidate_id && (
+              <Pill
+                tone={
+                  'recommended_candidate_id' in p &&
+                  p.recommended_candidate_id === v.candidate_id
+                    ? 'ok'
+                    : 'neutral'
+                }
+              >
+                {'recommended_candidate_id' in p &&
+                p.recommended_candidate_id === v.candidate_id
+                  ? 'מובילה'
+                  : 'חלופה'}
+              </Pill>
+            )}
             <h3 style={cardTitleStyle}>{v.headline}</h3>
           </div>
           <div className="flex flex-col gap-3">
+            {'test_hypothesis' in v && v.test_hypothesis && (
+              <p style={{ fontSize: '12px', color: '#8A7A55' }}>
+                {'specialist' in v ? `${v.specialist} · ` : ''}
+                {v.test_hypothesis}
+              </p>
+            )}
             {v.subheadline && (
               <p
                 style={{ fontSize: '14px', fontWeight: 500, color: '#6B6459' }}

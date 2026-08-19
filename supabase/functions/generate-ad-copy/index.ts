@@ -32,6 +32,7 @@ import {
   StoredAvatarSchema,
   type CopyBrainInputSnapshotV1,
 } from '../_shared/types/copyBrain.ts'
+import { OfferEconomicsV1Schema } from '../_shared/types/offerEconomics.ts'
 import {
   recordRunError,
   recordRunStart,
@@ -192,6 +193,19 @@ Deno.serve(async (req: Request) => {
     const complianceContext =
       (complianceRow?.payload as Record<string, unknown> | null) ?? null
 
+    const { data: offerEconomicsRow } = await admin
+      .from('offer_economics')
+      .select('payload')
+      .eq('offer_id', offerId)
+      .eq('is_current', true)
+      .maybeSingle()
+    const parsedOfferEconomics = OfferEconomicsV1Schema.safeParse(
+      offerEconomicsRow?.payload
+    )
+    const offerEconomics = parsedOfferEconomics.success
+      ? parsedOfferEconomics.data
+      : null
+
     // Latest consumer-facing test kit (angles, hooks, target_audience) — prior
     // work the copy builds on rather than regenerating from scratch.
     const { data: testKitRow } = await admin
@@ -251,7 +265,7 @@ Deno.serve(async (req: Request) => {
       ? await admin
           .from('campaign_results')
           .select(
-            'campaign_id, spend_usd, impressions, clicks, landing_views, conversions, revenue_usd, days_running'
+            'campaign_id, spend_amount, spend_currency, impressions, clicks, landing_views, affiliate_clicks, conversions, approved_conversions, reversed_conversions, commission_amount, commission_currency, days_running'
           )
           .in('campaign_id', campaignIds)
       : { data: [] }
@@ -358,11 +372,13 @@ Deno.serve(async (req: Request) => {
       const result = resultByCampaign.get(campaignId)
       if (!result) continue
       const metrics = {
-        spend_usd: Number(result.spend_usd),
+        spend_amount: Number(result.spend_amount),
         impressions: Number(result.impressions),
         clicks: Number(result.clicks),
+        affiliate_clicks: Number(result.affiliate_clicks),
         conversions: Number(result.conversions),
-        revenue_usd: Number(result.revenue_usd),
+        approved_conversions: Number(result.approved_conversions),
+        commission_amount: Number(result.commission_amount ?? 0),
       }
       const sourceRef = `campaign-${campaignId}`
       brainSources.push({
@@ -383,7 +399,15 @@ Deno.serve(async (req: Request) => {
       for (const [index, item] of analysis.entries()) {
         if (!item || typeof item !== 'object') continue
         const record = item as Record<string, unknown>
-        if (record.is_winner !== true || typeof record.hook !== 'string')
+        const sufficientlyMeasured =
+          metrics.clicks >= 100 && metrics.approved_conversions >= 5
+        const profitable = metrics.commission_amount > metrics.spend_amount
+        if (
+          record.is_winner !== true ||
+          typeof record.hook !== 'string' ||
+          !sufficientlyMeasured ||
+          !profitable
+        )
           continue
         performanceWinners.push({
           winner_id: `${campaignId}-${index}`,
@@ -395,7 +419,7 @@ Deno.serve(async (req: Request) => {
           decision_rule:
             typeof record.winner_reason === 'string'
               ? record.winner_reason
-              : 'Diagnosis marked winner against measured campaign results.',
+              : 'Measured winner with sufficient volume and positive campaign profit.',
           source_ref: sourceRef,
         })
       }
@@ -425,6 +449,7 @@ Deno.serve(async (req: Request) => {
       },
       underwriting: underwritingContext,
       compliance: complianceContext,
+      offer_economics: offerEconomics,
       sources: brainSources,
       research_documents: sourceDocuments as unknown as Array<
         Record<string, unknown>
@@ -440,14 +465,17 @@ Deno.serve(async (req: Request) => {
       taste_corpus: corpus as unknown as Array<Record<string, unknown>>,
       hook_library: hookLibrary as unknown as Array<Record<string, unknown>>,
       creative_hint: body.creative_hint?.trim() || null,
-      missing_inputs: missingCopyBrainInputs({
-        sources: brainSources,
-        underwriting: underwritingContext,
-        deepBrief: deepBriefContext,
-        avatar: avatarContext,
-        testKit,
-        spy: spyHistory,
-      }),
+      missing_inputs: [
+        ...missingCopyBrainInputs({
+          sources: brainSources,
+          underwriting: underwritingContext,
+          deepBrief: deepBriefContext,
+          avatar: avatarContext,
+          testKit,
+          spy: spyHistory,
+        }),
+        ...(offerEconomics ? [] : ['offer_economics']),
+      ],
       omitted_context: [],
     })
 

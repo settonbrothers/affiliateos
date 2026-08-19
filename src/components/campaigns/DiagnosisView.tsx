@@ -14,6 +14,15 @@ const METRIC_LABELS: Record<string, string> = {
   epc: 'EPC $',
 }
 
+function money(value: number | null, currency: string) {
+  if (value === null) return '—'
+  return new Intl.NumberFormat(undefined, {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 2,
+  }).format(value)
+}
+
 export function DiagnosisView({ payload }: { payload: unknown }) {
   const env = payload as DiagnosisResponse | null
   const p = env?.payload
@@ -31,7 +40,15 @@ export function DiagnosisView({ payload }: { payload: unknown }) {
 
   return (
     <div style={{ color: '#1F1B16' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '8px',
+        }}
+      >
         <span
           dir="ltr"
           style={{
@@ -110,7 +127,15 @@ export function DiagnosisView({ payload }: { payload: unknown }) {
         )}
       </div>
 
-      <p style={{ marginTop: '20px', fontFamily: 'var(--font-sans)', fontSize: '14px', lineHeight: 1.7, color: '#1F1B16' }}>
+      <p
+        style={{
+          marginTop: '20px',
+          fontFamily: 'var(--font-sans)',
+          fontSize: '14px',
+          lineHeight: 1.7,
+          color: '#1F1B16',
+        }}
+      >
         {p.diagnosis_summary}
       </p>
 
@@ -127,7 +152,13 @@ export function DiagnosisView({ payload }: { payload: unknown }) {
         >
           Metrics vs expected
         </h3>
-        <table style={{ width: '100%', fontSize: '13.5px', borderCollapse: 'collapse' }}>
+        <table
+          style={{
+            width: '100%',
+            fontSize: '13.5px',
+            borderCollapse: 'collapse',
+          }}
+        >
           <thead>
             <tr>
               <th
@@ -195,7 +226,13 @@ export function DiagnosisView({ payload }: { payload: unknown }) {
           <tbody>
             {metrics.map(([key, mtr]) => (
               <tr key={key}>
-                <td style={{ padding: '8px 8px 8px 0', borderBottom: '1px solid #ECE6DA', color: '#1F1B16' }}>
+                <td
+                  style={{
+                    padding: '8px 8px 8px 0',
+                    borderBottom: '1px solid #ECE6DA',
+                    color: '#1F1B16',
+                  }}
+                >
                   {METRIC_LABELS[key] ?? key}
                 </td>
                 <td
@@ -216,7 +253,9 @@ export function DiagnosisView({ payload }: { payload: unknown }) {
                     fontVariantNumeric: 'tabular-nums',
                   }}
                 >
-                  {mtr.expected?.[0] ?? '?'}{'–'}{mtr.expected?.[1] ?? '?'}
+                  {mtr.expected?.[0] ?? '?'}
+                  {'–'}
+                  {mtr.expected?.[1] ?? '?'}
                 </td>
                 <td
                   style={{
@@ -234,6 +273,109 @@ export function DiagnosisView({ payload }: { payload: unknown }) {
         </table>
       </div>
 
+      {p.economics_assessment && (
+        <div
+          style={{
+            marginTop: '28px',
+            border: '1px solid #DED8CB',
+            background: '#F6F4EF',
+            padding: '18px 20px',
+          }}
+        >
+          <h3
+            style={{
+              margin: 0,
+              fontFamily: 'var(--font-mono)',
+              fontSize: '10.5px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              color: '#8A7A55',
+            }}
+          >
+            Deterministic campaign economics
+          </h3>
+          <div
+            style={{
+              marginTop: '14px',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))',
+              gap: '14px',
+            }}
+          >
+            {[
+              [
+                'CPC',
+                money(
+                  p.economics_assessment.metrics.cpc,
+                  p.economics_assessment.reporting_currency
+                ),
+              ],
+              [
+                'Approved CPA',
+                money(
+                  p.economics_assessment.metrics.cpa_approved,
+                  p.economics_assessment.reporting_currency
+                ),
+              ],
+              [
+                'Break-even CPA',
+                money(
+                  p.economics_assessment.planning.break_even_cpa,
+                  p.economics_assessment.reporting_currency
+                ),
+              ],
+              [
+                'Break-even CPC',
+                money(
+                  p.economics_assessment.planning.break_even_cpc,
+                  p.economics_assessment.reporting_currency
+                ),
+              ],
+              [
+                'ROAS',
+                p.economics_assessment.metrics.roas === null
+                  ? '—'
+                  : `${p.economics_assessment.metrics.roas}×`,
+              ],
+              [
+                'Profit',
+                money(
+                  p.economics_assessment.metrics.profit,
+                  p.economics_assessment.reporting_currency
+                ),
+              ],
+            ].map(([label, value]) => (
+              <div key={label}>
+                <div
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '9px',
+                    textTransform: 'uppercase',
+                    color: '#8A7A55',
+                  }}
+                >
+                  {label}
+                </div>
+                <div
+                  style={{
+                    marginTop: '3px',
+                    fontSize: '16px',
+                    fontWeight: 700,
+                  }}
+                >
+                  {value}
+                </div>
+              </div>
+            ))}
+          </div>
+          <p style={{ margin: '14px 0 0', fontSize: '12px', color: '#6B6459' }}>
+            {p.economics_assessment.primary_economic_read} ·{' '}
+            {p.economics_assessment.data_sufficiency} ·{' '}
+            {p.economics_assessment.flags.join(', ') || 'no flags'}
+          </p>
+        </div>
+      )}
+
       {p.specific_recommendations.length > 0 && (
         <div style={{ marginTop: '28px' }}>
           <h3
@@ -248,12 +390,30 @@ export function DiagnosisView({ payload }: { payload: unknown }) {
           >
             Recommendations
           </h3>
-          <ul style={{ display: 'flex', flexDirection: 'column', gap: '10px', margin: 0, padding: 0, listStyle: 'none' }}>
+          <ul
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px',
+              margin: 0,
+              padding: 0,
+              listStyle: 'none',
+            }}
+          >
             {p.specific_recommendations.map((rec, i) => (
               <li key={i} style={{ fontSize: '13.5px' }}>
-                <span style={{ fontWeight: 700, color: '#1F1B16' }}>{rec.area}:</span>{' '}
+                <span style={{ fontWeight: 700, color: '#1F1B16' }}>
+                  {rec.area}:
+                </span>{' '}
                 <span style={{ color: '#1F1B16' }}>{rec.action}</span>
-                <span style={{ display: 'block', fontSize: '12px', color: '#6B6459', marginTop: '2px' }}>
+                <span
+                  style={{
+                    display: 'block',
+                    fontSize: '12px',
+                    color: '#6B6459',
+                    marginTop: '2px',
+                  }}
+                >
                   {rec.reasoning}
                 </span>
               </li>

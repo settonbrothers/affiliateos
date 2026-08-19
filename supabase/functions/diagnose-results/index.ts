@@ -1,6 +1,13 @@
-import { ForbiddenError, requireUser, UnauthorizedError } from '../_shared/auth.ts'
+import {
+  ForbiddenError,
+  requireUser,
+  UnauthorizedError,
+} from '../_shared/auth.ts'
 import { handleCors, jsonResponse } from '../_shared/cors.ts'
-import { assertUnderDailyCap, DailyCapExceededError } from '../_shared/costCap.ts'
+import {
+  assertUnderDailyCap,
+  DailyCapExceededError,
+} from '../_shared/costCap.ts'
 import {
   InsufficientCreditsError,
   linkCreditToRun,
@@ -9,11 +16,16 @@ import {
   type CreditHold,
 } from '../_shared/credits.ts'
 import { sendToDlq } from '../_shared/dlq.ts'
-import { assertNotPaused, OrchestratorPausedError } from '../_shared/killSwitch.ts'
+import {
+  assertNotPaused,
+  OrchestratorPausedError,
+} from '../_shared/killSwitch.ts'
 import { createTrace, recordGeneration } from '../_shared/langfuseClient.ts'
 import { judgeOutput } from '../_shared/llmJudge.ts'
 import { runDiagnosis } from '../_shared/orchestrators/diagnosis.ts'
 import { runDiagnosisV2 } from '../_shared/orchestrators/diagnosisV2.ts'
+import { calculateCampaignEconomics } from '../_shared/campaignEconomics.ts'
+import { OfferEconomicsV1Schema } from '../_shared/types/offerEconomics.ts'
 import {
   recordRunError,
   recordRunStart,
@@ -43,24 +55,27 @@ Deno.serve(async (req: Request) => {
       images?: string[]
     }
     const campaignId = body.campaign_id
-    if (!campaignId) return jsonResponse({ error: 'campaign_id is required' }, 400)
+    if (!campaignId)
+      return jsonResponse({ error: 'campaign_id is required' }, 400)
 
     const admin = getAdminClient()
     const { data: campaign, error: cErr } = await admin
       .from('campaigns')
       .select(
-        'id, offer_id, test_kit_id, workspace_id, name, channel, geo, offers(verticals(slug))'
+        'id, offer_id, test_kit_id, workspace_id, name, channel, geo, reporting_currency, offers(verticals(slug))'
       )
       .eq('id', campaignId)
       .single()
-    if (cErr || !campaign) return jsonResponse({ error: 'Campaign not found' }, 404)
+    if (cErr || !campaign)
+      return jsonResponse({ error: 'Campaign not found' }, 404)
 
     // ── V2 flow: creative input analysis (text or images) ────────────────────
     if (body.creative_input || (body.images && body.images.length > 0)) {
       try {
         await assertNotPaused('DiagnosisV2Orchestrator')
       } catch (err) {
-        if (err instanceof OrchestratorPausedError) return jsonResponse({ error: err.message }, 503)
+        if (err instanceof OrchestratorPausedError)
+          return jsonResponse({ error: err.message }, 503)
         throw err
       }
 
@@ -68,7 +83,8 @@ Deno.serve(async (req: Request) => {
         try {
           await assertUnderDailyCap(campaign.workspace_id)
         } catch (err) {
-          if (err instanceof DailyCapExceededError) return jsonResponse({ error: err.message }, 429)
+          if (err instanceof DailyCapExceededError)
+            return jsonResponse({ error: err.message }, 429)
           throw err
         }
       }
@@ -76,33 +92,69 @@ Deno.serve(async (req: Request) => {
       // Fetch optional metrics for context
       const { data: resultsRow } = await admin
         .from('campaign_results')
-        .select('clicks, conversions, spend_usd, revenue_usd')
+        .select(
+          'spend_amount, spend_currency, impressions, clicks, landing_views, affiliate_clicks, conversions, approved_conversions, reversed_conversions, commission_amount, commission_currency'
+        )
         .eq('campaign_id', campaignId)
         .maybeSingle()
 
+      const { data: economicsRow } = await admin
+        .from('offer_economics')
+        .select('payload')
+        .eq('offer_id', campaign.offer_id)
+        .eq('is_current', true)
+        .maybeSingle()
+      const parsedEconomics = OfferEconomicsV1Schema.safeParse(
+        economicsRow?.payload
+      )
+      const creativeEconomics = resultsRow
+        ? calculateCampaignEconomics(
+            parsedEconomics.success ? parsedEconomics.data : null,
+            {
+              reporting_currency: String(
+                campaign.reporting_currency ??
+                  resultsRow.spend_currency ??
+                  'USD'
+              ).toUpperCase(),
+              spend_amount: Number(resultsRow.spend_amount ?? 0),
+              impressions: Number(resultsRow.impressions ?? 0),
+              ad_clicks: Number(resultsRow.clicks ?? 0),
+              landing_views: Number(resultsRow.landing_views ?? 0),
+              affiliate_clicks: Number(resultsRow.affiliate_clicks ?? 0),
+              raw_conversions: Number(resultsRow.conversions ?? 0),
+              approved_conversions: Number(
+                resultsRow.approved_conversions ?? 0
+              ),
+              reversed_conversions: Number(
+                resultsRow.reversed_conversions ?? 0
+              ),
+              commission_amount:
+                resultsRow.commission_amount === null
+                  ? null
+                  : Number(resultsRow.commission_amount),
+              commission_currency: resultsRow.commission_currency ?? null,
+            }
+          )
+        : null
+
       const metrics = resultsRow
         ? {
-            ctr:
-              resultsRow.clicks && resultsRow.clicks > 0
-                ? undefined
-                : undefined,
-            cpl_usd:
-              resultsRow.spend_usd && resultsRow.conversions && resultsRow.conversions > 0
-                ? Number(resultsRow.spend_usd) / Number(resultsRow.conversions)
-                : undefined,
-            roas:
-              resultsRow.spend_usd && Number(resultsRow.spend_usd) > 0 && resultsRow.revenue_usd
-                ? Number(resultsRow.revenue_usd) / Number(resultsRow.spend_usd)
-                : undefined,
+            ctr: creativeEconomics?.metrics.ctr ?? undefined,
+            cpl_usd: creativeEconomics?.metrics.cpa_approved ?? undefined,
+            roas: creativeEconomics?.metrics.roas ?? undefined,
           }
         : undefined
 
       let creditHold: CreditHold | null = null
       if (campaign.workspace_id) {
         try {
-          creditHold = await reserveCredits(campaign.workspace_id, 'diagnose-results')
+          creditHold = await reserveCredits(
+            campaign.workspace_id,
+            'diagnose-results'
+          )
         } catch (err) {
-          if (err instanceof InsufficientCreditsError) return jsonResponse({ error: err.message }, 402)
+          if (err instanceof InsufficientCreditsError)
+            return jsonResponse({ error: err.message }, 402)
           throw err
         }
       }
@@ -114,7 +166,10 @@ Deno.serve(async (req: Request) => {
         orchestratorName: 'DiagnosisV2Orchestrator',
         agentVersion: willCallReal ? 'real-v1' : 'mock-v1',
         model,
-        inputPayload: { campaign_id: campaignId },
+        inputPayload: {
+          campaign_id: campaignId,
+          economics_assessment: creativeEconomics,
+        },
         userId: user.id,
         workspaceId: campaign.workspace_id ?? undefined,
         offerId: campaign.offer_id ?? undefined,
@@ -126,7 +181,9 @@ Deno.serve(async (req: Request) => {
       await admin.from('diagnose_creative_inputs').insert({
         campaign_id: campaignId,
         workspace_id: campaign.workspace_id ?? null,
-        raw_input: isImageInput ? `[${body.images!.length} image(s) uploaded]` : body.creative_input,
+        raw_input: isImageInput
+          ? `[${body.images!.length} image(s) uploaded]`
+          : body.creative_input,
         input_type: isImageInput ? 'image' : 'text',
       })
 
@@ -153,7 +210,10 @@ Deno.serve(async (req: Request) => {
               traceId,
               name: `DiagnosisV2Orchestrator (${result.mode})`,
               model,
-              input: { campaign_id: campaignId },
+              input: {
+                campaign_id: campaignId,
+                economics_assessment: creativeEconomics,
+              },
               output: result.output as unknown as Record<string, unknown>,
               promptTokens: result.usage?.input_tokens ?? 0,
               completionTokens: result.usage?.output_tokens ?? 0,
@@ -162,25 +222,30 @@ Deno.serve(async (req: Request) => {
               endTime: new Date(),
             })
 
-            const winningHooks = result.output.winning_hooks ?? []
-            let winnersAddedToLibrary = false
-
-            // Insert winning hooks into copy_hook_library
-            if (winningHooks.length > 0) {
-              const hooksToInsert = result.output.creative_analysis
-                .filter((item) => item.is_winner)
-                .map((item) => ({
-                  text: item.hook,
-                  hook_type: item.hook_type,
-                  label: 'good' as const,
-                  lang: 'he',
-                  vertical: null as string | null,
-                }))
-
-              if (hooksToInsert.length > 0) {
-                await admin.from('copy_hook_library').insert(hooksToInsert)
-                winnersAddedToLibrary = true
-              }
+            const performanceWinnerEligible =
+              creativeEconomics?.data_sufficiency === 'decision_ready' &&
+              creativeEconomics.primary_economic_read === 'profitable'
+            const creativeAnalysis = result.output.creative_analysis.map(
+              (item) =>
+                performanceWinnerEligible
+                  ? item
+                  : {
+                      ...item,
+                      is_winner: false,
+                      winner_reason:
+                        'Performance validation pending: requires decision-ready, profitable campaign data.',
+                    }
+            )
+            const winningHooks = performanceWinnerEligible
+              ? (result.output.winning_hooks ?? [])
+              : []
+            // Controlled learning: this diagnosis can inform the same offer via
+            // result_diagnoses, but never mutates the global Taste/Hook corpus.
+            const winnersAddedToLibrary = false
+            const validatedOutput = {
+              ...result.output,
+              creative_analysis: creativeAnalysis,
+              winning_hooks: winningHooks,
             }
 
             // Save creative_analysis and winning_hooks to result_diagnoses
@@ -195,7 +260,14 @@ Deno.serve(async (req: Request) => {
               await admin
                 .from('result_diagnoses')
                 .update({
-                  creative_analysis: result.output.creative_analysis as unknown as Record<string, unknown>[],
+                  payload: validatedOutput as unknown as Record<
+                    string,
+                    unknown
+                  >,
+                  creative_analysis: creativeAnalysis as unknown as Record<
+                    string,
+                    unknown
+                  >[],
                   winning_hooks: winningHooks as unknown as string[],
                   winners_added_to_library: winnersAddedToLibrary,
                 })
@@ -205,17 +277,26 @@ Deno.serve(async (req: Request) => {
                 campaign_id: campaignId,
                 ai_run_id: runId,
                 workspace_id: campaign.workspace_id ?? null,
-                payload: result.output as unknown as Record<string, unknown>,
-                creative_analysis: result.output.creative_analysis as unknown as Record<string, unknown>[],
+                payload: validatedOutput as unknown as Record<string, unknown>,
+                creative_analysis: creativeAnalysis as unknown as Record<
+                  string,
+                  unknown
+                >[],
                 winning_hooks: winningHooks as unknown as string[],
                 winners_added_to_library: winnersAddedToLibrary,
               })
             }
 
             await recordRunSuccess(runId, {
-              outputPayload: result.output as unknown as Record<string, unknown>,
-              validatedOutput: result.output as unknown as Record<string, unknown>,
-              envelope: result.output as unknown as Record<string, unknown>,
+              outputPayload: validatedOutput as unknown as Record<
+                string,
+                unknown
+              >,
+              validatedOutput: validatedOutput as unknown as Record<
+                string,
+                unknown
+              >,
+              envelope: validatedOutput as unknown as Record<string, unknown>,
               tokensInput: result.usage?.input_tokens,
               tokensOutput: result.usage?.output_tokens,
               estimatedCost: result.usage?.cost_usd,
@@ -225,11 +306,20 @@ Deno.serve(async (req: Request) => {
             const message = err instanceof Error ? err.message : String(err)
             await recordRunError(runId, message)
             if (campaign.workspace_id) {
-              await refundCredits(campaign.workspace_id, creditHold, 'diagnose-results', runId)
+              await refundCredits(
+                campaign.workspace_id,
+                creditHold,
+                'diagnose-results',
+                runId
+              )
             }
             await sendToDlq({
               messageType: 'ai_run',
-              payload: { kind: 'diagnose-results-v2', campaign_id: campaignId, ai_run_id: runId },
+              payload: {
+                kind: 'diagnose-results-v2',
+                campaign_id: campaignId,
+                ai_run_id: runId,
+              },
               error: message,
             })
           }
@@ -243,7 +333,8 @@ Deno.serve(async (req: Request) => {
     try {
       await assertNotPaused('DiagnosisOrchestrator')
     } catch (err) {
-      if (err instanceof OrchestratorPausedError) return jsonResponse({ error: err.message }, 503)
+      if (err instanceof OrchestratorPausedError)
+        return jsonResponse({ error: err.message }, 503)
       throw err
     }
 
@@ -251,7 +342,8 @@ Deno.serve(async (req: Request) => {
       try {
         await assertUnderDailyCap(campaign.workspace_id)
       } catch (err) {
-        if (err instanceof DailyCapExceededError) return jsonResponse({ error: err.message }, 429)
+        if (err instanceof DailyCapExceededError)
+          return jsonResponse({ error: err.message }, 429)
         throw err
       }
     }
@@ -259,7 +351,7 @@ Deno.serve(async (req: Request) => {
     const { data: resultsRow } = await admin
       .from('campaign_results')
       .select(
-        'spend_usd, impressions, clicks, landing_views, conversions, revenue_usd, days_running'
+        'spend_amount, spend_currency, impressions, clicks, landing_views, affiliate_clicks, conversions, approved_conversions, reversed_conversions, commission_amount, commission_currency, days_running'
       )
       .eq('campaign_id', campaignId)
       .maybeSingle()
@@ -267,14 +359,49 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: 'Enter campaign results first.' }, 400)
     }
     const results = {
-      spend_usd: Number(resultsRow.spend_usd ?? 0),
+      spend_usd: Number(resultsRow.spend_amount ?? 0),
       impressions: Number(resultsRow.impressions ?? 0),
       clicks: Number(resultsRow.clicks ?? 0),
       landing_views: Number(resultsRow.landing_views ?? 0),
+      affiliate_clicks: Number(resultsRow.affiliate_clicks ?? 0),
       conversions: Number(resultsRow.conversions ?? 0),
-      revenue_usd: Number(resultsRow.revenue_usd ?? 0),
+      approved_conversions: Number(resultsRow.approved_conversions ?? 0),
+      reversed_conversions: Number(resultsRow.reversed_conversions ?? 0),
+      revenue_usd: Number(resultsRow.commission_amount ?? 0),
       days_running: Number(resultsRow.days_running ?? 0),
     }
+
+    const { data: economicsRow } = await admin
+      .from('offer_economics')
+      .select('payload')
+      .eq('offer_id', campaign.offer_id)
+      .eq('is_current', true)
+      .maybeSingle()
+    const economicsParsed = OfferEconomicsV1Schema.safeParse(
+      economicsRow?.payload
+    )
+    const reportingCurrency = String(
+      campaign.reporting_currency ?? resultsRow.spend_currency ?? 'USD'
+    ).toUpperCase()
+    const economicsAssessment = calculateCampaignEconomics(
+      economicsParsed.success ? economicsParsed.data : null,
+      {
+        reporting_currency: reportingCurrency,
+        spend_amount: Number(resultsRow.spend_amount ?? 0),
+        impressions: Number(resultsRow.impressions ?? 0),
+        ad_clicks: Number(resultsRow.clicks ?? 0),
+        landing_views: Number(resultsRow.landing_views ?? 0),
+        affiliate_clicks: Number(resultsRow.affiliate_clicks ?? 0),
+        raw_conversions: Number(resultsRow.conversions ?? 0),
+        approved_conversions: Number(resultsRow.approved_conversions ?? 0),
+        reversed_conversions: Number(resultsRow.reversed_conversions ?? 0),
+        commission_amount:
+          resultsRow.commission_amount === null
+            ? null
+            : Number(resultsRow.commission_amount),
+        commission_currency: resultsRow.commission_currency ?? null,
+      }
+    )
 
     let testKit: Record<string, unknown> | null = null
     if (campaign.test_kit_id) {
@@ -287,10 +414,16 @@ Deno.serve(async (req: Request) => {
     }
 
     const verticalSlug =
-      (campaign as unknown as { offers?: { verticals?: { slug: string } | null } | null })
-        .offers?.verticals?.slug ?? undefined
+      (
+        campaign as unknown as {
+          offers?: { verticals?: { slug: string } | null } | null
+        }
+      ).offers?.verticals?.slug ?? undefined
 
-    const dq = dataQualityScore(results.clicks, results.conversions)
+    const dq = dataQualityScore(
+      results.clicks,
+      results.approved_conversions ?? results.conversions
+    )
     const willCallReal = !!Deno.env.get('ANTHROPIC_API_KEY')
     const model = willCallReal ? 'claude-sonnet-4-6' : 'mock'
 
@@ -298,9 +431,13 @@ Deno.serve(async (req: Request) => {
     let creditHold: CreditHold | null = null
     if (campaign.workspace_id) {
       try {
-        creditHold = await reserveCredits(campaign.workspace_id, 'diagnose-results')
+        creditHold = await reserveCredits(
+          campaign.workspace_id,
+          'diagnose-results'
+        )
       } catch (err) {
-        if (err instanceof InsufficientCreditsError) return jsonResponse({ error: err.message }, 402)
+        if (err instanceof InsufficientCreditsError)
+          return jsonResponse({ error: err.message }, 402)
         throw err
       }
     }
@@ -313,6 +450,7 @@ Deno.serve(async (req: Request) => {
         campaign_id: campaignId,
         data_quality_score: dq,
         vertical: verticalSlug ?? null,
+        economics_assessment: economicsAssessment,
       },
       userId: user.id,
       workspaceId: campaign.workspace_id ?? undefined,
@@ -335,6 +473,7 @@ Deno.serve(async (req: Request) => {
             testKit,
             results,
             dataQualityScore: dq,
+            economicsAssessment,
           })
 
           const judgement =
@@ -342,7 +481,15 @@ Deno.serve(async (req: Request) => {
               ? await judgeOutput({
                   aiRunId: runId,
                   orchestratorName: 'DiagnosisOrchestrator',
-                  userInput: JSON.stringify({ campaign_id: campaignId, results }, null, 2),
+                  userInput: JSON.stringify(
+                    {
+                      campaign_id: campaignId,
+                      results,
+                      economics_assessment: economicsAssessment,
+                    },
+                    null,
+                    2
+                  ),
                   agentOutput: result.output,
                 })
               : null
@@ -355,7 +502,11 @@ Deno.serve(async (req: Request) => {
             traceId,
             name: `DiagnosisOrchestrator (${result.mode})`,
             model,
-            input: { campaign_id: campaignId, data_quality_score: dq },
+            input: {
+              campaign_id: campaignId,
+              data_quality_score: dq,
+              economics_assessment: economicsAssessment,
+            },
             output: result.output,
             promptTokens: result.usage?.input_tokens ?? 0,
             completionTokens: result.usage?.output_tokens ?? 0,
@@ -375,7 +526,10 @@ Deno.serve(async (req: Request) => {
           })
           await admin
             .from('campaigns')
-            .update({ status: 'diagnosed', updated_at: new Date().toISOString() })
+            .update({
+              status: 'diagnosed',
+              updated_at: new Date().toISOString(),
+            })
             .eq('id', campaignId)
 
           await recordRunSuccess(runId, {
@@ -391,11 +545,20 @@ Deno.serve(async (req: Request) => {
           const message = err instanceof Error ? err.message : String(err)
           await recordRunError(runId, message)
           if (campaign.workspace_id) {
-            await refundCredits(campaign.workspace_id, creditHold, 'diagnose-results', runId)
+            await refundCredits(
+              campaign.workspace_id,
+              creditHold,
+              'diagnose-results',
+              runId
+            )
           }
           await sendToDlq({
             messageType: 'ai_run',
-            payload: { kind: 'diagnose-results', campaign_id: campaignId, ai_run_id: runId },
+            payload: {
+              kind: 'diagnose-results',
+              campaign_id: campaignId,
+              ai_run_id: runId,
+            },
             error: message,
           })
         }
@@ -404,8 +567,10 @@ Deno.serve(async (req: Request) => {
 
     return jsonResponse({ run_id: runId }, 200)
   } catch (err) {
-    if (err instanceof UnauthorizedError) return jsonResponse({ error: err.message }, 401)
-    if (err instanceof ForbiddenError) return jsonResponse({ error: err.message }, 403)
+    if (err instanceof UnauthorizedError)
+      return jsonResponse({ error: err.message }, 401)
+    if (err instanceof ForbiddenError)
+      return jsonResponse({ error: err.message }, 403)
     return jsonResponse({ error: 'Internal error' }, 500)
   }
 })

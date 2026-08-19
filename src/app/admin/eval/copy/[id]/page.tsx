@@ -59,7 +59,7 @@ export default async function CopyEvalRunPage({
       db
         .from('copy_eval_cases')
         .select('id,external_id,split,source_pack,input_snapshot,revealed_at')
-        .like('external_id', 'copy-brain-v2:%')
+        .like('external_id', 'copy-brain-v5:%')
         .order('external_id'),
       db
         .from('copy_eval_jobs')
@@ -90,7 +90,7 @@ export default async function CopyEvalRunPage({
     if (evalCase.split === 'holdout' && calibrationScored < 6) continue
     const pack = record(evalCase.source_pack)
     const packId = String(
-      pack?.id ?? evalCase.external_id.replace('copy-brain-v2:', '')
+      pack?.id ?? evalCase.external_id.replace('copy-brain-v5:', '')
     )
     const repetition = Number(
       (protocol.preregistered_presented_repetition as Record<string, number>)[

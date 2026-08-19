@@ -5,6 +5,10 @@ import { loadActivePrompt, loadPromptVersion } from '../loadActivePrompt.ts'
 import {
   AdCopyEvidenceResponseSchema,
   BlindReaderSchema,
+  AgencyEvidenceVariantSchema,
+  CopyCandidateReviewSchema,
+  CopyDepartmentPlanSchema,
+  CopyPortfolioDecisionSchema,
   EvidenceAngleSchema,
   EvidenceCriticSchema,
   EvidenceEnvelopeSchema,
@@ -118,6 +122,7 @@ function assemble(parts: {
   judge: z.infer<typeof EvidenceJudgeSchema>
   selectedIndex: number | null
   refineIterations: number
+  engineVersion?: 'evidence-story-v4' | 'evidence-agency-v5'
 }): AdCopyEvidenceResponse {
   const selected =
     parts.selectedIndex === null ? null : parts.angles[parts.selectedIndex]
@@ -134,7 +139,7 @@ function assemble(parts: {
   const review = outputStatus !== 'ready_for_user'
   return AdCopyEvidenceResponseSchema.parse({
     orchestrator_name: 'AdCopyOrchestrator',
-    agent_version: 'evidence-story-v4',
+    agent_version: parts.engineVersion ?? 'evidence-story-v4',
     status: outputStatus === 'ready_for_user' ? 'success' : 'partial',
     confidence_score:
       outputStatus === 'ready_for_user'
@@ -176,7 +181,7 @@ function assemble(parts: {
         ]
       : [],
     payload: {
-      engine_version: 'evidence-story-v4',
+      engine_version: parts.engineVersion ?? 'evidence-story-v4',
       output_status: outputStatus,
       evidence_envelope: parts.envelope,
       narrative_license: license,
@@ -203,10 +208,170 @@ function assemble(parts: {
   })
 }
 
+function tokenSimilarity(left: string, right: string): number {
+  const words = (value: string) =>
+    new Set(
+      value
+        .toLowerCase()
+        .split(/\s+/)
+        .filter((word) => word.length > 2)
+    )
+  const a = words(left)
+  const b = words(right)
+  if (a.size === 0 || b.size === 0) return 0
+  const intersection = [...a].filter((word) => b.has(word)).length
+  return intersection / (a.size + b.size - intersection)
+}
+
+function assembleAgency(parts: {
+  envelope: z.infer<typeof EvidenceEnvelopeSchema>
+  angles: z.infer<typeof EvidenceAngleSchema>[]
+  hooks: z.infer<typeof EvidenceHookSchema>[]
+  departmentPlan: z.infer<typeof CopyDepartmentPlanSchema>
+  candidates: z.infer<typeof AgencyEvidenceVariantSchema>[]
+  reviews: z.infer<typeof CopyCandidateReviewSchema>[]
+  portfolio: z.infer<typeof CopyPortfolioDecisionSchema>
+}): AdCopyEvidenceResponse {
+  const safeIds = new Set(
+    parts.reviews
+      .filter(
+        (review) =>
+          review.judge.overall === 'pass' &&
+          review.judge.compliance_ok &&
+          review.judge.kill_flags.length === 0 &&
+          review.critic.kill_flags.length === 0
+      )
+      .map((review) => review.candidate_id)
+  )
+  const ranked: z.infer<typeof AgencyEvidenceVariantSchema>[] = []
+  for (const candidateId of parts.portfolio.ranked_candidate_ids) {
+    const candidate = parts.candidates.find(
+      (item) => item.candidate_id === candidateId && safeIds.has(candidateId)
+    )
+    if (!candidate) continue
+    if (
+      ranked.some(
+        (existing) =>
+          existing.test_hypothesis === candidate.test_hypothesis ||
+          tokenSimilarity(existing.primary_text, candidate.primary_text) >= 0.8
+      )
+    )
+      continue
+    ranked.push(candidate)
+    if (ranked.length === 3) break
+  }
+  const recommended = ranked[0] ?? null
+  const topReview =
+    parts.reviews.find(
+      (review) => review.candidate_id === recommended?.candidate_id
+    ) ?? parts.reviews[0]
+  const selectedAngleIndex = recommended?.angle_index ?? 0
+  const selectedAngle = parts.angles[selectedAngleIndex] ?? parts.angles[0]
+  const outputStatus =
+    ranked.length > 0 ? 'ready_for_user' : 'compliance_review'
+  return AdCopyEvidenceResponseSchema.parse({
+    orchestrator_name: 'AdCopyOrchestrator',
+    agent_version: 'evidence-agency-v5',
+    status: outputStatus === 'ready_for_user' ? 'success' : 'partial',
+    confidence_score: outputStatus === 'ready_for_user' ? 90 : 45,
+    facts: parts.envelope.supported_outcomes.map((outcome) => ({
+      statement: outcome.statement,
+      source: outcome.source_ids.join(','),
+      confidence: outcome.typicality === 'representative' ? 90 : 70,
+    })),
+    assumptions:
+      selectedAngle.narrative_license.character_status === 'synthetic'
+        ? [
+            'Character and non-claim scene details are synthetic inside the evidence envelope.',
+          ]
+        : [],
+    estimates: [],
+    risks: (topReview?.judge.kill_flags ?? []).map((flag) => ({
+      type: flag,
+      description: `Copy gate flagged ${flag}.`,
+      severity: 'high',
+    })),
+    unknowns: [],
+    missing_data: parts.envelope.missing_data,
+    human_review_required: outputStatus !== 'ready_for_user',
+    human_review_reasons:
+      outputStatus === 'ready_for_user'
+        ? []
+        : [
+            'No safe, materially distinct candidate passed every independent gate.',
+          ],
+    payload: {
+      engine_version: 'evidence-agency-v5',
+      output_status: outputStatus,
+      evidence_envelope: parts.envelope,
+      narrative_license: selectedAngle.narrative_license,
+      angles: parts.angles,
+      hooks: parts.hooks,
+      variants: ranked,
+      department_plan: parts.departmentPlan,
+      recommended_candidate_id: recommended?.candidate_id ?? null,
+      candidate_reviews: parts.reviews,
+      portfolio_decision: {
+        ...parts.portfolio,
+        ranked_candidate_ids: ranked.map((candidate) => candidate.candidate_id),
+      },
+      reader_report: topReview?.reader ?? null,
+      critic_report: topReview?.critic ?? null,
+      judge: topReview?.judge ?? {
+        principles: [
+          {
+            principle: 'product_understanding',
+            verdict: 'fail',
+            reason: 'No candidate passed.',
+          },
+          {
+            principle: 'eye_level_authentic',
+            verdict: 'fail',
+            reason: 'No candidate passed.',
+          },
+          {
+            principle: 'depth_without_exaggeration',
+            verdict: 'fail',
+            reason: 'No candidate passed.',
+          },
+        ],
+        compliance_ok: false,
+        overall: 'fail',
+        calibrated: false,
+        notes: 'No candidate passed.',
+        kill_flags: ['boring'],
+        evidence: ['Portfolio has no publishable candidate.'],
+      },
+      refine_iterations: 0,
+      trace: {
+        source_snapshot_refs: parts.envelope.sources.map(
+          (source) => source.snapshot_sha256
+        ),
+        selected_angle_index: recommended ? selectedAngleIndex : null,
+        candidate_ids: parts.candidates.map(
+          (candidate) => candidate.candidate_id
+        ),
+      },
+      user_message:
+        outputStatus === 'ready_for_user'
+          ? `נבחרה מודעה מובילה ונשמרו ${Math.max(0, ranked.length - 1)} חלופות שבודקות השערות שונות.`
+          : 'לא נמצאה חלופה בטוחה ומובחנת שמוכנה לפרסום.',
+    },
+  })
+}
+
 export async function runAdCopyEvidence(
   input: EvidenceAdCopyInput
 ): Promise<{ output: Record<string, unknown>; usage: Usage; mode: 'real' }> {
   const vertical = input.verticalSlug ?? input.offer.vertical ?? undefined
+  const agencyEnabled = Boolean(
+    Deno.env.get('AD_COPY_AGENCY_V5_ENABLED') === 'true' ||
+    input.promptContents?.CopyDirectorOrchestrator ||
+    input.promptVersions?.CopyDirectorOrchestrator
+  )
+  const costCap = agencyEnabled
+    ? Number(Deno.env.get('AD_COPY_AGENCY_MAX_USD') ?? '2.25')
+    : MAX_USD
   const compiled = input.brainSnapshot
     ? compileCopyBrainContext(input.brainSnapshot)
     : null
@@ -222,9 +387,9 @@ export async function runAdCopyEvidence(
     total.input_tokens += usage.input_tokens
     total.output_tokens += usage.output_tokens
     total.cost_usd += usage.cost_usd
-    if (total.cost_usd >= MAX_USD)
+    if (total.cost_usd >= costCap)
       throw new Error(
-        `Evidence-story generation hit the $${MAX_USD.toFixed(2)} cost cap.`
+        `Evidence-story generation hit the $${costCap.toFixed(2)} cost cap.`
       )
   }
 
@@ -346,6 +511,7 @@ export async function runAdCopyEvidence(
       ),
       selectedIndex,
       refineIterations: 0,
+      engineVersion: agencyEnabled ? 'evidence-agency-v5' : 'evidence-story-v4',
     })
     return {
       output: output as unknown as Record<string, unknown>,
@@ -370,6 +536,192 @@ export async function runAdCopyEvidence(
     },
   })
   spend(hooks.usage)
+
+  if (agencyEnabled) {
+    const directed = await stage({
+      orchestrator: 'CopyDirectorOrchestrator',
+      tool: 'submit_copy_department_plan',
+      description:
+        'Route distinct evidence-bound candidates to specialist writers.',
+      schema: CopyDepartmentPlanSchema,
+      version: input.promptVersions?.CopyDirectorOrchestrator,
+      frozenPromptContent: input.promptContents?.CopyDirectorOrchestrator,
+      vertical,
+      payload: {
+        offer: input.offer,
+        evidence_envelope: evidence.data,
+        avatar: avatar.data,
+        angles: angles.data.angles,
+        campaign_context: input.campaignContext ?? null,
+        spy_intelligence: input.brainSnapshot
+          ? {
+              analyses: input.brainSnapshot.spy_analyses,
+              market_examples: input.brainSnapshot.market_examples,
+              measured_winners: input.brainSnapshot.performance_winners,
+            }
+          : (input.spyContext ?? null),
+      },
+    })
+    spend(directed.usage)
+
+    const candidates: z.infer<typeof AgencyEvidenceVariantSchema>[] = []
+    const reviews: z.infer<typeof CopyCandidateReviewSchema>[] = []
+    const writerBySpecialist = {
+      storytelling: 'CopyStorytellingWriterOrchestrator',
+      direct_response: 'CopyDirectResponseWriterOrchestrator',
+      proof_mechanism: 'CopyProofMechanismWriterOrchestrator',
+    } as const
+    for (const brief of directed.data.candidate_briefs) {
+      const angle = angles.data.angles[brief.angle_index]
+      if (!angle) continue
+      const deterministicFlags = validateNarrativePolicy(
+        evidence.data,
+        angle.narrative_license
+      )
+      if (deterministicFlags.length > 0) continue
+      const orchestrator = writerBySpecialist[brief.specialist]
+      const written = await stage({
+        orchestrator,
+        tool: 'submit_copy_candidate',
+        description: 'Submit one Hebrew specialist candidate.',
+        schema: AgencyEvidenceVariantSchema,
+        version: input.promptVersions?.[orchestrator],
+        frozenPromptContent: input.promptContents?.[orchestrator],
+        vertical,
+        payload: {
+          candidate_brief: brief,
+          offer: input.offer,
+          evidence_envelope: evidence.data,
+          narrative_license: angle.narrative_license,
+          conversion_spine: angle.conversion_spine,
+          avatar: avatar.data,
+          selected_hook:
+            hooks.data.hooks.find(
+              (hook) => hook.angle_index === brief.angle_index
+            ) ?? hooks.data.hooks[0],
+          campaign_context: input.campaignContext ?? null,
+        },
+      })
+      spend(written.usage)
+      const candidate = AgencyEvidenceVariantSchema.parse({
+        ...written.data,
+        candidate_id: brief.candidate_id,
+        specialist: brief.specialist,
+        test_hypothesis: brief.test_hypothesis,
+        angle_index: brief.angle_index,
+      })
+      candidates.push(candidate)
+
+      const read = await stage({
+        orchestrator: 'CopyReaderOrchestrator',
+        tool: 'submit_reader_report',
+        description: 'Submit the blind reader report.',
+        schema: BlindReaderSchema,
+        version: input.promptVersions?.CopyReaderOrchestrator,
+        frozenPromptContent: input.promptContents?.CopyReaderOrchestrator,
+        vertical,
+        payload: {
+          text: candidate.primary_text,
+          block_ids: candidate.block_ids,
+        },
+      })
+      spend(read.usage)
+      const critiqued = await stage({
+        orchestrator: 'CopyCriticOrchestrator',
+        tool: 'submit_critic_report',
+        description: 'Submit the evidence critic report.',
+        schema: EvidenceCriticSchema,
+        version: input.promptVersions?.CopyCriticOrchestrator,
+        frozenPromptContent: input.promptContents?.CopyCriticOrchestrator,
+        vertical,
+        payload: {
+          evidence_envelope: evidence.data,
+          narrative_license: angle.narrative_license,
+          conversion_spine: angle.conversion_spine,
+          line_purpose_map: candidate.line_purpose_map,
+          reader_report: read.data,
+        },
+      })
+      spend(critiqued.usage)
+      const judged = await stage({
+        orchestrator: 'CopyJudgeOrchestrator',
+        tool: 'submit_copy_judgment',
+        description: 'Submit the structured copy judgment.',
+        schema: EvidenceJudgeSchema,
+        version: input.promptVersions?.CopyJudgeOrchestrator,
+        frozenPromptContent: input.promptContents?.CopyJudgeOrchestrator,
+        model: JUDGE_MODEL,
+        vertical,
+        payload: {
+          variant: candidate,
+          evidence_envelope: evidence.data,
+          narrative_license: angle.narrative_license,
+          conversion_spine: angle.conversion_spine,
+          reader_report: read.data,
+          critic_report: critiqued.data,
+          campaign_context: input.campaignContext ?? null,
+        },
+      })
+      spend(judged.usage)
+      reviews.push({
+        candidate_id: brief.candidate_id,
+        reader: read.data,
+        critic: critiqued.data,
+        judge: judged.data,
+      })
+    }
+
+    const portfolio =
+      candidates.length > 0
+        ? await stage({
+            orchestrator: 'CopyPortfolioJudgeOrchestrator',
+            tool: 'submit_copy_portfolio_decision',
+            description:
+              'Rank only safe and materially distinct copy candidates.',
+            schema: CopyPortfolioDecisionSchema,
+            version: input.promptVersions?.CopyPortfolioJudgeOrchestrator,
+            frozenPromptContent:
+              input.promptContents?.CopyPortfolioJudgeOrchestrator,
+            model: JUDGE_MODEL,
+            vertical,
+            payload: {
+              department_plan: directed.data,
+              candidates,
+              independent_reviews: reviews,
+              evidence_envelope: evidence.data,
+              campaign_context: input.campaignContext ?? null,
+            },
+          })
+        : {
+            data: {
+              ranked_candidate_ids: [],
+              selection_reason:
+                'All routed candidates failed deterministic policy validation.',
+              rejected_candidates: directed.data.candidate_briefs.map(
+                (brief) => ({
+                  candidate_id: brief.candidate_id,
+                  reason: 'deterministic_policy_rejection',
+                })
+              ),
+            },
+            usage: { input_tokens: 0, output_tokens: 0, cost_usd: 0 },
+          }
+    spend(portfolio.usage)
+    const output = assembleAgency({
+      envelope: evidence.data,
+      angles: angles.data.angles,
+      hooks: hooks.data.hooks,
+      departmentPlan: directed.data,
+      candidates,
+      reviews,
+      portfolio: portfolio.data,
+    })
+    return {
+      output: output as unknown as Record<string, unknown>,
+      usage: total,
+      mode: 'real',
+    }
+  }
 
   let variants: z.infer<typeof VariantsSchema>
   let reader: z.infer<typeof BlindReaderSchema>
