@@ -5,6 +5,10 @@ import {
 } from '../_shared/auth.ts'
 import { handleCors, jsonResponse } from '../_shared/cors.ts'
 import { runAdCopy } from '../_shared/orchestrators/adCopy.ts'
+import {
+  runAdCopyEvidenceAgencyStep,
+  type EvidenceAgencyCheckpoint,
+} from '../_shared/orchestrators/adCopyEvidence.ts'
 import { getAdminClient } from '../_shared/supabaseAdmin.ts'
 import { CopyBrainInputSnapshotV1Schema } from '../_shared/types/copyBrain.ts'
 
@@ -79,34 +83,32 @@ async function claimJob(runId?: string) {
     if (countError) throw countError
     if ((count ?? 0) >= 2) return null
   }
-  let query = admin
+  const jobFields =
+    'id,eval_run_id,case_id,engine,repetition,status,attempt_count,lease_expires_at,internal_trace,tokens_input,tokens_output,cost_usd'
+  let expiredQuery = admin
     .from('copy_eval_jobs')
-    .select(
-      'id,eval_run_id,case_id,engine,repetition,status,attempt_count,lease_expires_at'
-    )
-    .eq('status', 'queued')
-    .order('created_at', { ascending: true })
+    .select(jobFields)
+    .eq('status', 'running')
+    .lt('lease_expires_at', new Date().toISOString())
+    .order('lease_expires_at', { ascending: true })
     .limit(1)
-  if (runId) query = query.eq('eval_run_id', runId)
-  const { data: candidates, error } = await query
-  if (error) throw error
-  let candidate = candidates?.[0]
-  let reclaiming = false
+  if (runId) expiredQuery = expiredQuery.eq('eval_run_id', runId)
+  const { data: expired, error: expiredError } = await expiredQuery
+  if (expiredError) throw expiredError
+  let candidate = expired?.[0]
+  let reclaiming = Boolean(candidate)
   if (!candidate) {
-    let expiredQuery = admin
+    let query = admin
       .from('copy_eval_jobs')
-      .select(
-        'id,eval_run_id,case_id,engine,repetition,status,attempt_count,lease_expires_at'
-      )
-      .eq('status', 'running')
-      .lt('lease_expires_at', new Date().toISOString())
-      .order('lease_expires_at', { ascending: true })
+      .select(jobFields)
+      .eq('status', 'queued')
+      .order('created_at', { ascending: true })
       .limit(1)
-    if (runId) expiredQuery = expiredQuery.eq('eval_run_id', runId)
-    const { data: expired, error: expiredError } = await expiredQuery
-    if (expiredError) throw expiredError
-    candidate = expired?.[0]
-    reclaiming = Boolean(candidate)
+    if (runId) query = query.eq('eval_run_id', runId)
+    const { data: candidates, error } = await query
+    if (error) throw error
+    candidate = candidates?.[0]
+    reclaiming = false
   }
   if (!candidate) return null
 
@@ -123,9 +125,32 @@ async function claimJob(runId?: string) {
     .eq('id', candidate.id)
     .eq('status', reclaiming ? 'running' : 'queued')
     .match(reclaiming ? { lease_expires_at: candidate.lease_expires_at } : {})
-    .select('id,eval_run_id,case_id,engine,repetition')
+    .select(`${jobFields},started_at`)
     .maybeSingle()
   if (claimError) throw claimError
+  if (claimed && runId) {
+    const { count: activeCount, error: activeError } = await admin
+      .from('copy_eval_jobs')
+      .select('id', { count: 'exact', head: true })
+      .eq('eval_run_id', runId)
+      .eq('status', 'running')
+      .gt('lease_expires_at', new Date().toISOString())
+    if (activeError) throw activeError
+    if ((activeCount ?? 0) > 2) {
+      const { error: releaseError } = await admin
+        .from('copy_eval_jobs')
+        .update({
+          status: 'queued',
+          lease_expires_at: null,
+          started_at: null,
+        })
+        .eq('id', claimed.id)
+        .eq('status', 'running')
+        .eq('lease_expires_at', claimed.lease_expires_at)
+      if (releaseError) throw releaseError
+      return null
+    }
+  }
   return claimed
 }
 
@@ -186,7 +211,7 @@ async function runClaimedJob(
   }
 
   const started = performance.now()
-  const result = await runAdCopy({
+  const adCopyInput: Parameters<typeof runAdCopy>[0] = {
     offer: {
       id: snapshot.offer.id,
       name: snapshot.offer.name,
@@ -220,10 +245,51 @@ async function runClaimedJob(
       job.engine === 'copy_brain_candidate' ? 'candidate' : 'baseline',
     promptVersions,
     promptContents,
-  })
+  }
+  let result: Awaited<ReturnType<typeof runAdCopy>>
+  const storedTrace = asRecord(job.internal_trace)
+  if (job.engine === 'copy_brain_candidate') {
+    const step = await runAdCopyEvidenceAgencyStep(
+      adCopyInput,
+      (storedTrace?.candidate_checkpoint as EvidenceAgencyCheckpoint | null) ??
+        null
+    )
+    if (!step.done) {
+      const { error: checkpointError } = await admin
+        .from('copy_eval_jobs')
+        .update({
+          status: 'queued',
+          internal_trace: {
+            ...(storedTrace ?? {}),
+            candidate_checkpoint: step.checkpoint,
+            candidate_latency_ms:
+              Number(storedTrace?.candidate_latency_ms ?? 0) +
+              Math.round(performance.now() - started),
+            prompt_versions: promptVersions,
+            input_snapshot_sha256: snapshot.snapshot_sha256,
+          },
+          tokens_input: step.checkpoint.total.input_tokens,
+          tokens_output: step.checkpoint.total.output_tokens,
+          cost_usd: step.checkpoint.total.cost_usd,
+          lease_expires_at: null,
+          error_message: null,
+        })
+        .eq('id', job.id)
+        .eq('status', 'running')
+      if (checkpointError) throw checkpointError
+      return
+    }
+    result = step
+  } else {
+    result = await runAdCopy(adCopyInput)
+  }
   const output = result.output as JsonRecord
   const decision = extractDecision(output)
-  const latencyMs = Math.round(performance.now() - started)
+  const latencyMs =
+    Math.round(performance.now() - started) +
+    (job.engine === 'copy_brain_candidate'
+      ? Number(storedTrace?.candidate_latency_ms ?? 0)
+      : 0)
   const { error: updateError } = await admin
     .from('copy_eval_jobs')
     .update({
