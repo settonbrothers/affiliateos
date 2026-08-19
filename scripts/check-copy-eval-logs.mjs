@@ -7,9 +7,10 @@ if (!ref || !token) {
 const now = new Date()
 const start = new Date(now.getTime() - 30 * 60_000)
 const params = new URLSearchParams({
-  sql: `select datetime(timestamp) as occurred_at, event_message
-        from edge_logs
-        where event_message != ''
+  sql: `select timestamp as occurred_at, source, severity_text, event_message
+        from logs
+        where source in ('function_logs', 'function_edge_logs')
+          and event_message != ''
         order by timestamp desc
         limit 200`,
   iso_timestamp_start: start.toISOString(),
