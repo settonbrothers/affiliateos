@@ -405,10 +405,23 @@ export async function prepareCopyEvalSuite(): Promise<{
       ),
     }
   })
-  const selected = selectAffxEvalOffers(candidates)
   const affxPacks = (sourcePacks.packs as JsonRecord[]).filter(
     (pack) => pack.origin === 'affx'
   )
+  const lockedSelectors = affxPacks.map((pack) => {
+    const selector = asRecord(pack.selector)
+    const offerId = String(selector?.offer_id ?? '')
+    const profile = String(selector?.profile ?? '') as
+      | 'best_available_context'
+      | 'verified_evidence_missing_optional_upstream'
+      | 'conflicting_vendor_economics'
+      | 'thin_health_claims_vendor_only'
+    if (!offerId || !profile) {
+      throw new Error(`${String(pack.id)}: locked AffX selector is incomplete`)
+    }
+    return { offerId, profile }
+  })
+  const selected = selectAffxEvalOffers(candidates, lockedSelectors)
   const syntheticPacks = (sourcePacks.packs as JsonRecord[]).filter(
     (pack) => pack.origin === 'synthetic_fixture'
   )

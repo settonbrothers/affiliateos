@@ -18,7 +18,16 @@ export type EvalSelection = EvalOfferCandidate & {
     | 'full_context_without_measured_winner'
     | 'good_evidence_missing_optional_upstream'
     | 'thin_conflicting_or_compliance_risk'
+    | 'best_available_context'
+    | 'verified_evidence_missing_optional_upstream'
+    | 'conflicting_vendor_economics'
+    | 'thin_health_claims_vendor_only'
   completenessScore: number
+}
+
+export type LockedEvalSelector = {
+  offerId: string
+  profile: EvalSelection['profile']
 }
 
 export function completenessScore(candidate: EvalOfferCandidate): number {
@@ -43,8 +52,33 @@ const complete = (candidate: EvalOfferCandidate) =>
   candidate.hasTestKit
 
 export function selectAffxEvalOffers(
-  candidates: EvalOfferCandidate[]
+  candidates: EvalOfferCandidate[],
+  lockedSelectors: LockedEvalSelector[] = []
 ): EvalSelection[] {
+  if (lockedSelectors.length > 0) {
+    if (lockedSelectors.length !== 4) {
+      throw new Error('Locked AffX eval suite must contain exactly four offers.')
+    }
+    const uniqueIds = new Set(lockedSelectors.map((item) => item.offerId))
+    if (uniqueIds.size !== lockedSelectors.length) {
+      throw new Error('Locked AffX eval suite contains duplicate offer ids.')
+    }
+    return lockedSelectors.map((selector) => {
+      const candidate = candidates.find(
+        (item) => item.offerId === selector.offerId
+      )
+      if (!candidate) {
+        throw new Error(
+          `Locked AffX eval offer ${selector.offerId} is unavailable; do not substitute a random case.`
+        )
+      }
+      return {
+        ...candidate,
+        profile: selector.profile,
+        completenessScore: completenessScore(candidate),
+      }
+    })
+  }
   const remaining = [...candidates]
   const selected: EvalSelection[] = []
   const usedVerticals = new Set<string>()

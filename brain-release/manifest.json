@@ -167,18 +167,18 @@
       "source": "tests/copy-system-v2/protocol.json",
       "target": "brain-evals/copy-system-v2.protocol.json",
       "kind": "eval",
-      "sha256": "803973ee0cb7bb189f70ce9c86683c82e57d1b2223a098756676c3697cbce7b3"
+      "sha256": "2f67be3c3d9a3f79a831f6821024a861b5bb61b6e1c42e7472313ca68ef869d2"
     },
     {
       "source": "tests/copy-system-v2/source-packs.json",
       "target": "brain-evals/copy-system-v2.source-packs.json",
       "kind": "eval",
-      "sha256": "c39121df862b23930514d1eb6be196ff31a6ebd054d352a6d367708782942265"
+      "sha256": "91efee5ee467480665dd1dc05d3c5660980c7c093913559d22b3b15c2dac1dec"
     }
   ],
   "source_repository": "creation-engine",
-  "source_git_sha": "14aae1878ff795fc5f9fc960ad822503dc225155",
-  "compiled_at": "2026-08-19T09:02:26.888Z",
+  "source_git_sha": "8faacfc8907325ad5d0c8606f176a3e45347c89a",
+  "compiled_at": "2026-08-19T09:47:30.654Z",
   "regression_commands": [
     "node tests/run-conversion-regressions.mjs",
     "node tests/run-story-evidence-evals.mjs",
@@ -200,7 +200,7 @@
     {
       "command": "node tests/run-copy-system-v2.mjs",
       "status": "passed",
-      "output": "PASS copy-system-v2: 8 cases, 48 preregistered jobs, sha256=0efa1706a80924948c612ba159b9eebaf79cbd6ea8a75c4fbeb11e36dfb07e3e\nPENDING live AffX snapshots, generation and owner scoring"
+      "output": "PASS copy-system-v2: 8 cases, 48 preregistered jobs, sha256=1ee3e5bae46e82848eeafcdcf714599a2598ccfe0432f215471b6b0cbf7f4dec\nPENDING live AffX snapshots, generation and owner scoring"
     },
     {
       "command": "node tests/run-agency-economics-contracts.mjs",
@@ -213,5 +213,5 @@
       "output": "PASS copy-engine-v4-local: 9 checksums, schema valid, placeholders clean, Zod parity exact"
     }
   ],
-  "manifest_sha256": "78467148c5295ec10a4fbb16144b43ed021988c352ab9fd9693cf4ec27075ec7"
+  "manifest_sha256": "5640a64e6a5fd6f23de8135d57434ee1fb18319d476baa85de9e6e024930e7c4"
 }
