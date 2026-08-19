@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 
 export default async function CopyEvalPage() {
   const db = (await createClient()) as SupabaseClient
-  const [{ count: caseCount }, { data: runs }] = await Promise.all([
+  const [casesResult, runsResult] = await Promise.all([
     db
       .from('copy_eval_cases')
       .select('id', { count: 'exact', head: true })
@@ -18,6 +18,9 @@ export default async function CopyEvalPage() {
       .order('started_at', { ascending: false })
       .limit(20),
   ])
+  const setupError = casesResult.error ?? runsResult.error
+  const caseCount = casesResult.count
+  const runs = runsResult.data
   const runRows = (runs ?? []) as Array<{
     id: string
     status: string
@@ -35,7 +38,17 @@ export default async function CopyEvalPage() {
         המקרים במעבדה: {caseCount ?? 0}/8. Fixtures מסומנים ואינם ניתנים לפרסום.
         הריצות אינן יוצרות offers ואינן מעדכנות Taste Corpus.
       </p>
-      <CopyEvalControls />
+      {setupError && (
+        <div className="rounded border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+          המעבדה מותקנת בקוד אך טבלאות הניסוי עדיין לא הותקנו במסד הנתונים.
+          הפעולות נעולות עד להחלת ה־migration המאושר.
+        </div>
+      )}
+      <CopyEvalControls
+        disabledReason={
+          setupError ? 'ממתין להתקנת טבלאות הניסוי — אין כתיבה למסד הנתונים.' : null
+        }
+      />
       <div className="space-y-2">
         {runRows.map((run) => (
           <Link

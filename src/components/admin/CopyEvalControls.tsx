@@ -6,7 +6,11 @@ import { useRouter } from 'next/navigation'
 import { prepareCopyEvalSuite, startCopyEvalRun } from '@/lib/actions/copyEval'
 import { Button } from '@/components/ui/button'
 
-export function CopyEvalControls() {
+export function CopyEvalControls({
+  disabledReason,
+}: {
+  disabledReason?: string | null
+}) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [message, setMessage] = useState('')
@@ -31,12 +35,22 @@ export function CopyEvalControls() {
     })
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <Button disabled={pending} onClick={() => run('prepare')}>
+      <Button
+        disabled={pending || Boolean(disabledReason)}
+        onClick={() => run('prepare')}
+      >
         1. הכנת 8 snapshots
       </Button>
-      <Button disabled={pending} variant="outline" onClick={() => run('start')}>
+      <Button
+        disabled={pending || Boolean(disabledReason)}
+        variant="outline"
+        onClick={() => run('start')}
+      >
         2. פתיחת ריצת 48 jobs
       </Button>
+      {disabledReason && (
+        <span className="text-sm text-amber-700">{disabledReason}</span>
+      )}
       {message && (
         <span className="text-sm text-[var(--color-muted-foreground)]">
           {message}
