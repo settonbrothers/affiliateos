@@ -58,3 +58,52 @@ export async function loadActivePrompt(
     `No active prompt found for ${orchestratorName}${verticalSlug ? ` (vertical=${verticalSlug})` : ''}.`
   )
 }
+
+// Eval and staged-release runs must resolve the exact frozen version recorded
+// in their manifest, even when that version is intentionally inactive.
+export async function loadPromptVersion(
+  orchestratorName: string,
+  version: string,
+  verticalSlug?: string
+): Promise<string> {
+  const admin = getAdminClient()
+  let verticalId: string | null = null
+  if (verticalSlug) {
+    const { data: vertical } = await admin
+      .from('verticals')
+      .select('id')
+      .eq('slug', verticalSlug)
+      .maybeSingle()
+    verticalId = vertical?.id ?? null
+  }
+
+  if (verticalId) {
+    const { data } = await admin
+      .from('prompts')
+      .select('content')
+      .eq('orchestrator_name', orchestratorName)
+      .eq('prompt_type', 'main')
+      .eq('version', version)
+      .eq('vertical_id', verticalId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (data?.content) return data.content
+  }
+
+  const { data } = await admin
+    .from('prompts')
+    .select('content')
+    .eq('orchestrator_name', orchestratorName)
+    .eq('prompt_type', 'main')
+    .eq('version', version)
+    .is('vertical_id', null)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (data?.content) return data.content
+
+  throw new Error(
+    `No prompt version ${version} found for ${orchestratorName}${verticalSlug ? ` (vertical=${verticalSlug})` : ''}.`
+  )
+}

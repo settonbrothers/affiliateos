@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://affx.local/schemas/ad-copy-v5.schema.json",
+  "title": "AdCopyAgencyV5",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["engine_version", "output_status", "department_plan", "recommended_candidate_id", "variants", "portfolio_decision", "user_message"],
+  "properties": {
+    "engine_version": { "const": "evidence-agency-v5" },
+    "output_status": { "enum": ["ready_for_user", "needs_evidence", "compliance_review", "blocked"] },
+    "department_plan": { "$ref": "copy-department-v1.schema.json" },
+    "recommended_candidate_id": { "type": ["string", "null"] },
+    "variants": {
+      "type": "array", "minItems": 0, "maxItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["candidate_id", "specialist", "test_hypothesis", "primary_text", "headline", "hook", "angle_index", "block_ids", "line_purpose_map"],
+        "properties": {
+          "candidate_id": { "type": "string" },
+          "specialist": { "enum": ["storytelling", "direct_response", "proof_mechanism"] },
+          "test_hypothesis": { "type": "string" },
+          "primary_text": { "type": "string" },
+          "headline": { "type": "string" },
+          "subheadline": { "type": "string" },
+          "hook": { "type": "string" },
+          "cta_button": { "type": "string" },
+          "angle_index": { "type": "integer", "minimum": 0 },
+          "block_ids": { "type": "array", "items": { "type": "string" } },
+          "line_purpose_map": { "type": "array", "items": { "type": "object" } }
+        }
+      }
+    },
+    "portfolio_decision": {
+      "type": ["object", "null"],
+      "properties": {
+        "ranked_candidate_ids": { "type": "array", "maxItems": 3, "items": { "type": "string" } },
+        "selection_reason": { "type": "string" },
+        "rejected_candidates": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "user_message": { "type": "string" }
+  }
+}

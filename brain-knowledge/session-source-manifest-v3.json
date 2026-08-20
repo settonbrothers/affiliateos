@@ -1,0 +1,62 @@
+{
+  "schema_version": "session-source-manifest-v3",
+  "captured_at": "2026-08-19T00:00:00+03:00",
+  "authority_order": [
+    "latest_explicit_owner_feedback",
+    "latest_owner_approved_output",
+    "older_non_conflicting_owner_feedback",
+    "agent_inference",
+    "general_doctrine"
+  ],
+  "sources": [
+    {
+      "source_id": "claude-affex-main-2026-08-03--2026-08-17",
+      "kind": "raw_session_jsonl",
+      "path": "/Users/macmini/.claude/projects/-Users-macmini-Claude/35068795-722a-48c5-aa9b-bbfd066e3e45.jsonl",
+      "line_count": 5018,
+      "sha256": "dc01035e25dfa8687cc44f1113bc3705c2d94c58fe117e207ae5d755c892824b",
+      "reviewed_message_by_message": true
+    },
+    {
+      "source_id": "claude-affex-state-audit-2026-08-18",
+      "kind": "raw_session_jsonl",
+      "path": "/Users/macmini/.claude/projects/-Users-macmini-Claude/3ea2d24c-ced1-4bc0-a089-f97b8cbbc7e9.jsonl",
+      "line_count": 860,
+      "sha256": "e92b6cf84a4eeb287628e9af2a91f6438538ec4a4fe31992cc25abf8de995a95",
+      "reviewed_message_by_message": true
+    },
+    {
+      "source_id": "owner-lesson-chronology-2026-08-18",
+      "kind": "derived_chronology",
+      "path": "/Users/macmini/Claude/affex/planning/lessons-chronology.md",
+      "sha256": "664117fa87f1095063f8a7da285c7250956631851fda248c33ffcb29ee424e3c",
+      "verified_against_raw_sessions": true
+    },
+    {
+      "source_id": "michael-v5-owner-approved",
+      "kind": "approved_copy",
+      "path": "/Users/macmini/Claude/affex/planning/tracer/reset/michael-v5.md",
+      "sha256": "2da7a94f68c3746970f6b320502ee54a03b0670d2a54ef29d68835591ff8bf8f",
+      "owner_approval": "2026-08-16T17:48:03.285Z"
+    },
+    {
+      "source_id": "round5-owner-feedback",
+      "kind": "verbatim_owner_feedback",
+      "path": "/Users/macmini/Claude/affex/planning/tracer/truth-test/round5/owner-feedback.md",
+      "sha256": "8c0b9af5a9557b735c0861d0591050c8a322bb314c136f77de6e5e7df2527048"
+    },
+    {
+      "source_id": "round5-negative-copy",
+      "kind": "rejected_copy",
+      "path": "/Users/macmini/Claude/affex/planning/tracer/truth-test/round5/ad.md",
+      "sha256": "3075d28bc621fc32cbd654c698bbb51098efbf1e81cba2901aca6b0922f7bcae"
+    },
+    {
+      "source_id": "codex-current-thread-2026-08-19",
+      "kind": "current_owner_thread",
+      "path": null,
+      "sha256": null,
+      "notes": "Contains the latest owner decisions about evidence-based dramatization, eight-case evaluation, local brain as source of truth, agency specialists, campaign economics, and strict recency precedence. It must be exported and hashed before release activation; local development may use the verbatim decisions recorded in lesson-registry-v3.json."
+    }
+  ]
+}

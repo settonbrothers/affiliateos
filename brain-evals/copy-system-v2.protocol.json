@@ -1,0 +1,35 @@
+{
+  "protocol": "copy-brain-system-ab-v2",
+  "cases": 8,
+  "origins": { "affx": 4, "synthetic_fixture": 4 },
+  "domains": { "commercial": 7, "donation": 1 },
+  "splits": { "calibration": 6, "holdout": 2 },
+  "engines": ["production_baseline_snapshot", "copy_brain_candidate"],
+  "repetitions_per_engine": 3,
+  "total_pipeline_runs": 48,
+  "owner_pairs": 8,
+  "owner_outputs": 16,
+  "generation_language": "he",
+  "research_during_generation": false,
+  "blind_order_seed": "affx-copy-brain-owner-2026-08-18-v2",
+  "preregistered_presented_repetition": {
+    "affx-jasper-best-available": 1,
+    "affx-activecampaign-verified-missing-upstream": 0,
+    "affx-systeme-conflicting-economics": 2,
+    "affx-femicore-thin-health-claims": 1,
+    "fixture-sleep-evidence": 0,
+    "fixture-saas-mechanism": 2,
+    "fixture-digital-extreme-claim": 1,
+    "fixture-hot-meal-donation": 0
+  },
+  "acceptance": {
+    "candidate_min_wins": 6,
+    "candidate_max_losses": 1,
+    "min_average_score_delta": 0.5,
+    "candidate_truth_violations": 0,
+    "stable_mode_cases_min": 7,
+    "judge_owner_case_matches_min": 7,
+    "judge_false_pass_on_truth_or_causality": 0,
+    "holdout_kill_false_pass": 0
+  }
+}

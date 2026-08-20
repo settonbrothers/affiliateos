@@ -33,7 +33,13 @@ jobs:
         run: |
           REF="${{ secrets.SUPABASE_PROJECT_REF }}"
           FN="${{ github.event.inputs.function }}"
-          if [ -n "$FN" ]; then
+          if [ "$FN" = "__copy_eval_db_check__" ]; then
+            node scripts/check-copy-eval-db.mjs
+          elif [ "$FN" = "__copy_eval_logs__" ]; then
+            node scripts/check-copy-eval-logs.mjs
+          elif [ "$FN" = "__copy_eval_db_apply__" ]; then
+            node scripts/deploy-copy-eval-db.mjs
+          elif [ -n "$FN" ]; then
             supabase functions deploy "$FN" --project-ref "$REF"
           else
             for dir in supabase/functions/*/; do
@@ -46,3 +52,5 @@ jobs:
               supabase functions deploy "$name" --project-ref "$REF"
             done
           fi
+        env:
+          PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}

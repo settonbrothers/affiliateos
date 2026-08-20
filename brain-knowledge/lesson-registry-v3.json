@@ -1,0 +1,287 @@
+{
+  "schema_version": "lesson-registry-v3",
+  "registry_version": "2026-08-19.1",
+  "precedence_rule": "A later explicit owner correction supersedes an older rule. Approval confirms the resulting output, not every reusable surface pattern inside it.",
+  "lessons": [
+    {
+      "lesson_id": "L20",
+      "date": "2026-08-05",
+      "status": "still_valid",
+      "authority": "explicit_owner_feedback",
+      "principle": "Teach why a decision works; never copy the owner's surface style or turn references into templates.",
+      "writer_question": "What effect must this choice create, and what different form could create the same effect for this offer?",
+      "routes": ["director", "all_writers", "portfolio_judge"],
+      "regression": "template_clone"
+    },
+    {
+      "lesson_id": "L24",
+      "date": "2026-08-06",
+      "status": "active_latest",
+      "authority": "explicit_owner_feedback_with_later_clarification",
+      "principle": "Never lose an achieved capability while adding a new lesson. Owner feedback may reopen any prior pass; writer self-approval may not freeze it.",
+      "writer_question": "Did this revision preserve every previously approved capability that still applies?",
+      "routes": ["director", "all_writers", "critic", "judge"],
+      "regression": "latest_baseline_regression"
+    },
+    {
+      "lesson_id": "L27",
+      "date": "2026-08-06",
+      "status": "active_latest",
+      "authority": "explicit_owner_feedback",
+      "principle": "A correction is a weighted consideration with when, when-not and why; never a universal mechanical rule.",
+      "writer_question": "Why does the consideration apply here, and what evidence would make it inapplicable?",
+      "routes": ["director", "all_writers", "critic"],
+      "regression": "mechanical_rule_overfit"
+    },
+    {
+      "lesson_id": "L32",
+      "date": "2026-08-06",
+      "status": "still_valid",
+      "authority": "explicit_owner_feedback",
+      "principle": "The fold must stop the relevant reader, identify or resonate with that reader, and leave a strong live question.",
+      "writer_question": "In a crowded feed, why would this exact audience stop now and need the next line?",
+      "routes": ["hook", "all_writers", "reader", "judge"],
+      "regression": "weak_fold"
+    },
+    {
+      "lesson_id": "L36",
+      "date": "2026-08-06",
+      "status": "still_valid",
+      "authority": "explicit_owner_feedback",
+      "principle": "Competent prose without a believable human mind, lived detail and emotional movement is an AI-shaped failure.",
+      "writer_question": "Does a specific human consciousness seem to be discovering this, or is a copywriter arranging effects?",
+      "routes": ["all_writers", "reader", "critic", "judge"],
+      "regression": "no_soul"
+    },
+    {
+      "lesson_id": "L40",
+      "date": "2026-08-06",
+      "status": "active_latest",
+      "authority": "explicit_owner_feedback",
+      "principle": "Every lesson must include its logic, appropriate use and counter-condition.",
+      "writer_question": "What reader-state makes this choice useful, and when would it damage trust or momentum?",
+      "routes": ["director", "all_writers", "critic"],
+      "regression": "missing_when_not"
+    },
+    {
+      "lesson_id": "L44",
+      "date": "2026-08-06",
+      "status": "active_latest",
+      "authority": "explicit_owner_feedback",
+      "principle": "References teach functions, not line counts, skeletons or wording. The agent must generate the structure for this reader and offer.",
+      "writer_question": "What work must this section do, and what structure naturally performs it here?",
+      "routes": ["director", "all_writers", "portfolio_judge"],
+      "regression": "reference_as_template"
+    },
+    {
+      "lesson_id": "L60",
+      "date": "2026-08-10",
+      "status": "still_valid",
+      "authority": "explicit_owner_feedback",
+      "principle": "Diversity must be visible in the silhouette, narrator, rhythm and argument—not merely in changed nouns.",
+      "writer_question": "Would these candidates still look and move differently with product names removed?",
+      "routes": ["director", "all_writers", "portfolio_judge"],
+      "regression": "same_silhouette"
+    },
+    {
+      "lesson_id": "L67",
+      "date": "2026-08-11",
+      "status": "active_latest",
+      "authority": "explicit_owner_feedback",
+      "principle": "Power comes from maximizing the resolution of a true fact, never by increasing the claim beyond evidence.",
+      "writer_question": "Is the underlying fact powerful, specific and earned—or is the wording shouting around a weak fact?",
+      "routes": ["hook", "all_writers", "critic", "judge"],
+      "regression": "adjective_inflation"
+    },
+    {
+      "lesson_id": "L91_L109_L116",
+      "date": "2026-08-18",
+      "status": "active_latest",
+      "authority": "latest_explicit_owner_feedback",
+      "principle": "Physical form is copy. Make the post inviting to the eye through character- and emotion-led rhythm, without fixed line-length or block-count rules.",
+      "writer_question": "Before reading, does this shape invite entry; when read aloud, do the breaks sound like this narrator breathing?",
+      "routes": ["all_writers", "reader", "critic", "judge"],
+      "regression": "visual_density_or_staccato_template"
+    },
+    {
+      "lesson_id": "L94",
+      "date": "2026-08-16",
+      "status": "active_latest",
+      "authority": "explicit_owner_feedback",
+      "principle": "Do not hand-edit a failed ad as the learning mechanism. Diagnose, update the agent's reasoning and let the agent generate again.",
+      "writer_question": "What general reasoning failure produced this line, and how will the next unseen case expose whether it was learned?",
+      "routes": ["diagnostician", "release_governance"],
+      "regression": "manual_patch_without_learning"
+    },
+    {
+      "lesson_id": "L95",
+      "date": "2026-08-16",
+      "status": "active_latest",
+      "authority": "explicit_owner_feedback",
+      "principle": "The rubber-band model: open a meaningful question, release only enough to reward attention, and open the next question before tension becomes slack.",
+      "writer_question": "What is alive in the reader's mind now, what does this beat answer, and what remains necessary to know?",
+      "routes": ["hook", "all_writers", "reader", "critic", "judge"],
+      "regression": "low_momentum"
+    },
+    {
+      "lesson_id": "L96_L121",
+      "date": "2026-08-18",
+      "status": "active_latest",
+      "authority": "latest_explicit_owner_feedback",
+      "principle": "A conversion story must expose a present unmet need in-scene and make the offer the direct causal bridge to the same outcome while the gap remains open at the ask.",
+      "writer_question": "Who remains without what now, where did the reader experience it, and why does this offer—not an adjacent one—change that exact result?",
+      "routes": ["director", "angle", "all_writers", "reader", "critic", "judge"],
+      "regression": "round5_problem_closed_or_offer_not_causal"
+    },
+    {
+      "lesson_id": "L97",
+      "date": "2026-08-16",
+      "status": "active_latest",
+      "authority": "owner_approved_output",
+      "principle": "Michael v5 is the latest approved quality baseline, including tension, causal funding dependence, human specificity, emotional transfer and visual rhythm.",
+      "writer_question": "Does this candidate preserve the applicable capabilities of the latest approved baseline without imitating its surface?",
+      "routes": ["director", "all_writers", "critic", "judge", "release_governance"],
+      "regression": "michael_v5_positive_control"
+    },
+    {
+      "lesson_id": "L117",
+      "date": "2026-08-18",
+      "status": "active_latest",
+      "authority": "latest_explicit_owner_feedback",
+      "principle": "A hook can satisfy structural checkboxes and still be weak. The embodied stop-and-read response is the test.",
+      "writer_question": "Would the intended reader actually stop, or can I only explain why they should?",
+      "routes": ["hook", "reader", "critic", "judge"],
+      "regression": "mechanically_valid_weak_hook"
+    },
+    {
+      "lesson_id": "L118",
+      "date": "2026-08-18",
+      "status": "active_latest",
+      "authority": "latest_explicit_owner_feedback",
+      "principle": "Readiness requires predicting the owner's latest critique from reader experience, but owner taste remains a development calibration—not a universal user voice.",
+      "writer_question": "What would the owner reject immediately, and which part is universal reader logic versus personal taste?",
+      "routes": ["critic", "judge", "release_governance"],
+      "regression": "owner_lens_false_pass"
+    },
+    {
+      "lesson_id": "L119_L120_L122",
+      "date": "2026-08-18",
+      "status": "active_latest",
+      "authority": "latest_explicit_owner_feedback",
+      "principle": "An anchor story needs one dominant earned emotional peak. Pleasant moments, symbols and dramatic wording do not substitute for a strong underlying event.",
+      "writer_question": "If only one moment remained, would it make action feel necessary, and did the preceding story earn it?",
+      "routes": ["director", "storytelling_writer", "reader", "critic", "judge"],
+      "regression": "round5_no_dominant_peak"
+    },
+    {
+      "lesson_id": "L123",
+      "date": "2026-08-18",
+      "status": "active_latest",
+      "authority": "latest_explicit_owner_feedback",
+      "principle": "Every block has an intended reader-state change; a blind reader reports the experienced change, and the critic judges the gap.",
+      "writer_question": "What was alive before this block, why does it exist, and what should be different afterward?",
+      "routes": ["all_writers", "reader", "critic"],
+      "regression": "missing_block_intent_or_reader_coverage"
+    },
+    {
+      "lesson_id": "L124",
+      "date": "2026-08-18",
+      "status": "active_latest",
+      "authority": "latest_explicit_owner_feedback",
+      "principle": "A lesson is not implemented until it has provenance, reasoning, a writer question, a runtime route, an independent gate and a regression case.",
+      "writer_question": "Can the release prove this lesson reached execution and survived an unseen test?",
+      "routes": ["release_governance"],
+      "regression": "doctrine_route_missing"
+    },
+    {
+      "lesson_id": "L125",
+      "date": "2026-08-19",
+      "status": "active_latest",
+      "authority": "latest_explicit_owner_feedback",
+      "principle": "Evidence-based dramatization may invent scene texture but never outcomes, measurements, diagnoses, urgency, scarcity, testimonial attribution or increased severity.",
+      "writer_question": "Does the invented detail only make the scene visible, or make the reader believe a stronger claim?",
+      "routes": ["evidence", "director", "all_writers", "critic", "judge"],
+      "regression": "invented_claim_detail"
+    },
+    {
+      "lesson_id": "L126",
+      "date": "2026-08-19",
+      "status": "active_latest",
+      "authority": "latest_explicit_owner_feedback",
+      "principle": "The ordinary user supplies an offer, not a story or template. The system researches, chooses story/non-story/blocked and produces the campaign direction.",
+      "writer_question": "What form best fits the evidence and objective without asking the operator to be the copy strategist?",
+      "routes": ["director", "angle", "release_governance"],
+      "regression": "operator_forced_to_choose_story"
+    },
+    {
+      "lesson_id": "L127",
+      "date": "2026-08-19",
+      "status": "active_latest",
+      "authority": "latest_explicit_owner_feedback",
+      "principle": "Copy cannot begin when product, consumer audience or campaign objective is unknown or confused with the affiliate program.",
+      "writer_question": "What is sold, to whom, for which action—and is affiliate economics kept internal?",
+      "routes": ["execution_brief", "director", "all_writers", "judge"],
+      "regression": "jasper_objective_audience_mismatch"
+    },
+    {
+      "lesson_id": "L128",
+      "date": "2026-08-19",
+      "status": "active_latest",
+      "authority": "latest_explicit_owner_feedback",
+      "principle": "Local creation-engine is the single brain source. AffX receives immutable, inactive, verified releases and never becomes a parallel learning store.",
+      "writer_question": "Can this runtime artifact be reproduced from one committed local source and exact checksums?",
+      "routes": ["release_governance"],
+      "regression": "brain_release_drift"
+    },
+    {
+      "lesson_id": "L129",
+      "date": "2026-08-20",
+      "status": "active_latest",
+      "authority": "jasper_v3_1_clean_runtime_finding",
+      "principle": "Evidence bounds the scope of every claim-bearing verb and relationship, not only numbers and outcomes. Do not expand a supported feature into broader permanence, reach, compatibility or architecture language.",
+      "writer_question": "Does the source prove this exact subject, verb and scope—or did I quietly widen who can access what, where it persists or how broadly it applies?",
+      "routes": ["evidence", "all_writers", "critic", "judge"],
+      "regression": "source_scope_expansion"
+    },
+    {
+      "lesson_id": "L130",
+      "date": "2026-08-20",
+      "status": "active_latest",
+      "authority": "jasper_v3_1_clean_runtime_finding",
+      "principle": "A mechanism block must preserve the reader's emotional movement: demonstrate the supported mechanism through one concrete workflow instead of dumping features, then carry the strongest earned cost or identity realization into the ask.",
+      "writer_question": "Can the reader feel the mechanism changing the workflow, and does the close collect the strongest moment rather than switching to a feature list or a weaker slogan?",
+      "routes": ["hook", "all_writers", "reader", "critic", "judge"],
+      "regression": "mechanism_spec_dump_or_peak_abandonment"
+    },
+    {
+      "lesson_id": "L131",
+      "date": "2026-08-20",
+      "status": "active_latest",
+      "authority": "jasper_v3_2_fresh_runtime_finding",
+      "principle": "A supported product mechanism is not automatically a proven market difference. Without verified competitive evidence, do not assign category-wide behavior or absence to generic tools, other tools or competitors; sell the verified reader problem and causal usefulness without inventing uniqueness.",
+      "writer_question": "Am I describing what the reader and product evidence prove, or quietly turning missing competitor evidence into a claim about what an entire category forgets, lacks or cannot do?",
+      "routes": ["angle", "director", "hook", "all_writers", "critic", "judge"],
+      "regression": "unsupported_category_behavior_in_hook"
+    },
+    {
+      "lesson_id": "OLD_FIXED_LINE_COUNTS",
+      "date": "2026-08-06",
+      "status": "superseded",
+      "authority": "agent_inference",
+      "principle": "Fixed line length, fixed three-line blocks or a single approved silhouette.",
+      "superseded_by": "L91_L109_L116",
+      "routes": [],
+      "regression": "visual_template_overfit"
+    },
+    {
+      "lesson_id": "OLD_COMPONENT_CHECKLIST_PASS",
+      "date": "2026-08-18",
+      "status": "superseded",
+      "authority": "agent_inference",
+      "principle": "Presence of scarcity, a number, a delivery and a CTA is sufficient evidence of a conversion arc.",
+      "superseded_by": "L96_L121",
+      "routes": [],
+      "regression": "round5_false_pass"
+    }
+  ]
+}

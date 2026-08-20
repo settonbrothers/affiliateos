@@ -10,6 +10,15 @@ name: Sync Prompts
 #   SUPABASE_SERVICE_ROLE_KEY   — service role key (server-only; never client)
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Sync regular prompts or stage the signed copy-brain candidate'
+        required: true
+        default: sync
+        type: choice
+        options:
+          - sync
+          - brain-stage
 
 jobs:
   sync:
@@ -33,4 +42,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Sync prompts
+        if: ${{ github.event.inputs.mode == 'sync' }}
         run: pnpm prompts:sync
+
+      - name: Stage signed copy-brain prompts inactive
+        if: ${{ github.event.inputs.mode == 'brain-stage' }}
+        run: pnpm brain:stage -- --package brain-release/manifest.json

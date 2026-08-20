@@ -1,0 +1,25 @@
+{
+  "case_id": "jasper-v3.1-revision-routing",
+  "source_run": "manual-evals/jasper-v3.1/99-final.output.json",
+  "finding_date": "2026-08-20",
+  "candidates": [
+    {
+      "candidate_id": "storytelling-structural-repair",
+      "critic_flags": ["generic_angle", "wording_stronger_than_fact"],
+      "judge_flags": ["low_momentum"]
+    },
+    {
+      "candidate_id": "proof-bounded-repair",
+      "critic_flags": ["wording_stronger_than_fact"],
+      "judge_flags": ["evidence_threshold_unmet"]
+    }
+  ],
+  "expected_revision_candidate_id": "proof-bounded-repair",
+  "fail_if": [
+    "the first eligible candidate wins despite a harder structural rewrite",
+    "hook, headline and opening resolve or repeat the same premise",
+    "the mechanism becomes a feature inventory",
+    "the close abandons the strongest earned reader realization",
+    "a supported feature is widened into an unsupported scope claim"
+  ]
+}

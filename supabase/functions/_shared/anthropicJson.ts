@@ -5,9 +5,27 @@ import { zodToJsonSchema } from 'npm:zod-to-json-schema@^3.23'
 import { logError } from './logError.ts'
 
 // Per-model price in USD per 1M tokens.
-const PRICING_USD_PER_MTOK: Record<string, { input: number; output: number }> = {
-  'claude-sonnet-4-6': { input: 3, output: 15 },
-  'claude-haiku-4-5-20251001': { input: 1, output: 5 },
+const PRICING_USD_PER_MTOK: Record<string, { input: number; output: number }> =
+  {
+    'claude-sonnet-4-6': { input: 3, output: 15 },
+    'claude-opus-4-6': { input: 5, output: 25 },
+    'claude-haiku-4-5-20251001': { input: 1, output: 5 },
+  }
+
+export function calculateAnthropicCostUsd(
+  model: string,
+  usage: { input_tokens: number; output_tokens: number }
+): number {
+  const pricing = PRICING_USD_PER_MTOK[model]
+  if (!pricing) {
+    throw new Error(
+      `No verified Anthropic pricing is configured for model ${model}; refusing to report zero cost.`
+    )
+  }
+  return (
+    (usage.input_tokens / 1_000_000) * pricing.input +
+    (usage.output_tokens / 1_000_000) * pricing.output
+  )
 }
 
 export class AnthropicValidationError extends Error {
@@ -15,7 +33,9 @@ export class AnthropicValidationError extends Error {
     public readonly zodError: z.ZodError,
     public readonly rawInput: unknown
   ) {
-    super(`Anthropic tool_use output failed Zod validation: ${zodError.message}`)
+    super(
+      `Anthropic tool_use output failed Zod validation: ${zodError.message}`
+    )
     this.name = 'AnthropicValidationError'
   }
 }
@@ -52,6 +72,12 @@ export async function callAnthropicWithTool<T extends ZodTypeAny>(
   if (!apiKey) {
     throw new Error('ANTHROPIC_API_KEY is not set in the function environment')
   }
+  // Fail before making a paid request when the selected model cannot be
+  // priced. A silent $0 would also disable the agency cost cap.
+  calculateAnthropicCostUsd(args.model, {
+    input_tokens: 0,
+    output_tokens: 0,
+  })
 
   const anthropic = new Anthropic({ apiKey })
 
@@ -75,7 +101,10 @@ export async function callAnthropicWithTool<T extends ZodTypeAny>(
   // actually correct it instead of re-sending the identical prompt (which yields
   // the identical invalid output when the model is deterministic on this input).
   const messages: Anthropic.MessageParam[] = [
-    { role: 'user', content: args.userMessage as Anthropic.MessageParam['content'] },
+    {
+      role: 'user',
+      content: args.userMessage as Anthropic.MessageParam['content'],
+    },
   ]
 
   while (attempt < maxRetries) {
@@ -117,10 +146,7 @@ export async function callAnthropicWithTool<T extends ZodTypeAny>(
         throw new AnthropicValidationError(parsed.error, toolUse.input)
       }
 
-      const pricing = PRICING_USD_PER_MTOK[args.model] ?? { input: 0, output: 0 }
-      const costUsd =
-        (resp.usage.input_tokens / 1_000_000) * pricing.input +
-        (resp.usage.output_tokens / 1_000_000) * pricing.output
+      const costUsd = calculateAnthropicCostUsd(args.model, resp.usage)
 
       return {
         data: parsed.data,

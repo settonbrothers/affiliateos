@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://affx.local/schemas/copy-execution-brief-v2.schema.json",
+  "title": "CopyExecutionBriefV2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "brief_id", "snapshot_id", "readiness_status",
+    "consumer_offer", "affiliate_program", "campaign_objective", "audience",
+    "evidence", "upstream_context", "taste_selection", "doctrine_bundle",
+    "internal_economics", "critical_missing", "conflicts", "trace"
+  ],
+  "properties": {
+    "schema_version": { "const": "copy-execution-brief-v2" },
+    "brief_id": { "type": "string", "minLength": 1 },
+    "snapshot_id": { "type": "string", "minLength": 1 },
+    "readiness_status": {
+      "enum": ["ready_to_write", "needs_avatar", "needs_audience", "needs_objective", "objective_conflict", "blocked"]
+    },
+    "consumer_offer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["offer_id", "name", "description", "vertical", "destination_url", "promise_source_refs"],
+      "properties": {
+        "offer_id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": ["string", "null"] },
+        "vertical": { "type": ["string", "null"] },
+        "destination_url": { "type": ["string", "null"], "format": "uri" },
+        "promise_source_refs": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "affiliate_program": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["program_url", "network", "vendor", "internal_only"],
+      "properties": {
+        "program_url": { "type": ["string", "null"], "format": "uri" },
+        "network": { "type": ["string", "null"] },
+        "vendor": { "type": ["string", "null"] },
+        "internal_only": { "const": true }
+      }
+    },
+    "campaign_objective": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["objective_type", "desired_action", "audience_side", "source"],
+      "properties": {
+        "objective_type": { "enum": ["sale", "lead", "donation", "trial", "signup", "affiliate_recruitment", "unknown"] },
+        "desired_action": { "type": ["string", "null"] },
+        "audience_side": { "enum": ["consumer", "affiliate_marketer", "donor", "unknown"] },
+        "source": { "enum": ["campaign_context", "deep_brief", "test_kit", "explicit_eval_override", "unknown"] }
+      }
+    },
+    "audience": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "awareness", "sophistication", "avatar_ref", "avatar_completeness", "voc", "source"],
+      "properties": {
+        "summary": { "type": ["string", "null"] },
+        "awareness": { "type": ["string", "null"] },
+        "sophistication": { "type": ["integer", "null"], "minimum": 1, "maximum": 5 },
+        "avatar_ref": { "type": ["string", "null"] },
+        "avatar_completeness": { "type": "number", "minimum": 0, "maximum": 1 },
+        "voc": { "type": "array", "items": { "type": "object" } },
+        "source": { "enum": ["campaign_context", "avatar_v2", "explicit_eval_override", "unknown"] }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["verified_claims", "source_refs", "forbidden_claims", "narrative_readiness"],
+      "properties": {
+        "verified_claims": { "type": "array", "items": { "type": "object" } },
+        "source_refs": { "type": "array", "items": { "type": "string" } },
+        "forbidden_claims": { "type": "array", "items": { "type": "string" } },
+        "narrative_readiness": { "enum": ["documented_case", "evidence_based_dramatization", "non_story", "blocked", "unresolved"] }
+      }
+    },
+    "upstream_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["deep_brief", "test_kit", "spy_analyses", "market_examples", "performance_winners", "omitted_context"],
+      "properties": {
+        "deep_brief": { "type": ["object", "null"] },
+        "test_kit": {},
+        "spy_analyses": { "type": "array", "items": { "type": "object" } },
+        "market_examples": { "type": "array", "items": { "type": "object" } },
+        "performance_winners": { "type": "array", "items": { "type": "object" } },
+        "omitted_context": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "taste_selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["selected", "excluded", "selection_policy", "requirement_status"],
+      "properties": {
+        "selected": { "type": "array", "maxItems": 6, "items": { "type": "object" } },
+        "excluded": { "type": "array", "items": { "type": "object" } },
+        "selection_policy": { "type": "string", "minLength": 1 },
+        "requirement_status": { "type": "string", "enum": ["loaded", "none_available"] }
+      }
+    },
+    "doctrine_bundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bundle_version", "registry_version", "active_lesson_ids", "superseded_lesson_ids", "checksum"],
+      "properties": {
+        "bundle_version": { "const": "latest-owner-doctrine-v3" },
+        "registry_version": { "type": "string", "minLength": 1 },
+        "active_lesson_ids": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "superseded_lesson_ids": { "type": "array", "items": { "type": "string" } },
+        "checksum": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "internal_economics": {
+      "description": "Operator-only. It must never become consumer-facing proof or copy.",
+      "oneOf": [{ "$ref": "offer-economics-v1.schema.json" }, { "type": "null" }]
+    },
+    "critical_missing": { "type": "array", "items": { "type": "string" } },
+    "conflicts": { "type": "array", "items": { "type": "object" } },
+    "trace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input_sections_consumed", "input_sections_rejected", "lesson_routes", "warnings"],
+      "properties": {
+        "input_sections_consumed": { "type": "array", "items": { "type": "string" } },
+        "input_sections_rejected": { "type": "array", "items": { "type": "string" } },
+        "lesson_routes": { "type": "array", "items": { "type": "object" } },
+        "warnings": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

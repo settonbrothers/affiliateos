@@ -11,7 +11,7 @@ import { z } from 'npm:zod@^3.24.0'
 
 import { callAnthropicWithTool } from '../anthropicJson.ts'
 import { assertNotPaused } from '../killSwitch.ts'
-import { loadActivePrompt } from '../loadActivePrompt.ts'
+import { loadActivePrompt, loadPromptVersion } from '../loadActivePrompt.ts'
 import { mockAdCopy } from '../mockAi.ts'
 import {
   AdCopyAngleSchema,
@@ -31,6 +31,8 @@ import {
   shouldRefine,
   type TasteExample,
 } from './adCopyLogic.ts'
+import { runAdCopyEvidence } from './adCopyEvidence.ts'
+import type { CopyBrainInputSnapshotV1 } from '../types/copyBrain.ts'
 
 // NOTE (locked plan): generation + judging run on Opus. The exact Opus model id
 // and its PRICING_USD_PER_MTOK entry are wired + verified against the live API in
@@ -66,11 +68,31 @@ export type AdCopyInput = {
   // One of the 9 template values; injected into the copy_write stage system prompt.
   template?: string
   // Admin-curated hook examples; injected as {{HOOK_LIBRARY_FEWSHOT}} in copy_hook.
-  hookLibrary?: Array<{ text: string; lang: string; hook_type: string; label: string }>
+  hookLibrary?: Array<{
+    text: string
+    lang: string
+    hook_type: string
+    label: string
+  }>
   // Optional upstream context from the data chain.
   deepBriefContext?: Record<string, unknown> | null
   avatarContext?: Record<string, unknown> | null
   spyContext?: Record<string, unknown> | null
+  // Evidence-story v4: optional user direction and extra research hints. Neither
+  // is trusted as a claim without corroboration.
+  creativeHint?: string | null
+  additionalSourceUrls?: string[]
+  campaignContext?: {
+    channel?: string | null
+    geo?: string | null
+    audience?: string | null
+  }
+  brainSnapshot?: CopyBrainInputSnapshotV1
+  engineOverride?: 'production' | 'baseline' | 'candidate'
+  // Exact orchestrator→version map captured when an eval starts. This prevents
+  // an active-prompt change mid-run from contaminating either A/B arm.
+  promptVersions?: Record<string, string>
+  promptContents?: Record<string, string>
 }
 
 export type OrchestratorResult = {
@@ -80,9 +102,13 @@ export type OrchestratorResult = {
 }
 
 // Tool wrappers for stages whose output is an array (tool input must be an object).
-const AnglesToolSchema = z.object({ angles: z.array(AdCopyAngleSchema).min(2).max(5) })
+const AnglesToolSchema = z.object({
+  angles: z.array(AdCopyAngleSchema).min(2).max(5),
+})
 const HooksToolSchema = z.object({ hooks: z.array(AdCopyHookSchema).min(10) })
-const VariantsToolSchema = z.object({ variants: z.array(FacebookAdVariantSchema).min(2) })
+const VariantsToolSchema = z.object({
+  variants: z.array(FacebookAdVariantSchema).min(2),
+})
 
 async function runStage<T extends z.ZodTypeAny>(
   orchestratorName: string,
@@ -93,9 +119,15 @@ async function runStage<T extends z.ZodTypeAny>(
   model: string,
   verticalSlug?: string,
   // Optional key→value substitutions applied to the loaded system prompt.
-  promptSubstitutions?: Record<string, string>
+  promptSubstitutions?: Record<string, string>,
+  promptVersion?: string,
+  frozenPromptContent?: string
 ): Promise<{ data: z.infer<T>; costUsd: number }> {
-  let systemPrompt = await loadActivePrompt(orchestratorName, verticalSlug)
+  let systemPrompt =
+    frozenPromptContent ??
+    (promptVersion
+      ? await loadPromptVersion(orchestratorName, promptVersion, verticalSlug)
+      : await loadActivePrompt(orchestratorName, verticalSlug))
   if (promptSubstitutions) {
     for (const [key, value] of Object.entries(promptSubstitutions)) {
       systemPrompt = systemPrompt.split(key).join(value)
@@ -112,13 +144,32 @@ async function runStage<T extends z.ZodTypeAny>(
   return { data: result.data, costUsd: result.cost_usd }
 }
 
-export async function runAdCopy(input: AdCopyInput): Promise<OrchestratorResult> {
+export async function runAdCopy(
+  input: AdCopyInput
+): Promise<OrchestratorResult> {
   await assertNotPaused('AdCopyOrchestrator')
 
   if (!Deno.env.get('ANTHROPIC_API_KEY')) {
     return { output: mockAdCopy(), mode: 'mock' }
   }
 
+  // Staged rollout: the implementation and prompts can ship safely while the
+  // production engine stays bit-for-bit on v2. Enable only after the sealed
+  // 48-job / eight-pair eval and owner blind review pass.
+  if (
+    input.engineOverride === 'candidate' ||
+    (input.engineOverride !== 'baseline' &&
+      Deno.env.get('AD_COPY_EVIDENCE_V4_ENABLED') === 'true')
+  ) {
+    return runAdCopyEvidence(input)
+  }
+
+  return runAdCopyLegacy(input)
+}
+
+export async function runAdCopyLegacy(
+  input: AdCopyInput
+): Promise<OrchestratorResult> {
   const corpus = input.corpus ?? []
   const offer = input.offer
   const vertical = input.verticalSlug ?? offer.vertical ?? undefined
@@ -150,7 +201,10 @@ export async function runAdCopy(input: AdCopyInput): Promise<OrchestratorResult>
       spy: input.spyContext ?? null,
     },
     GENERATION_MODEL,
-    vertical
+    vertical,
+    undefined,
+    input.promptVersions?.CopyExcavateProductOrchestrator,
+    input.promptContents?.CopyExcavateProductOrchestrator
   )
   spend(product.costUsd)
   guard()
@@ -170,7 +224,10 @@ export async function runAdCopy(input: AdCopyInput): Promise<OrchestratorResult>
       ],
     },
     GENERATION_MODEL,
-    vertical
+    vertical,
+    undefined,
+    input.promptVersions?.CopyExcavateAvatarOrchestrator,
+    input.promptContents?.CopyExcavateAvatarOrchestrator
   )
   spend(avatar.costUsd)
   guard()
@@ -188,20 +245,24 @@ export async function runAdCopy(input: AdCopyInput): Promise<OrchestratorResult>
       test_kit: input.testKit ?? null,
     },
     GENERATION_MODEL,
-    vertical
+    vertical,
+    undefined,
+    input.promptVersions?.CopyAngleOrchestrator,
+    input.promptContents?.CopyAngleOrchestrator
   )
   spend(angles.costUsd)
   guard()
 
   // Build the hook library few-shot block for {{HOOK_LIBRARY_FEWSHOT}} substitution.
-  const hookLibraryFewshot = input.hookLibrary && input.hookLibrary.length > 0
-    ? input.hookLibrary
-        .map(
-          (h) =>
-            `[${h.label.toUpperCase()} | ${h.lang} | ${h.hook_type}] ${h.text}`
-        )
-        .join('\n')
-    : '(No admin hook library examples yet.)'
+  const hookLibraryFewshot =
+    input.hookLibrary && input.hookLibrary.length > 0
+      ? input.hookLibrary
+          .map(
+            (h) =>
+              `[${h.label.toUpperCase()} | ${h.lang} | ${h.hook_type}] ${h.text}`
+          )
+          .join('\n')
+      : '(No admin hook library examples yet.)'
 
   // Stage 3: hooks.
   const hooks = await runStage(
@@ -219,7 +280,9 @@ export async function runAdCopy(input: AdCopyInput): Promise<OrchestratorResult>
     },
     GENERATION_MODEL,
     vertical,
-    { '{{HOOK_LIBRARY_FEWSHOT}}': hookLibraryFewshot }
+    { '{{HOOK_LIBRARY_FEWSHOT}}': hookLibraryFewshot },
+    input.promptVersions?.CopyHookOrchestrator,
+    input.promptContents?.CopyHookOrchestrator
   )
   spend(hooks.costUsd)
   guard()
@@ -238,7 +301,9 @@ export async function runAdCopy(input: AdCopyInput): Promise<OrchestratorResult>
   })
 
   // Build the template substitution for {{COPY_TEMPLATE}} in the write prompt.
-  const copyTemplateSubstitution = { '{{COPY_TEMPLATE}}': input.template ?? 'PAS' }
+  const copyTemplateSubstitution = {
+    '{{COPY_TEMPLATE}}': input.template ?? 'PAS',
+  }
 
   let variants = await runStage(
     'CopyWriteOrchestrator',
@@ -248,7 +313,9 @@ export async function runAdCopy(input: AdCopyInput): Promise<OrchestratorResult>
     writePayload(),
     GENERATION_MODEL,
     vertical,
-    copyTemplateSubstitution
+    copyTemplateSubstitution,
+    input.promptVersions?.CopyWriteOrchestrator,
+    input.promptContents?.CopyWriteOrchestrator
   )
   spend(variants.costUsd)
   guard()
@@ -264,7 +331,10 @@ export async function runAdCopy(input: AdCopyInput): Promise<OrchestratorResult>
       avatar_excavation: avatar.data,
     },
     JUDGE_MODEL,
-    vertical
+    vertical,
+    undefined,
+    input.promptVersions?.CopyJudgeOrchestrator,
+    input.promptContents?.CopyJudgeOrchestrator
   )
   spend(judge.costUsd)
   guard()
@@ -283,7 +353,9 @@ export async function runAdCopy(input: AdCopyInput): Promise<OrchestratorResult>
       writePayload(judge.data),
       GENERATION_MODEL,
       vertical,
-      copyTemplateSubstitution
+      copyTemplateSubstitution,
+      input.promptVersions?.CopyWriteOrchestrator,
+      input.promptContents?.CopyWriteOrchestrator
     )
     spend(variants.costUsd)
     if (isOverCostCap(accumUsd, MAX_USD_PER_GENERATION)) break
@@ -298,7 +370,10 @@ export async function runAdCopy(input: AdCopyInput): Promise<OrchestratorResult>
         avatar_excavation: avatar.data,
       },
       JUDGE_MODEL,
-      vertical
+      vertical,
+      undefined,
+      input.promptVersions?.CopyJudgeOrchestrator,
+      input.promptContents?.CopyJudgeOrchestrator
     )
     spend(judge.costUsd)
   }

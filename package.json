@@ -18,6 +18,13 @@
     "format:check": "prettier --check .",
     "prompts:sync": "node scripts/prompts-sync.mjs",
     "eval:run": "tsx scripts/eval-run.mts",
+    "eval:copy-evidence": "tsx scripts/eval-copy-evidence.mts",
+    "eval:copy-owner-packet": "tsx scripts/build-copy-owner-packet.mts",
+    "brain:import": "tsx scripts/import-copy-brain.mts",
+    "brain:stage": "tsx scripts/stage-copy-brain.mts",
+    "brain:release": "tsx scripts/release-copy-brain.mts",
+    "brain:drift": "tsx scripts/check-copy-brain-drift.mts",
+    "brain:ownership": "tsx scripts/check-copy-path-ownership.mts",
     "prompts:activate": "node scripts/prompts-sync.mjs --activate",
     "audit:prompts": "tsx scripts/audit-prompts.mts",
     "audit:discovery": "tsx scripts/audit-discovery-quality.mts"
