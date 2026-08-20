@@ -229,7 +229,7 @@
       "source": "integration/copy-engine-v3/runtime/validateAgencyContracts.mjs",
       "target": "supabase/functions/_shared/brainContracts/validateAgencyContracts.ts",
       "kind": "runtime_contract",
-      "sha256": "f38cdb6c0630ad3655db85162e8f515c068599edc033cae1c2cbf49f063e6f58"
+      "sha256": "0dca3bee6d1f011c766fdb2eef2d8ccce291460ad3bbcfdb1bb5a657b77c489f"
     },
     {
       "source": "integration/copy-engine-v3/fixtures/jasper-corrected-v3.snapshot.json",
@@ -257,8 +257,8 @@
     }
   ],
   "source_repository": "creation-engine",
-  "source_git_sha": "99ed3afe139d2c52f541d1c2b3612e8437f862d7",
-  "compiled_at": "2026-08-20T13:03:41.992Z",
+  "source_git_sha": "0c5061d8c4649ed3d92b2d453a59d008aeb92d9b",
+  "compiled_at": "2026-08-20T13:20:14.524Z",
   "regression_commands": [
     "node tests/run-conversion-regressions.mjs",
     "node tests/run-story-evidence-evals.mjs",
@@ -299,5 +299,5 @@
       "output": "PASS copy-brain-release-v3.2: 35 artifacts, 25 active lessons, compiled doctrine routes and Zod parity"
     }
   ],
-  "manifest_sha256": "1649aba4e1d04c4a182b6db00b4f69b0f9fdf531e6f40fee9ea38aa8182d5d9e"
+  "manifest_sha256": "0d47eac7bd584bdf577736c496a7994ddb45efe387b1657e193987615133cbe8"
 }
