@@ -76,8 +76,9 @@ export default function CopyBrainReadinessPage() {
 
   return (
     <main
-      className="mx-auto flex w-full max-w-[1480px] flex-col gap-0 px-4 pb-20 sm:px-6 xl:px-8"
+      className="relative left-1/2 flex max-w-none -translate-x-1/2 flex-col gap-0 px-4 pb-20 sm:px-6 xl:px-8"
       dir="rtl"
+      style={{ width: 'min(1600px, calc(100vw - 32px))' }}
     >
       <div className="mb-8 flex flex-wrap items-end justify-between gap-5 pt-2">
         <AdminPageHeader
