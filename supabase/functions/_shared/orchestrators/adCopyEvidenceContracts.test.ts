@@ -235,6 +235,25 @@ Deno.test('unsupported category behavior fails at the angle gate', () => {
       'angle_unsupported_category_claim'
     )
   )
+
+  const disguisedComparison = {
+    is_recommended: true,
+    conversion_spine: {
+      ...spine,
+      swap_test: {
+        replacement_offer:
+          'A general-purpose AI writing tool that does not include persistent brand voice storage',
+        story_still_works: false,
+        conclusion:
+          'The replacement does not include that stored-context mechanism.',
+      },
+    },
+  }
+  assert(
+    validateAngleDecision([disguisedComparison], envelope).flags.includes(
+      'angle_unsupported_category_claim'
+    )
+  )
 })
 
 Deno.test(

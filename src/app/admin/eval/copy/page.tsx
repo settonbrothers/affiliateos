@@ -47,13 +47,12 @@ export default async function CopyEvalPage() {
             Input ready · output blocked · $0.00
           </div>
           <h2 className="mt-2 text-lg font-semibold text-white">
-            תיק Jasper מוכן · תוצאת v3.3 נחסמה לפני הצגה
+            Jasper v3.6 נעצר בשער הזווית · אין מועמד להצגה
           </h2>
           <p className="mt-2 text-sm text-[var(--color-muted-foreground)]">
-            הקלט המלא מוכן. v3.6 חוסמת מספרים לא מבוססים וטענות לא מוכחות על
-            כלי AI אחרים כבר בשלב הזווית, ומסנכרנת את כל 26 הלקחים למסלול
-            ההרצה. היא עדיין לא הורצה מחדש; אין כרגע קופי שמסומן כמאושר לבדיקת
-            בעלים.
+            הקלט המלא מוכן, אך גם הזווית הראשית וגם התיקון המוגבל ניסו להציג
+            היעדר יכולת אצל כלי AI כלליים ללא מקור. המסלול נעצר לפני כתיבה;
+            אין כרגע קופי שמסומן כמאושר לבדיקת בעלים.
           </p>
         </div>
         <span className="font-mono text-xs text-[#f4bd21] transition-transform group-hover:-translate-x-1">
