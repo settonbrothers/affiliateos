@@ -93,6 +93,30 @@ Deno.test('unsupported Jasper timings fail before judging', () => {
   )
 })
 
+Deno.test('digits inside G2 are not treated as invented measurements', () => {
+  assertEquals(
+    validateCandidateClaims(
+      {
+        hook: 'G2',
+        primary_text: 'ביקורות G2 וניסיון של 7 ימים.',
+        headline: 'בדיקה',
+      },
+      {
+        ...envelope,
+        sources: [
+          ...envelope.sources,
+          {
+            source_id: 'trial',
+            claim: 'A 7-day product trial is available.',
+            source_quote: null,
+          },
+        ],
+      }
+    ).pass,
+    true
+  )
+})
+
 Deno.test(
   'every routed candidate requires its own hook pool and recommendation',
   () => {

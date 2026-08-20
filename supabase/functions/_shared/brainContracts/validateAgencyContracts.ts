@@ -164,13 +164,15 @@ export function selectCandidateHook(brief, hooks) {
 /** @returns {{pass: boolean, flags: string[], details: string[]}} */
 export function validateCandidateClaims(candidate, envelope) {
   const supported = evidenceText(envelope)
-  const supportedNumbers = new Set(supported.match(/\d+(?:[.,]\d+)?/g) ?? [])
+  const standaloneNumbers = (value) =>
+    normalize(value).match(/(?<![\p{L}])\d+(?:[.,]\d+)?(?![\p{L}])/gu) ?? []
+  const supportedNumbers = new Set(standaloneNumbers(supported))
   const candidateNumbers = unique(
-    normalize(
+    standaloneNumbers(
       [candidate?.hook, candidate?.primary_text, candidate?.headline]
         .filter(Boolean)
         .join(' ')
-    ).match(/\d+(?:[.,]\d+)?/g) ?? []
+    )
   )
   const unsupported = candidateNumbers.filter((number) => !supportedNumbers.has(number))
   return {
