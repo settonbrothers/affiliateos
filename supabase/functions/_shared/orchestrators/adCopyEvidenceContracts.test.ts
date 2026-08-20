@@ -178,3 +178,38 @@ Deno.test(
     assertEquals(selected?.candidate.candidate_id, 'c1')
   }
 )
+
+Deno.test(
+  'Jasper revision routing prefers a bounded proof repair over a structural rewrite',
+  () => {
+    const selected = selectRevisionCandidate(
+      [
+        { candidate_id: 'storytelling-structural-repair' },
+        { candidate_id: 'proof-bounded-repair' },
+      ],
+      [
+        {
+          candidate_id: 'storytelling-structural-repair',
+          critic: {
+            kill_flags: ['generic_angle', 'wording_stronger_than_fact'],
+          },
+          judge: {
+            overall: 'fail',
+            compliance_ok: false,
+            kill_flags: ['low_momentum'],
+          },
+        },
+        {
+          candidate_id: 'proof-bounded-repair',
+          critic: { kill_flags: ['wording_stronger_than_fact'] },
+          judge: {
+            overall: 'fail',
+            compliance_ok: false,
+            kill_flags: ['evidence_threshold_unmet'],
+          },
+        },
+      ]
+    )
+    assertEquals(selected?.candidate.candidate_id, 'proof-bounded-repair')
+  }
+)

@@ -120,7 +120,7 @@
       "authority": "explicit_owner_feedback",
       "principle": "The rubber-band model: open a meaningful question, release only enough to reward attention, and open the next question before tension becomes slack.",
       "writer_question": "What is alive in the reader's mind now, what does this beat answer, and what remains necessary to know?",
-      "routes": ["hook", "storytelling_writer", "reader", "critic", "judge"],
+      "routes": ["hook", "all_writers", "reader", "critic", "judge"],
       "regression": "low_momentum"
     },
     {
@@ -232,6 +232,26 @@
       "writer_question": "Can this runtime artifact be reproduced from one committed local source and exact checksums?",
       "routes": ["release_governance"],
       "regression": "brain_release_drift"
+    },
+    {
+      "lesson_id": "L129",
+      "date": "2026-08-20",
+      "status": "active_latest",
+      "authority": "jasper_v3_1_clean_runtime_finding",
+      "principle": "Evidence bounds the scope of every claim-bearing verb and relationship, not only numbers and outcomes. Do not expand a supported feature into broader permanence, reach, compatibility or architecture language.",
+      "writer_question": "Does the source prove this exact subject, verb and scope—or did I quietly widen who can access what, where it persists or how broadly it applies?",
+      "routes": ["evidence", "all_writers", "critic", "judge"],
+      "regression": "source_scope_expansion"
+    },
+    {
+      "lesson_id": "L130",
+      "date": "2026-08-20",
+      "status": "active_latest",
+      "authority": "jasper_v3_1_clean_runtime_finding",
+      "principle": "A mechanism block must preserve the reader's emotional movement: demonstrate the supported mechanism through one concrete workflow instead of dumping features, then carry the strongest earned cost or identity realization into the ask.",
+      "writer_question": "Can the reader feel the mechanism changing the workflow, and does the close collect the strongest moment rather than switching to a feature list or a weaker slogan?",
+      "routes": ["hook", "all_writers", "reader", "critic", "judge"],
+      "regression": "mechanism_spec_dump_or_peak_abandonment"
     },
     {
       "lesson_id": "OLD_FIXED_LINE_COUNTS",

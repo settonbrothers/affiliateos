@@ -222,7 +222,6 @@ export function normalizeTasteKillFlag(report, status) {
 
 const UNREPAIRABLE_FLAGS = new Set([
   'claim_violation',
-  'evidence_threshold_unmet',
   'fake_testimonial',
   'vulnerability_stack',
   'wrong_audience',
@@ -233,7 +232,23 @@ const UNREPAIRABLE_FLAGS = new Set([
   'taste_not_loaded',
 ])
 
-/** @returns {{candidate: any, review: any, flags: string[], order: number} | null} */
+const REVISION_EFFORT = {
+  wording_stronger_than_fact: 1,
+  evidence_threshold_unmet: 1,
+  disclosure_required: 1,
+  hook_body_duplicate: 1,
+  weak_close: 2,
+  low_momentum: 2,
+  weak_fold: 2,
+  generic_angle: 4,
+  swap_test_passes: 4,
+}
+
+function revisionEffort(flags) {
+  return flags.reduce((sum, flag) => sum + (REVISION_EFFORT[flag] ?? 3), 0)
+}
+
+/** @returns {{candidate: any, review: any, flags: string[], effort: number, order: number} | null} */
 export function selectRevisionCandidate(candidates, reviews) {
   const passed = new Set(
     reviews
@@ -254,7 +269,7 @@ export function selectRevisionCandidate(candidates, reviews) {
         ...(review?.critic?.kill_flags ?? []),
         ...(review?.judge?.kill_flags ?? []),
       ])
-      return { candidate, review, flags, order }
+      return { candidate, review, flags, effort: revisionEffort(flags), order }
     })
     .filter(
       (item) =>
@@ -262,6 +277,11 @@ export function selectRevisionCandidate(candidates, reviews) {
         item.flags.length > 0 &&
         !item.flags.some((flag) => UNREPAIRABLE_FLAGS.has(flag))
     )
-    .sort((left, right) => left.flags.length - right.flags.length || left.order - right.order)
+    .sort(
+      (left, right) =>
+        left.effort - right.effort ||
+        left.flags.length - right.flags.length ||
+        left.order - right.order
+    )
   return eligible[0] ?? null
 }
