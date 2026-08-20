@@ -24,7 +24,7 @@ const tone = {
 
 function Tag({ children }: { children: React.ReactNode }) {
   return (
-    <span className="border border-white/15 bg-black/20 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-[#a8a8a3]">
+    <span className="border border-white/20 bg-black/25 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.15em] text-[#c3c3bd]">
       {children}
     </span>
   )
@@ -42,13 +42,17 @@ function Section({
   children: React.ReactNode
 }) {
   return (
-    <section className="grid gap-5 border-t border-white/15 py-7 md:grid-cols-[180px_1fr]">
+    <section className="grid gap-7 border-t border-white/15 py-10 lg:grid-cols-[240px_1fr] lg:gap-10 xl:py-12">
       <div>
-        <div className="font-mono text-[11px] tracking-[0.22em] text-[#f4bd21]">
+        <div className="font-mono text-xs font-semibold tracking-[0.2em] text-[#f4bd21]">
           {number}
         </div>
-        <h2 className="mt-2 text-lg font-semibold text-white">{title}</h2>
-        <p className="mt-2 text-xs leading-5 text-[#83837f]">{note}</p>
+        <h2 className="mt-3 text-2xl font-semibold leading-tight text-white">
+          {title}
+        </h2>
+        <p className="mt-3 max-w-[220px] text-sm leading-6 text-[#a2a29c]">
+          {note}
+        </p>
       </div>
       <div>{children}</div>
     </section>
@@ -72,70 +76,70 @@ export default function CopyBrainReadinessPage() {
 
   return (
     <main
-      className="mx-auto flex w-full max-w-6xl flex-col gap-0 pb-16"
+      className="mx-auto flex w-full max-w-[1480px] flex-col gap-0 px-4 pb-20 sm:px-6 xl:px-8"
       dir="rtl"
     >
-      <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-5 pt-2">
         <AdminPageHeader
           title="JASPER / READINESS PACK"
           subtitle="תיק הקלט המלא לפני ריצת המוח · ללא שימוש ב-AI"
         />
         <Link
           href="/admin/eval/copy"
-          className="border border-white/20 px-4 py-2 font-mono text-xs text-[#cfcfcb] no-underline transition-colors hover:border-[#f4bd21] hover:text-[#f4bd21]"
+          className="border border-white/25 px-5 py-3 font-mono text-sm text-[#e0e0db] no-underline transition-colors hover:border-[#f4bd21] hover:text-[#f4bd21]"
         >
           חזרה למעבדה ←
         </Link>
       </div>
 
-      <div className="grid border border-white/15 bg-[#0d0d0c] md:grid-cols-[1.45fr_1fr]">
-        <div className="relative overflow-hidden p-7 md:p-10">
+      <div className="grid border border-white/20 bg-[#0d0d0c] shadow-[0_24px_80px_rgba(0,0,0,0.22)] lg:grid-cols-[1.55fr_1fr]">
+        <div className="relative overflow-hidden p-7 sm:p-9 lg:p-12 xl:p-14">
           <div className="absolute -left-10 top-0 h-px w-64 rotate-[-18deg] bg-[#f4bd21]/60" />
-          <div className="mb-5 flex flex-wrap gap-2">
+          <div className="mb-7 flex flex-wrap gap-2.5">
             <Tag>copy-brain-release-v3</Tag>
             <Tag>fixture only</Tag>
             <Tag>cost $0.00</Tag>
           </div>
-          <p className="max-w-3xl text-2xl font-semibold leading-[1.35] text-white md:text-4xl">
+          <p className="max-w-4xl text-3xl font-semibold leading-[1.35] text-white sm:text-4xl xl:text-[44px]">
             לא מוכרים “עוד כלי AI”. בודקים אם Jasper יכול להוציא מנהל תוכן ממעגל
             השכתוב הידני.
           </p>
-          <p className="mt-5 max-w-2xl text-sm leading-7 text-[#aaa9a4]">
+          <p className="mt-6 max-w-3xl text-base leading-8 text-[#c2c1bb] xl:text-lg">
             התיק הזה נבנה כדי לתקן את טעות הריצה הקודמת: הקמפיין פונה למשתמש
             במוצר ומוביל לניסיון של 7 ימים. תוכנית השותפים והעמלה נשארות מידע
             פנימי בלבד.
           </p>
         </div>
-        <div className="grid grid-cols-2 border-t border-white/15 md:border-r md:border-t-0">
-          <div className="border-b border-l border-white/15 p-5">
-            <div className="font-mono text-[10px] tracking-widest text-[#777772]">
+        <div className="grid grid-cols-2 border-t border-white/15 lg:border-r lg:border-t-0">
+          <div className="flex min-h-36 flex-col justify-center border-b border-l border-white/15 p-7">
+            <div className="font-mono text-xs font-semibold tracking-widest text-[#92928c]">
               STATUS
             </div>
-            <div className="mt-2 text-lg font-semibold text-emerald-300">
+            <div className="mt-3 text-3xl font-semibold text-emerald-300">
               READY
             </div>
           </div>
-          <div className="border-b border-white/15 p-5">
-            <div className="font-mono text-[10px] tracking-widest text-[#777772]">
+          <div className="flex min-h-36 flex-col justify-center border-b border-white/15 p-7">
+            <div className="font-mono text-xs font-semibold tracking-widest text-[#92928c]">
               SOURCES
             </div>
-            <div className="mt-2 text-lg font-semibold text-white">
+            <div className="mt-3 text-3xl font-semibold text-white">
               {snapshot.sources.length}
             </div>
           </div>
-          <div className="border-l border-white/15 p-5">
-            <div className="font-mono text-[10px] tracking-widest text-[#777772]">
+          <div className="flex min-h-36 flex-col justify-center border-l border-white/15 p-7">
+            <div className="font-mono text-xs font-semibold tracking-widest text-[#92928c]">
               AVATAR
             </div>
-            <div className="mt-2 text-lg font-semibold text-white">
+            <div className="mt-3 text-3xl font-semibold text-white">
               {Math.round(brief.audience.avatar_completeness * 100)}%
             </div>
           </div>
-          <div className="p-5">
-            <div className="font-mono text-[10px] tracking-widest text-[#777772]">
+          <div className="flex min-h-36 flex-col justify-center p-7">
+            <div className="font-mono text-xs font-semibold tracking-widest text-[#92928c]">
               AI CALLS
             </div>
-            <div className="mt-2 text-lg font-semibold text-white">0</div>
+            <div className="mt-3 text-3xl font-semibold text-white">0</div>
           </div>
         </div>
       </div>
@@ -159,16 +163,18 @@ export default function CopyBrainReadinessPage() {
               brief.campaign_objective.desired_action,
             ],
           ].map(([label, title, body]) => (
-            <div key={label} className="bg-[#0b0b0a] p-5">
-              <div className="font-mono text-[10px] tracking-widest text-[#f4bd21]">
+            <div key={label} className="min-h-52 bg-[#0b0b0a] p-6 xl:p-7">
+              <div className="font-mono text-xs font-semibold tracking-widest text-[#f4bd21]">
                 {label}
               </div>
-              <h3 className="mt-3 font-semibold text-white">{title}</h3>
-              <p className="mt-2 text-xs leading-6 text-[#979792]">{body}</p>
+              <h3 className="mt-4 text-xl font-semibold text-white">{title}</h3>
+              <p className="mt-3 text-sm leading-7 text-[#b1b1ab] xl:text-base">
+                {body}
+              </p>
             </div>
           ))}
         </div>
-        <div className={`mt-3 border p-4 text-sm ${tone.ready}`}>
+        <div className={`mt-4 border p-5 text-base leading-7 ${tone.ready}`}>
           אין ערבוב קהלים: הקופי מוכר את Jasper למשתמש במוצר. תוכנית השותפים
           מסומנת internal-only ולא תיכנס כהוכחה או כמסר.
         </div>
@@ -179,18 +185,18 @@ export default function CopyBrainReadinessPage() {
         title="ליבת ההמרה"
         note="הבעיה, המנגנון והתוצאה חייבים להיות אותה שרשרת."
       >
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2">
           {[
             ['האדם', conversionSpine.person],
             ['הצורך הפתוח', conversionSpine.unmet_need],
             ['מה קורה בלי פתרון', conversionSpine.consequence_without_offer],
             ['למה Jasper הוא פתרון סיבתי', conversionSpine.causal_solution],
           ].map(([label, value]) => (
-            <div key={String(label)} className={`border p-4 ${tone.quiet}`}>
-              <div className="text-[11px] font-semibold text-white">
+            <div key={String(label)} className={`min-h-36 border p-6 ${tone.quiet}`}>
+              <div className="text-sm font-semibold text-white">
                 {String(label)}
               </div>
-              <p className="mt-2 text-sm leading-6 text-[#a9a9a4]">
+              <p className="mt-3 text-base leading-7 text-[#c0c0ba]">
                 {String(value ?? '—')}
               </p>
             </div>
@@ -207,21 +213,21 @@ export default function CopyBrainReadinessPage() {
           {snapshot.sources.map((source, index) => (
             <div
               key={source.source_id}
-              className="grid gap-3 p-4 md:grid-cols-[44px_150px_1fr] md:items-start"
+              className="grid gap-4 p-5 md:grid-cols-[52px_180px_1fr] md:items-start xl:p-6"
             >
-              <span className="font-mono text-xs text-[#63635f]">
+              <span className="font-mono text-sm text-[#81817b]">
                 {String(index + 1).padStart(2, '0')}
               </span>
-              <span className="font-mono text-[10px] uppercase tracking-wide text-[#d2a91f]">
+              <span className="font-mono text-xs uppercase tracking-wide text-[#e0b82b]">
                 {source.source_type.replaceAll('_', ' ')}
               </span>
               <div>
-                <p className="text-sm leading-6 text-[#dededa]">
+                <p className="text-base leading-7 text-[#e5e5e0]">
                   {source.claim}
                 </p>
                 <a
                   href={source.source_url ?? '#'}
-                  className="mt-2 inline-block text-[11px] text-[#777772] underline decoration-white/20 underline-offset-4"
+                  className="mt-3 inline-block text-xs text-[#9b9b95] underline decoration-white/25 underline-offset-4 hover:text-[#f4bd21]"
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -231,7 +237,7 @@ export default function CopyBrainReadinessPage() {
             </div>
           ))}
         </div>
-        <div className={`mt-3 border p-4 text-sm leading-6 ${tone.warning}`}>
+        <div className={`mt-4 border p-5 text-base leading-7 ${tone.warning}`}>
           גבול האמת: מותר לדבר על first drafts מהירים יותר ועל עקביות טובה יותר
           לפי הביקורות. אסור להבטיח הכנסות, שיפור המרות, דיוק מוחלט או עבודה ללא
           עריכה ובדיקת עובדות.
@@ -243,10 +249,10 @@ export default function CopyBrainReadinessPage() {
         title="מי אמור להרגיש שזה נכתב אליו"
         note="האווטאר מוקפא לפני הכתיבה ואינו מומצא מחדש בכל ריצה."
       >
-        <blockquote className="border-r-2 border-[#f4bd21] pr-5 text-xl leading-8 text-white">
+        <blockquote className="max-w-5xl border-r-2 border-[#f4bd21] py-1 pr-6 text-2xl font-medium leading-10 text-white xl:text-3xl xl:leading-[1.5]">
           {deepAvatar?.summary.central_problem_in_their_words}
         </blockquote>
-        <div className="mt-6 grid gap-6 md:grid-cols-3">
+        <div className="mt-8 grid gap-7 md:grid-cols-3">
           {[
             ['כאבים', deepAvatar?.summary.pains ?? []],
             ['מניעים', deepAvatar?.summary.psychological_drivers ?? []],
@@ -257,10 +263,10 @@ export default function CopyBrainReadinessPage() {
             ],
           ].map(([label, values]) => (
             <div key={String(label)}>
-              <h3 className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#777772]">
+              <h3 className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[#9c9c96]">
                 {String(label)}
               </h3>
-              <ul className="mt-3 space-y-2 text-sm leading-6 text-[#b8b8b3]">
+              <ul className="mt-4 space-y-3 text-base leading-7 text-[#cecec8]">
                 {(values as string[]).map((value) => (
                   <li key={value} className="border-r border-white/20 pr-3">
                     {value}
@@ -278,9 +284,9 @@ export default function CopyBrainReadinessPage() {
         note="המסך מציג את החיבור בפועל, לא רק את מה שקיים בתיקייה."
       >
         <div className="grid gap-3 md:grid-cols-2">
-          <div className={`border p-5 ${tone.quiet}`}>
-            <h3 className="font-semibold text-white">נתיב המודלים</h3>
-            <dl className="mt-4 space-y-3 text-sm">
+          <div className={`border p-6 ${tone.quiet}`}>
+            <h3 className="text-lg font-semibold text-white">נתיב המודלים</h3>
+            <dl className="mt-5 space-y-4 text-base">
               <div className="flex justify-between gap-4">
                 <dt className="text-[#858580]">מחקר והכנת תדריך</dt>
                 <dd className="font-mono text-[#d6d6d1]">Sonnet 4.6</dd>
@@ -295,9 +301,9 @@ export default function CopyBrainReadinessPage() {
               </div>
             </dl>
           </div>
-          <div className={`border p-5 ${tone.quiet}`}>
-            <h3 className="font-semibold text-white">גרסת התורה</h3>
-            <dl className="mt-4 space-y-3 text-sm">
+          <div className={`border p-6 ${tone.quiet}`}>
+            <h3 className="text-lg font-semibold text-white">גרסת התורה</h3>
+            <dl className="mt-5 space-y-4 text-base">
               <div className="flex justify-between gap-4">
                 <dt className="text-[#858580]">חבילת ידע</dt>
                 <dd className="font-mono text-[#d6d6d1]">latest-owner-v3</dd>
@@ -315,8 +321,8 @@ export default function CopyBrainReadinessPage() {
             </dl>
           </div>
         </div>
-        <details className="mt-3 border border-white/15 p-4">
-          <summary className="cursor-pointer text-sm text-[#d6d6d1]">
+        <details className="mt-4 border border-white/15 p-5">
+          <summary className="cursor-pointer text-base font-medium text-[#e2e2dc]">
             הצג את 23 מזהי הלקחים שייטענו
           </summary>
           <div className="mt-4 flex flex-wrap gap-2">
@@ -332,8 +338,8 @@ export default function CopyBrainReadinessPage() {
         title="מה עדיין חסר"
         note="חוסר גלוי נשאר חוסר; המוח לא ממלא אותו בדמיון."
       >
-        <div className={`border p-5 ${tone.warning}`}>
-          <ul className="space-y-3 text-sm leading-6">
+        <div className={`border p-6 ${tone.warning}`}>
+          <ul className="space-y-4 text-base leading-7">
             {snapshot.omitted_context.map((item) => (
               <li key={item.section}>
                 <strong className="text-white">{item.section}:</strong>{' '}
@@ -342,7 +348,7 @@ export default function CopyBrainReadinessPage() {
             ))}
           </ul>
         </div>
-        <div className="mt-4 border border-dashed border-white/20 p-5 text-sm leading-6 text-[#94948f]">
+        <div className="mt-4 border border-dashed border-white/25 p-6 text-base leading-7 text-[#afafa9]">
           התיק מוכן לריצת איכות אחת, אך אינו טוען שיש לנו Spy או מודעה מנצחת.
           הוא גם לא נכנס ל־Taste Corpus. הפעלת AI נשארת נעולה עד החלטה נפרדת.
         </div>
