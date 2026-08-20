@@ -38,6 +38,9 @@ const CLAIM_BEARING_SPINE_FIELDS = [
   'unresolved_at_ask',
 ]
 
+const UNSUPPORTED_CATEGORY_BEHAVIOR =
+  /(?:כלי(?:ם)?(?:\s+כתיבה)?\s+גנרי(?:ים|ות)?|כלים אחרים|המתחרים|בינה מלאכותית כללית|ה[-־–— ]?ai|הכלי|generic (?:ai )?tools?|general ai|the ai|the tool|other (?:ai )?tools?|competitors?).{0,140}(?:שוכח|שוכחים|לא זוכר|לא זוכרים|לא שומר|לא שומרים|אין (?:לו|להם) זיכרון|מתחיל(?:ים)? מאפס|חסר(?:ת)? זיכרון|לא יכול|לא יכולים|תמיד|אף פעם|stateless|no (?:persistent )?memory|has no (?:persistent )?memory|forget|forgets|do not remember|don't remember|does not retain|did not retain|never retained|does not store|context resets?|starts? (?:again )?from (?:a )?(?:blank|zero)|cannot|can't|never|always)/iu
+
 const unique = (values) => [...new Set(values)]
 
 function evidenceText(envelope) {
@@ -99,6 +102,12 @@ export function validateAngleDecision(angles, envelope) {
   }
 
   for (const [angleIndex, angle] of angles.entries()) {
+    if (UNSUPPORTED_CATEGORY_BEHAVIOR.test(normalize(JSON.stringify(angle)))) {
+      flags.push('angle_unsupported_category_claim')
+      details.push(
+        `Angle ${angleIndex} assigns unsupported behavior or absence to a tool category.`
+      )
+    }
     const spine = angle.conversion_spine
     if (!spine) continue
     for (const sourceId of spine.truth_sources ?? []) {
@@ -178,8 +187,6 @@ export function validateDepartmentPlan(plan, angles, envelope, executionBrief = 
 export function validateHookCoverage(plan, hooks, envelope = null) {
   const flags = []
   const details = []
-  const unsupportedCategoryBehavior =
-    /(?:כלי(?:ם)?(?:\s+כתיבה)?\s+גנרי(?:ים|ות)?|כלים אחרים|המתחרים|כל המתחרים|generic (?:ai )?tools?|other (?:ai )?tools?|competitors?).{0,100}(?:שוכח|שוכחים|לא זוכר|לא זוכרים|לא שומר|לא שומרים|לא יכול|לא יכולים|תמיד|אף פעם|forget|forgets|do not remember|don't remember|cannot|can't|never|always)/iu
   const supported = envelope ? evidenceText(envelope) : ''
   for (const brief of plan?.candidate_briefs ?? []) {
     const pool = hooks.filter(
@@ -197,7 +204,7 @@ export function validateHookCoverage(plan, hooks, envelope = null) {
       details.push(`${brief.candidate_id} has ${recommended.length} recommended compatible hooks.`)
     }
     for (const hook of pool) {
-      if (unsupportedCategoryBehavior.test(normalize(hook.text))) {
+      if (UNSUPPORTED_CATEGORY_BEHAVIOR.test(normalize(hook.text))) {
         flags.push('hook_unsupported_category_claim')
         details.push(
           `${brief.candidate_id} assigns unsupported category-wide behavior in hook: ${hook.text}`

@@ -214,6 +214,29 @@ Deno.test('unsupported category hooks and domain bleed fail upstream', () => {
   )
 })
 
+Deno.test('unsupported category behavior fails at the angle gate', () => {
+  const unsupportedAngle = {
+    is_recommended: true,
+    positioning: 'The AI never retained what the content lead taught it.',
+    conversion_spine: {
+      ...spine,
+      dominant_emotional_peak:
+        'The recognition that the AI is stateless and never retained the brand context.',
+      swap_test: {
+        replacement_offer: 'Generic standalone AI writing tool',
+        story_still_works: false,
+        conclusion: 'A generic tool does not store persistent brand memory.',
+      },
+    },
+  }
+
+  assert(
+    validateAngleDecision([unsupportedAngle], envelope).flags.includes(
+      'angle_unsupported_category_claim'
+    )
+  )
+})
+
 Deno.test(
   'empty relevant Taste is valid and bounded revision skips unrepairable candidates',
   () => {

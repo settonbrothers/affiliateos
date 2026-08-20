@@ -1,5 +1,5 @@
 {
-  "release_version": "copy-brain-release-v3.5",
+  "release_version": "copy-brain-release-v3.6",
   "engine_version": "evidence-agency-v7",
   "activation": "blocked_pending_clean_8_case_eval",
   "files": [
@@ -243,7 +243,7 @@
       "source": "integration/copy-engine-v3/runtime/validateAgencyContracts.mjs",
       "target": "supabase/functions/_shared/brainContracts/validateAgencyContracts.ts",
       "kind": "runtime_contract",
-      "sha256": "96e0a91d7f5a331b197a8efe251a660d257cb31726146890c2870c697ae09396"
+      "sha256": "9e1b1465e07d38f8da0a78b20b3dd80742a572ce3f9ca70eb2a5ec319651cb2b"
     },
     {
       "source": "integration/copy-engine-v3/fixtures/jasper-corrected-v3.snapshot.json",
@@ -271,8 +271,8 @@
     }
   ],
   "source_repository": "creation-engine",
-  "source_git_sha": "276a020cd24d282be68aefcce8a0dd33c3f692a7",
-  "compiled_at": "2026-08-20T15:50:42.622Z",
+  "source_git_sha": "bf523fe26ad3f921d2701b1c9cfc7b5240af2cc3",
+  "compiled_at": "2026-08-20T16:26:12.377Z",
   "regression_commands": [
     "node tests/run-conversion-regressions.mjs",
     "node tests/run-story-evidence-evals.mjs",
@@ -310,8 +310,8 @@
     {
       "command": "node integration/copy-engine-v3/scripts/check-package.mjs",
       "status": "passed",
-      "output": "PASS copy-brain-release-v3.5: 37 artifacts, 26 active lessons, compiled doctrine routes and Zod parity"
+      "output": "PASS copy-brain-release-v3.6: 37 artifacts, 26 active lessons, compiled doctrine routes and Zod parity"
     }
   ],
-  "manifest_sha256": "67f4a15673f4e2ba62eb210bedd0d16243a11705904359bc8af17c031feff3e6"
+  "manifest_sha256": "bb30c892fd5a293f0e1bb32a7323db704b70d7ab0b737fb8d8681b58d2c905a9"
 }
