@@ -103,7 +103,7 @@ export default function CopyBrainReadinessPage() {
           <div className="relative overflow-hidden p-7 sm:p-9 lg:p-12 xl:p-14">
             <div className="absolute -left-10 top-0 h-px w-64 rotate-[-18deg] bg-[#f4bd21]/60" />
             <div className="mb-7 flex flex-wrap gap-2.5">
-              <Tag>copy-brain-release-v3.4</Tag>
+              <Tag>copy-brain-release-v3.5</Tag>
               <Tag>fixture only</Tag>
               <Tag>cost $0.00</Tag>
             </div>
@@ -161,8 +161,8 @@ export default function CopyBrainReadinessPage() {
           <p className="text-base leading-8 text-amber-50/85">
             תיק הקלט מוכן, אבל עדיין אין קופי שמוכן לשיפוט בעלים. מועמד v3.3
             עבר את סוכני הבקרה ונפסל בבדיקה הטכנית האחרונה בגלל משך זמן שלא
-            הופיע במקורות. v3.4 מתקנת את השער הזה וממתינה לריצה חדשה — היא לא
-            פעילה במערכת.
+            הופיע במקורות. v3.5 מתקנת את השער הזה וגם מסנכרנת למסלול ההרצה את
+            כל 26 הלקחים הפעילים. היא ממתינה לריצה חדשה ואינה פעילה במערכת.
           </p>
         </div>
 
@@ -364,7 +364,7 @@ export default function CopyBrainReadinessPage() {
           </div>
           <details className="mt-4 border border-white/15 p-5">
             <summary className="cursor-pointer text-base font-medium text-[#e2e2dc]">
-              הצג את 23 מזהי הלקחים שייטענו
+              הצג את {brief.doctrine_bundle.active_lesson_ids.length} מזהי הלקחים שייטענו
             </summary>
             <div className="mt-4 flex flex-wrap gap-2">
               {brief.doctrine_bundle.active_lesson_ids.map((lesson) => (

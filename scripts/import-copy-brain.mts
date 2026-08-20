@@ -28,6 +28,8 @@ const allowed = [
   /^brain-knowledge\//,
   /^brain-evals\//,
   /^brain-release\//,
+  /^src\/lib\/copy\/generated\/copyBrainDoctrineV3\.ts$/,
+  /^supabase\/functions\/_shared\/orchestrators\/generated\/copyBrainDoctrineV3\.ts$/,
   /^supabase\/functions\/_shared\/brainContracts\//,
 ]
 const sha = (path: string) =>

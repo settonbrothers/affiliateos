@@ -95,6 +95,25 @@ function snapshot(
 }
 
 describe('CopyExecutionBriefV2', () => {
+  it('loads every active lesson from the signed registry into the runtime trace', () => {
+    const registry = JSON.parse(
+      readFileSync(
+        resolve(process.cwd(), 'brain-knowledge/lesson-registry-v3.json'),
+        'utf8'
+      )
+    ) as { lessons: Array<{ lesson_id: string; status: string }> }
+    const expected = registry.lessons
+      .filter((lesson) =>
+        ['active_latest', 'still_valid'].includes(lesson.status)
+      )
+      .map((lesson) => lesson.lesson_id)
+
+    expect(COPY_BRAIN_DOCTRINE_V3.activeLessonIds).toEqual(expected)
+    expect(expected).toContain('L129')
+    expect(expected).toContain('L130')
+    expect(expected).toContain('L131')
+  })
+
   it('accepts an existing v1 avatar while preserving the v3 doctrine trace', () => {
     const brief = compileCopyExecutionBriefV2(snapshot())
     expect(brief.readiness_status).toBe('ready_to_write')

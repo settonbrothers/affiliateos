@@ -50,8 +50,9 @@ export default async function CopyEvalPage() {
             תיק Jasper מוכן · תוצאת v3.3 נחסמה לפני הצגה
           </h2>
           <p className="mt-2 text-sm text-[var(--color-muted-foreground)]">
-            הקלט המלא מוכן. v3.4 הוסיפה חסם למספרים הכתובים בעברית ועדיין לא
-            הורצה מחדש; אין כרגע קופי שמסומן כמאושר לבדיקת בעלים.
+            הקלט המלא מוכן. v3.5 הוסיפה חסם למספרים הכתובים בעברית וסנכרנה את
+            כל 26 הלקחים למסלול ההרצה. היא עדיין לא הורצה מחדש; אין כרגע קופי
+            שמסומן כמאושר לבדיקת בעלים.
           </p>
         </div>
         <span className="font-mono text-xs text-[#f4bd21] transition-transform group-hover:-translate-x-1">
