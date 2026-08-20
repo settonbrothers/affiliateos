@@ -1,39 +1,7 @@
 import type { CopyBrainInputSnapshotV1 } from '@/types/agents/copyBrain'
+import { COPY_BRAIN_DOCTRINE_V3 } from './generated/copyBrainDoctrineV3'
 
-export const COPY_BRAIN_DOCTRINE_V3 = {
-  bundleVersion: 'latest-owner-doctrine-v3' as const,
-  registryVersion: '2026-08-19.1',
-  checksum: 'ce1470eef7b1bc818ea02f8f30822fea584ab51aa58074b0d3a25873a41cb6cc',
-  activeLessonIds: [
-    'L20',
-    'L24',
-    'L27',
-    'L32',
-    'L36',
-    'L40',
-    'L44',
-    'L60',
-    'L67',
-    'L91_L109_L116',
-    'L94',
-    'L95',
-    'L96_L121',
-    'L97',
-    'L117',
-    'L118',
-    'L119_L120_L122',
-    'L123',
-    'L124',
-    'L125',
-    'L126',
-    'L127',
-    'L128',
-  ],
-  supersededLessonIds: [
-    'OLD_FIXED_LINE_COUNTS',
-    'OLD_COMPONENT_CHECKLIST_PASS',
-  ],
-}
+export { COPY_BRAIN_DOCTRINE_V3 }
 
 export type CopyExecutionBriefV2 = ReturnType<
   typeof compileCopyExecutionBriefV2
