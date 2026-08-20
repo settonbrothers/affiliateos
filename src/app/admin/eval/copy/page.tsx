@@ -44,14 +44,14 @@ export default async function CopyEvalPage() {
       >
         <div>
           <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#f4bd21]">
-            Ready for inspection · $0.00
+            Input ready · output blocked · $0.00
           </div>
           <h2 className="mt-2 text-lg font-semibold text-white">
-            תיק Jasper המתוקן מוכן לבדיקה לפני ריצת AI
+            תיק Jasper מוכן · תוצאת v3.3 נחסמה לפני הצגה
           </h2>
           <p className="mt-2 text-sm text-[var(--color-muted-foreground)]">
-            מוצר, קהל, מטרה, 7 מקורות, אווטאר עמוק, גבולות אמת ו־trace של התורה
-            שתגיע לסוכנים.
+            הקלט המלא מוכן. v3.4 הוסיפה חסם למספרים הכתובים בעברית ועדיין לא
+            הורצה מחדש; אין כרגע קופי שמסומן כמאושר לבדיקת בעלים.
           </p>
         </div>
         <span className="font-mono text-xs text-[#f4bd21] transition-transform group-hover:-translate-x-1">

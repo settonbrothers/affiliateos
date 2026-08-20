@@ -103,7 +103,7 @@ export default function CopyBrainReadinessPage() {
           <div className="relative overflow-hidden p-7 sm:p-9 lg:p-12 xl:p-14">
             <div className="absolute -left-10 top-0 h-px w-64 rotate-[-18deg] bg-[#f4bd21]/60" />
             <div className="mb-7 flex flex-wrap gap-2.5">
-              <Tag>copy-brain-release-v3</Tag>
+              <Tag>copy-brain-release-v3.4</Tag>
               <Tag>fixture only</Tag>
               <Tag>cost $0.00</Tag>
             </div>
@@ -123,7 +123,7 @@ export default function CopyBrainReadinessPage() {
                 STATUS
               </div>
               <div className="mt-3 text-3xl font-semibold text-emerald-300">
-                READY
+                INPUT READY
               </div>
             </div>
             <div className="flex min-h-36 flex-col justify-center border-b border-white/15 p-7">
@@ -149,6 +149,21 @@ export default function CopyBrainReadinessPage() {
               <div className="mt-3 text-3xl font-semibold text-white">0</div>
             </div>
           </div>
+        </div>
+
+        <div className="mt-5 grid gap-4 border border-amber-300/35 bg-amber-300/[0.07] p-5 text-amber-50 md:grid-cols-[190px_1fr] md:items-start xl:p-6">
+          <div>
+            <div className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-amber-300">
+              OUTPUT STATUS
+            </div>
+            <div className="mt-2 text-xl font-semibold">חסום לבדיקה חוזרת</div>
+          </div>
+          <p className="text-base leading-8 text-amber-50/85">
+            תיק הקלט מוכן, אבל עדיין אין קופי שמוכן לשיפוט בעלים. מועמד v3.3
+            עבר את סוכני הבקרה ונפסל בבדיקה הטכנית האחרונה בגלל משך זמן שלא
+            הופיע במקורות. v3.4 מתקנת את השער הזה וממתינה לריצה חדשה — היא לא
+            פעילה במערכת.
+          </p>
         </div>
 
         <Section
