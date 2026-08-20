@@ -1,5 +1,5 @@
 {
-  "release_version": "copy-brain-release-v3.1",
+  "release_version": "copy-brain-release-v3.2",
   "engine_version": "evidence-agency-v7",
   "activation": "blocked_pending_clean_8_case_eval",
   "files": [
@@ -19,7 +19,7 @@
       "orchestrator": "CopyAngleOrchestrator",
       "version": "v6",
       "source_sha256": "658067f3cf1de9590535d479331834fa80225d470fd728e07277d7f2fcf88419",
-      "sha256": "7619ab789ba4fd88e016d6856c5722c69d316d5dd91d6b997be2f3e4a9fa3a3b"
+      "sha256": "66e4c0fc00c40668413431b1b6933edf7ab8c2834dff54914651eac830cda4bf"
     },
     {
       "source": "integration/copy-engine-v3/prompts/copy_hook/v6.md",
@@ -28,7 +28,7 @@
       "orchestrator": "CopyHookOrchestrator",
       "version": "v6",
       "source_sha256": "0c84c8584124cc960af2fa35a848c7594dc197b288a785905b2201e923008f7f",
-      "sha256": "7400a1c400c4c38ebd558e9eea28e8b8e8bb0e429032ea3d5e9adfedd7eec306"
+      "sha256": "6ba17774f0573b9b4dcdd91f3dcf1788bbac57cf0c75e7793e0901e46ce04344"
     },
     {
       "source": "integration/copy-engine-v3/prompts/copy_write/v5.md",
@@ -37,7 +37,7 @@
       "orchestrator": "CopyWriteOrchestrator",
       "version": "v5",
       "source_sha256": "767137facd7d072d1f5072c0af23348497da2054980553593572c00212b5dd9c",
-      "sha256": "5ffa070cdc151d065b7d3d3dc41cc7fd9fe3a37000cebe959595e704d6749c61"
+      "sha256": "5fa27594f207397039feed270243ee1f2b1f1257af7dad053edc6e077a3a76c0"
     },
     {
       "source": "integration/copy-engine-v3/prompts/copy_reader/v2.md",
@@ -46,7 +46,7 @@
       "orchestrator": "CopyReaderOrchestrator",
       "version": "v2",
       "source_sha256": "d37025c791e2ce9ab9548935702ee25a0cf822edcab77db8bf6c9fd304b917d9",
-      "sha256": "39f2493164672fde69661b65f534e9f0ae2a536fca8509cc19793d977a538dca"
+      "sha256": "cd84b5d154c3cf4caddfd99133e0bd6034c61fae63fa5d3381fe8172191704f9"
     },
     {
       "source": "integration/copy-engine-v3/prompts/copy_critic/v3.md",
@@ -55,7 +55,7 @@
       "orchestrator": "CopyCriticOrchestrator",
       "version": "v3",
       "source_sha256": "d5b41b0c5f0c606c6d26ee4af65f8f85ca67090d9e96669867a319da22131ea2",
-      "sha256": "2afd32b223133e9b3bec1c1d6fe1ca0abcf0325ca6a3dac0958ea70ddcde12bb"
+      "sha256": "06b5252732159e5bf05d841fd45e68a94340d7951666c8e2d69fcbfb7a8860c2"
     },
     {
       "source": "integration/copy-engine-v3/prompts/copy_judge/v5.md",
@@ -64,7 +64,7 @@
       "orchestrator": "CopyJudgeOrchestrator",
       "version": "v5",
       "source_sha256": "eb354386f75940986a0f9f95beedf6667005f82983e0654a6f9eb771edf50922",
-      "sha256": "989624bb3553a0d8cade4001a059b173c217c671fb0f13ac55a3bc9b17e92f88"
+      "sha256": "2b4d96537b479e2d3a62045739fa9bbcf12da9995fade3818f9ba3435311910a"
     },
     {
       "source": "integration/copy-engine-v3/prompts/copy_director/v3.md",
@@ -73,7 +73,7 @@
       "orchestrator": "CopyDirectorOrchestrator",
       "version": "v3",
       "source_sha256": "8a91fd41a3c269a9aee755adca4572ab20e236cbcada2254fd9694970097d63c",
-      "sha256": "553b277390abb8f9f7ad7fd3a110af0467aed8ee1133e5375733a3ac2158d40e"
+      "sha256": "c44253edd0bc50cc4937280b39ac8caf1bd8716761e442a1efcbef99e061cf29"
     },
     {
       "source": "integration/copy-engine-v3/prompts/copy_write_storytelling/v3.md",
@@ -82,7 +82,7 @@
       "orchestrator": "CopyStorytellingWriterOrchestrator",
       "version": "v3",
       "source_sha256": "86d7784eefe1f94ed23d6a06c50e01703bb4557882a8ae2216942c6715ef27ce",
-      "sha256": "8525627221abc3cf52d6c0f3bfb535432fbf89953456d9148987b3fa073bf723"
+      "sha256": "dd8f913df9ff1f5100ebaa4bec100ee4950fce70ba245ea37f876e3fdbd283b0"
     },
     {
       "source": "integration/copy-engine-v3/prompts/copy_write_direct_response/v3.md",
@@ -91,16 +91,16 @@
       "orchestrator": "CopyDirectResponseWriterOrchestrator",
       "version": "v3",
       "source_sha256": "5fc46b5360d6adb4bdb2d1c250d516070485a4439fa4f8c0e21f17f50e50d66c",
-      "sha256": "978a86b78a9278ac34405ca9f05eef923388e54d3564d8bd45834a72cd9a28ba"
+      "sha256": "4534f147f9e2305633889f939d514af5341c67028ea29c83c4e99abfed490611"
     },
     {
-      "source": "integration/copy-engine-v3/prompts/copy_write_proof_mechanism/v3.md",
-      "target": "prompts/copy_write_proof_mechanism/v3.md",
+      "source": "integration/copy-engine-v3/prompts/copy_write_proof_mechanism/v4.md",
+      "target": "prompts/copy_write_proof_mechanism/v4.md",
       "kind": "prompt",
       "orchestrator": "CopyProofMechanismWriterOrchestrator",
-      "version": "v3",
-      "source_sha256": "f099cb78420d79ee92ac7079dd9ff52cedd42ca69dc1e4e95dc94006a500300c",
-      "sha256": "43433afeb8281f5c456ab35caace963b5c727e720250d77ae008869632403cd9"
+      "version": "v4",
+      "source_sha256": "49d2338127c53df3713dc0f1ea20c38fb52d220320dfd8edf1420fc3ee9a4816",
+      "sha256": "7188c86c1d83613b2e4ab4201d597d474f055ffa7afcecb9de303479b4ea358b"
     },
     {
       "source": "integration/copy-engine-v3/prompts/copy_portfolio_judge/v3.md",
@@ -109,7 +109,7 @@
       "orchestrator": "CopyPortfolioJudgeOrchestrator",
       "version": "v3",
       "source_sha256": "9cca4f1cae04c6efa0de9a5c54a22b36b236c45fbfc4c8bd010b9fb70f0b24c4",
-      "sha256": "bbc95b088e2a88e1cba64dce07d47d53a3873e2cb2be1ebac1d8e2750c72f9d8"
+      "sha256": "966b67be2aaa4416f69457d8d0f2007d2ef1e41293bc3b771ce712985d4a2dcd"
     },
     {
       "source": "integration/copy-engine-v3/prompts/diagnosis/v2.md",
@@ -127,13 +127,13 @@
       "orchestrator": "AvatarBuilderOrchestrator",
       "version": "v3",
       "source_sha256": "2bf9cb63229ebbf416b7e5ec56a6f92f4a36f1d3eaa8d3fae13d8990cc624d58",
-      "sha256": "804e325f5187b23a10438e5b81a24cc7c7fc0ac6067544027c607dd00762f566"
+      "sha256": "cdc0b288d68845bd99141049494dfbcb2b6192652f85995cd8c825fd93fa4935"
     },
     {
       "source": "brain/knowledge/latest-owner-doctrine-v3.md",
       "target": "brain-knowledge/latest-owner-doctrine-v3.md",
       "kind": "knowledge",
-      "sha256": "ce1470eef7b1bc818ea02f8f30822fea584ab51aa58074b0d3a25873a41cb6cc"
+      "sha256": "8948765ad8568a76393879801409d453d3944cc7e5736fdd4c88da2f5d865776"
     },
     {
       "source": "brain/knowledge/quality-baseline-v3.md",
@@ -145,7 +145,7 @@
       "source": "brain/knowledge/lesson-registry-v3.json",
       "target": "brain-knowledge/lesson-registry-v3.json",
       "kind": "knowledge",
-      "sha256": "30b1e296462b6c2c6d09120d4690bee24cb6aa9f19d60a5f477b153f83070a45"
+      "sha256": "4f98fc6225edfdd1745fcf48284af77f4629a28019b8c64c2f49c41dfb4e546f"
     },
     {
       "source": "brain/knowledge/session-source-manifest-v3.json",
@@ -229,13 +229,19 @@
       "source": "integration/copy-engine-v3/runtime/validateAgencyContracts.mjs",
       "target": "supabase/functions/_shared/brainContracts/validateAgencyContracts.ts",
       "kind": "runtime_contract",
-      "sha256": "d0cfb4e93b12f9a6d11358babaa823225cb9971a4ae3d235b1461b760731106f"
+      "sha256": "f38cdb6c0630ad3655db85162e8f515c068599edc033cae1c2cbf49f063e6f58"
     },
     {
       "source": "integration/copy-engine-v3/fixtures/jasper-corrected-v3.snapshot.json",
       "target": "brain-evals/jasper-corrected-v3.snapshot.json",
       "kind": "eval_fixture",
       "sha256": "46df3fea53d83bc4f640850e851394b040b17e87b6c764a9c03565eaf31fe422"
+    },
+    {
+      "source": "integration/copy-engine-v3/fixtures/jasper-v3.1-routing-regression.json",
+      "target": "brain-evals/jasper-v3.1-routing-regression.json",
+      "kind": "eval_fixture",
+      "sha256": "1cef5cca10406cab3b3e7f6b9f0d17638917703be2dec878a867c1057e3e009b"
     },
     {
       "source": "tests/copy-system-v2/protocol.json",
@@ -251,8 +257,8 @@
     }
   ],
   "source_repository": "creation-engine",
-  "source_git_sha": "ed4796e682c95afd94a4e607a2e150784e514b9d",
-  "compiled_at": "2026-08-20T11:51:56.564Z",
+  "source_git_sha": "99ed3afe139d2c52f541d1c2b3612e8437f862d7",
+  "compiled_at": "2026-08-20T13:03:41.992Z",
   "regression_commands": [
     "node tests/run-conversion-regressions.mjs",
     "node tests/run-story-evidence-evals.mjs",
@@ -290,8 +296,8 @@
     {
       "command": "node integration/copy-engine-v3/scripts/check-package.mjs",
       "status": "passed",
-      "output": "PASS copy-brain-release-v3.1: 34 artifacts, 23 active lessons, compiled doctrine routes and Zod parity"
+      "output": "PASS copy-brain-release-v3.2: 35 artifacts, 25 active lessons, compiled doctrine routes and Zod parity"
     }
   ],
-  "manifest_sha256": "f2024a842eb0a791620d34ea679dc1932abc0c225ff9fac81687b74fdbb510f8"
+  "manifest_sha256": "1649aba4e1d04c4a182b6db00b4f69b0f9fdf531e6f40fee9ea38aa8182d5d9e"
 }
