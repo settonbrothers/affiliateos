@@ -168,7 +168,10 @@ export default function CopyBrainReadinessPage() {
                 {label}
               </div>
               <h3 className="mt-4 text-xl font-semibold text-white">{title}</h3>
-              <p className="mt-3 text-sm leading-7 text-[#b1b1ab] xl:text-base">
+              <p
+                className="mt-3 text-left text-sm leading-7 text-[#b1b1ab] xl:text-base"
+                dir="ltr"
+              >
                 {body}
               </p>
             </div>
@@ -196,7 +199,10 @@ export default function CopyBrainReadinessPage() {
               <div className="text-sm font-semibold text-white">
                 {String(label)}
               </div>
-              <p className="mt-3 text-base leading-7 text-[#c0c0ba]">
+              <p
+                className="mt-3 text-left text-base leading-7 text-[#c0c0ba]"
+                dir="ltr"
+              >
                 {String(value ?? '—')}
               </p>
             </div>
@@ -221,7 +227,7 @@ export default function CopyBrainReadinessPage() {
               <span className="font-mono text-xs uppercase tracking-wide text-[#e0b82b]">
                 {source.source_type.replaceAll('_', ' ')}
               </span>
-              <div>
+              <div className="text-left" dir="ltr">
                 <p className="text-base leading-7 text-[#e5e5e0]">
                   {source.claim}
                 </p>
@@ -249,7 +255,10 @@ export default function CopyBrainReadinessPage() {
         title="מי אמור להרגיש שזה נכתב אליו"
         note="האווטאר מוקפא לפני הכתיבה ואינו מומצא מחדש בכל ריצה."
       >
-        <blockquote className="max-w-5xl border-r-2 border-[#f4bd21] py-1 pr-6 text-2xl font-medium leading-10 text-white xl:text-3xl xl:leading-[1.5]">
+        <blockquote
+          className="max-w-5xl border-l-2 border-[#f4bd21] py-1 pl-6 text-left text-2xl font-medium leading-10 text-white xl:text-3xl xl:leading-[1.5]"
+          dir="ltr"
+        >
           {deepAvatar?.summary.central_problem_in_their_words}
         </blockquote>
         <div className="mt-8 grid gap-7 md:grid-cols-3">
@@ -266,9 +275,12 @@ export default function CopyBrainReadinessPage() {
               <h3 className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[#9c9c96]">
                 {String(label)}
               </h3>
-              <ul className="mt-4 space-y-3 text-base leading-7 text-[#cecec8]">
+              <ul
+                className="mt-4 space-y-3 text-left text-base leading-7 text-[#cecec8]"
+                dir="ltr"
+              >
                 {(values as string[]).map((value) => (
-                  <li key={value} className="border-r border-white/20 pr-3">
+                  <li key={value} className="border-l border-white/20 pl-3">
                     {value}
                   </li>
                 ))}
@@ -341,7 +353,7 @@ export default function CopyBrainReadinessPage() {
         <div className={`border p-6 ${tone.warning}`}>
           <ul className="space-y-4 text-base leading-7">
             {snapshot.omitted_context.map((item) => (
-              <li key={item.section}>
+              <li key={item.section} className="text-left" dir="ltr">
                 <strong className="text-white">{item.section}:</strong>{' '}
                 {item.reason}
               </li>
