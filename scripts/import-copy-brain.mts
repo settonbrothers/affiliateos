@@ -28,6 +28,7 @@ const allowed = [
   /^brain-knowledge\//,
   /^brain-evals\//,
   /^brain-release\//,
+  /^supabase\/functions\/_shared\/brainContracts\//,
 ]
 const sha = (path: string) =>
   createHash('sha256').update(readFileSync(path)).digest('hex')

@@ -93,11 +93,12 @@
     "taste_selection": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["selected", "excluded", "selection_policy"],
+      "required": ["selected", "excluded", "selection_policy", "requirement_status"],
       "properties": {
         "selected": { "type": "array", "maxItems": 6, "items": { "type": "object" } },
         "excluded": { "type": "array", "items": { "type": "object" } },
-        "selection_policy": { "type": "string", "minLength": 1 }
+        "selection_policy": { "type": "string", "minLength": 1 },
+        "requirement_status": { "type": "string", "enum": ["loaded", "none_available"] }
       }
     },
     "doctrine_bundle": {
