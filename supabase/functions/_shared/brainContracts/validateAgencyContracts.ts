@@ -10,12 +10,22 @@ const normalize = (value) =>
 const NUMBER_WORDS = [
   'אחד', 'אחת', 'שניים', 'שתיים', 'שני', 'שתי', 'שלושה', 'שלוש',
   'ארבעה', 'ארבע', 'חמישה', 'חמש', 'שישה', 'שש', 'שבעה', 'שבע',
-  'שמונה', 'תשעה', 'תשע', 'עשרה', 'עשר', 'חצי', 'רבע',
+  'שמונה', 'תשעה', 'תשע', 'עשרה', 'עשר', 'אחת עשרה', 'אחד עשר',
+  'שתים עשרה', 'שנים עשר', 'עשרים', 'שלושים', 'ארבעים', 'חמישים',
+  'שישים', 'שבעים', 'שמונים', 'תשעים', 'מאה', 'מאות', 'אלף', 'אלפים',
+  'חצי', 'רבע',
+]
+
+const UNSUPPORTED_ORDINAL_WORDS = [
+  'השני', 'השנייה', 'השניי', 'השלישי', 'השלישית', 'הרביעי', 'הרביעית',
+  'החמישי', 'החמישית', 'השישי', 'השישית', 'השביעי', 'השביעית',
+  'השמיני', 'השמינית', 'התשיעי', 'התשיעית', 'העשירי', 'העשירית',
 ]
 
 const UNIT_WORDS = [
-  'דקה', 'דקות', 'שעה', 'שעות', 'יום', 'ימים', 'שבוע', 'שבועות',
+  'שנייה', 'שניות', 'שניה', 'שניות', 'דקה', 'דקות', 'שעה', 'שעות', 'יום', 'ימים', 'שבוע', 'שבועות',
   'חודש', 'חודשים', 'עובד', 'עובדים', 'איש', 'אנשים', 'אחוז', 'אחוזים',
+  'קליק', 'קליקים', 'המרה', 'המרות', 'טיוטה', 'טיוטות',
 ]
 
 const CLAIM_BEARING_SPINE_FIELDS = [
@@ -55,11 +65,25 @@ function quantifiedFragments(value) {
   const numeric = /\b\d+(?:[.,]\d+)?(?:\s*(?:-|–|עד)\s*\d+(?:[.,]\d+)?)?(?:%|\s+[\p{L}]+)?/gu
   for (const match of text.matchAll(numeric)) fragments.push(match[0].trim())
   const wordPattern = new RegExp(
-    `(?:${NUMBER_WORDS.join('|')})(?:\\s+(?:${UNIT_WORDS.join('|')}))?`,
+    `(?<!\\p{L})(?:${NUMBER_WORDS.join('|')})(?:\\s+(?:${UNIT_WORDS.join('|')}))?(?!\\p{L})`,
     'gu'
   )
   for (const match of text.matchAll(wordPattern)) fragments.push(match[0].trim())
+  const ordinalPattern = new RegExp(
+    `(?<!\\p{L})(?:${UNSUPPORTED_ORDINAL_WORDS.join('|')})(?!\\p{L})`,
+    'gu'
+  )
+  for (const match of text.matchAll(ordinalPattern)) fragments.push(match[0].trim())
   return unique(fragments.filter(Boolean))
+}
+
+function measuredWordFragments(value) {
+  const text = normalize(value)
+  const pattern = new RegExp(
+    `(?<!\\p{L})(?:${NUMBER_WORDS.join('|')})\\s+(?:${UNIT_WORDS.join('|')})(?!\\p{L})`,
+    'gu'
+  )
+  return unique([...text.matchAll(pattern)].map((match) => match[0].trim()))
 }
 
 /** @returns {{pass: boolean, flags: string[], details: string[]}} */
@@ -98,7 +122,7 @@ export function validateAngleDecision(angles, envelope) {
 }
 
 /** @returns {{pass: boolean, flags: string[], details: string[]}} */
-export function validateDepartmentPlan(plan, angles, envelope) {
+export function validateDepartmentPlan(plan, angles, envelope, executionBrief = null) {
   const flags = []
   const details = []
   const candidateIds = new Set()
@@ -123,13 +147,40 @@ export function validateDepartmentPlan(plan, angles, envelope) {
       }
     }
   }
+  const objectiveType = executionBrief?.campaign_objective?.objective_type
+  const isFundraising = ['donation', 'fundraising'].includes(objectiveType)
+  const planText = normalize(
+    [
+      plan?.routing_reason,
+      ...(plan?.candidate_briefs ?? []).flatMap((brief) => [
+        brief.test_hypothesis,
+        brief.reader_change,
+        brief.material_difference,
+      ]),
+    ]
+      .filter(Boolean)
+      .join(' ')
+  )
+  if (
+    executionBrief &&
+    !isFundraising &&
+    /(?:\bfunding\b|\bdonation\b|\bdonor\b|תרומ|מימון)/u.test(planText)
+  ) {
+    flags.push('department_objective_domain_bleed')
+    details.push(
+      `Department planning introduced fundraising language for objective ${objectiveType ?? 'unknown'}.`
+    )
+  }
   return { pass: flags.length === 0, flags: unique(flags), details: unique(details) }
 }
 
 /** @returns {{pass: boolean, flags: string[], details: string[]}} */
-export function validateHookCoverage(plan, hooks) {
+export function validateHookCoverage(plan, hooks, envelope = null) {
   const flags = []
   const details = []
+  const unsupportedCategoryBehavior =
+    /(?:כלי(?:ם)?(?:\s+כתיבה)?\s+גנרי(?:ים|ות)?|כלים אחרים|המתחרים|כל המתחרים|generic (?:ai )?tools?|other (?:ai )?tools?|competitors?).{0,100}(?:שוכח|שוכחים|לא זוכר|לא זוכרים|לא שומר|לא שומרים|לא יכול|לא יכולים|תמיד|אף פעם|forget|forgets|do not remember|don't remember|cannot|can't|never|always)/iu
+  const supported = envelope ? evidenceText(envelope) : ''
   for (const brief of plan?.candidate_briefs ?? []) {
     const pool = hooks.filter(
       (hook) =>
@@ -144,6 +195,24 @@ export function validateHookCoverage(plan, hooks) {
     if (recommended.length !== 1) {
       flags.push('candidate_hook_recommendation_cardinality')
       details.push(`${brief.candidate_id} has ${recommended.length} recommended compatible hooks.`)
+    }
+    for (const hook of pool) {
+      if (unsupportedCategoryBehavior.test(normalize(hook.text))) {
+        flags.push('hook_unsupported_category_claim')
+        details.push(
+          `${brief.candidate_id} assigns unsupported category-wide behavior in hook: ${hook.text}`
+        )
+      }
+      if (envelope && hook.is_recommended) {
+        for (const fragment of quantifiedFragments(hook.text)) {
+          if (!supported.includes(fragment)) {
+            flags.push('hook_unsupported_quantified_detail')
+            details.push(
+              `${brief.candidate_id} adds unsupported quantified detail in hook: ${fragment}`
+            )
+          }
+        }
+      }
     }
   }
   return { pass: flags.length === 0, flags: unique(flags), details: unique(details) }
@@ -175,10 +244,16 @@ export function validateCandidateClaims(candidate, envelope) {
     )
   )
   const unsupported = candidateNumbers.filter((number) => !supportedNumbers.has(number))
+  const unsupportedMeasuredWords = measuredWordFragments(
+    [candidate?.hook, candidate?.primary_text, candidate?.headline]
+      .filter(Boolean)
+      .join(' ')
+  ).filter((fragment) => !supported.includes(fragment))
+  const allUnsupported = unique([...unsupported, ...unsupportedMeasuredWords])
   return {
-    pass: unsupported.length === 0,
-    flags: unsupported.length ? ['invented_claim_detail'] : [],
-    details: unsupported.map(
+    pass: allUnsupported.length === 0,
+    flags: allUnsupported.length ? ['invented_claim_detail'] : [],
+    details: allUnsupported.map(
       (number) => `Candidate uses unsupported numeric detail: ${number}`
     ),
   }

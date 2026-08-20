@@ -7,6 +7,7 @@ import {
   tasteRequirementStatus as rawTasteRequirementStatus,
   validateAngleDecision,
   validateCandidateClaims,
+  validateDepartmentPlan,
   validateHookCoverage,
 } from '../brainContracts/validateAgencyContracts.ts'
 
@@ -14,6 +15,17 @@ const tasteRequirementStatus = rawTasteRequirementStatus as (
   selection: unknown,
   consumedIds?: string[]
 ) => string
+const validateDepartmentPlanV4 = validateDepartmentPlan as (
+  plan: unknown,
+  angles: unknown,
+  envelope: unknown,
+  executionBrief?: unknown
+) => { pass: boolean; flags: string[]; details: string[] }
+const validateHookCoverageV7 = validateHookCoverage as (
+  plan: unknown,
+  hooks: unknown,
+  envelope?: unknown
+) => { pass: boolean; flags: string[]; details: string[] }
 
 const envelope = {
   real_problem: 'Manual rewriting remains the bottleneck.',
@@ -93,6 +105,20 @@ Deno.test('unsupported Jasper timings fail before judging', () => {
   )
 })
 
+Deno.test('unsupported Hebrew-word timings fail before judging', () => {
+  assertEquals(
+    validateCandidateClaims(
+      {
+        hook: 'הוק',
+        primary_text: 'שלושים שניות — ויש טיוטה.',
+        headline: 'כותרת',
+      },
+      envelope
+    ).flags,
+    ['invented_claim_detail']
+  )
+})
+
 Deno.test('digits inside G2 are not treated as invented measurements', () => {
   assertEquals(
     validateCandidateClaims(
@@ -154,6 +180,39 @@ Deno.test(
     )
   }
 )
+
+Deno.test('unsupported category hooks and domain bleed fail upstream', () => {
+  const plan = {
+    routing_reason: 'The causal funding dependence is established.',
+    candidate_briefs: [
+      {
+        candidate_id: 'c1',
+        angle_index: 0,
+        evidence_anchor_ids: ['s1'],
+      },
+    ],
+  }
+  const angles = [{ is_recommended: true, conversion_spine: spine }]
+  assert(
+    validateDepartmentPlanV4(plan, angles, envelope, {
+      campaign_objective: { objective_type: 'trial' },
+    }).flags.includes('department_objective_domain_bleed')
+  )
+  const hooks = ['a', 'b', 'c'].map((text, index) => ({
+    text:
+      index === 0
+        ? 'הבעיה עם כלי כתיבה גנריים היא מה שהם שוכחים בין משימות.'
+        : text,
+    candidate_id: 'c1',
+    angle_index: 0,
+    is_recommended: index === 0,
+  }))
+  assert(
+    validateHookCoverageV7(plan, hooks, envelope).flags.includes(
+      'hook_unsupported_category_claim'
+    )
+  )
+})
 
 Deno.test(
   'empty relevant Taste is valid and bounded revision skips unrepairable candidates',
