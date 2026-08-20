@@ -131,6 +131,7 @@ export const EvidenceAngleSchema = z.object({
 
 export const EvidenceHookSchema = z.object({
   text: z.string(),
+  candidate_id: z.string().min(1).optional(),
   angle_index: z.number().int().min(0),
   lang: z.literal('he'),
   payoff_anchor: z.string(),
@@ -180,6 +181,9 @@ export const AgencyEvidenceVariantSchema = EvidenceVariantSchema.extend({
   candidate_id: z.string().min(1),
   specialist: CopySpecialistSchema,
   test_hypothesis: z.string().min(1),
+  consumed_doctrine_lesson_ids: z.array(z.string().min(1)).optional(),
+  consumed_taste_example_ids: z.array(z.string().min(1)).optional(),
+  revision_number: z.number().int().min(0).max(1).optional(),
 })
 export const CopyPortfolioDecisionSchema = z.object({
   ranked_candidate_ids: z.array(z.string()).max(3),
@@ -249,6 +253,7 @@ export const KillFlagV4Schema = z.enum([
   'low_momentum',
   'boring',
   'hook_body_duplicate',
+  'hook_assignment_mismatch',
   'objective_unknown',
   'audience_unknown',
   'objective_mismatch',
@@ -256,6 +261,14 @@ export const KillFlagV4Schema = z.enum([
   'taste_not_loaded',
   'generic_angle',
   'latest_baseline_regression',
+  'angle_recommendation_cardinality',
+  'angle_truth_source_invalid',
+  'angle_unsupported_quantified_detail',
+  'duplicate_candidate_id',
+  'candidate_angle_missing',
+  'candidate_evidence_anchor_invalid',
+  'candidate_hook_pool_missing',
+  'candidate_hook_recommendation_cardinality',
 ])
 export const BlindReaderSchema = z.object({
   perceived_attribution: z.enum([
@@ -299,6 +312,7 @@ export const EvidenceJudgeSchema = z.object({
 })
 export const CopyCandidateReviewSchema = z.object({
   candidate_id: z.string(),
+  revision_number: z.number().int().min(0).max(1).default(0),
   reader: BlindReaderSchema,
   critic: EvidenceCriticSchema,
   judge: EvidenceJudgeSchema,
@@ -310,6 +324,7 @@ export const AdCopyEvidencePayloadSchema = z
       'evidence-story-v4',
       'evidence-agency-v5',
       'evidence-agency-v6',
+      'evidence-agency-v7',
     ]),
     output_status: z.enum([
       'ready_for_user',
@@ -339,6 +354,18 @@ export const AdCopyEvidencePayloadSchema = z
       taste_selection_count: z.number().int().min(0).optional(),
       preflight_flags: z.array(z.string()).optional(),
       models: z.record(z.string()).optional(),
+      angle_validation: z.record(z.unknown()).optional(),
+      department_plan_validation: z.record(z.unknown()).optional(),
+      hook_coverage: z.record(z.unknown()).optional(),
+      taste_requirement_status: z
+        .enum([
+          'loaded',
+          'none_available',
+          'required_but_not_consumed',
+          'claimed_but_not_available',
+        ])
+        .optional(),
+      revision: z.record(z.unknown()).optional(),
     }),
     user_message: z.string(),
   })

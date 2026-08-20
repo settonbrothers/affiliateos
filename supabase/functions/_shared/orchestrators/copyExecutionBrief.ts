@@ -309,7 +309,13 @@ export function compileCopyExecutionBriefV2(
       performance_winners: snapshot.performance_winners,
       omitted_context: snapshot.omitted_context,
     },
-    taste_selection: tasteSelection,
+    taste_selection: {
+      ...tasteSelection,
+      requirement_status:
+        tasteSelection.selected.length > 0
+          ? ('loaded' as const)
+          : ('none_available' as const),
+    },
     doctrine_bundle: {
       bundle_version: COPY_BRAIN_DOCTRINE_V3.bundleVersion,
       registry_version: COPY_BRAIN_DOCTRINE_V3.registryVersion,
