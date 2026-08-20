@@ -39,7 +39,7 @@ const CLAIM_BEARING_SPINE_FIELDS = [
 ]
 
 const UNSUPPORTED_CATEGORY_BEHAVIOR =
-  /(?:כלי(?:ם)?(?:\s+כתיבה)?\s+גנרי(?:ים|ות)?|כלים אחרים|המתחרים|בינה מלאכותית כללית|ה[-־–— ]?ai|הכלי|generic (?:ai )?tools?|general ai|the ai|the tool|other (?:ai )?tools?|competitors?).{0,140}(?:שוכח|שוכחים|לא זוכר|לא זוכרים|לא שומר|לא שומרים|אין (?:לו|להם) זיכרון|מתחיל(?:ים)? מאפס|חסר(?:ת)? זיכרון|לא יכול|לא יכולים|תמיד|אף פעם|stateless|no (?:persistent )?memory|has no (?:persistent )?memory|forget|forgets|do not remember|don't remember|does not retain|did not retain|never retained|does not store|context resets?|starts? (?:again )?from (?:a )?(?:blank|zero)|cannot|can't|never|always)/iu
+  /(?:כלי(?:ם)?(?:\s+כתיבה)?\s+גנרי(?:ים|ות)?|כלים אחרים|המתחרים|בינה מלאכותית כללית|ה[-־–— ]?ai|הכלי|generic (?:ai )?tools?|general(?:-purpose)? ai(?: writing)? tools?|the ai|the tool|other (?:ai )?tools?|competitors?).{0,160}(?:שוכח|שוכחים|לא זוכר|לא זוכרים|לא שומר|לא שומרים|אין (?:לו|להם) זיכרון|מתחיל(?:ים)? מאפס|חסר(?:ת)? זיכרון|לא כולל|חסר|לא יכול|לא יכולים|תמיד|אף פעם|stateless|no (?:persistent )?memory|has no (?:persistent )?memory|forget|forgets|do not remember|don't remember|does not retain|did not retain|never retained|does not store|does not include|without (?:persistent )?|lacks?|context resets?|starts? (?:again )?from (?:a )?(?:blank|zero)|cannot|can't|never|always)/iu
 
 const unique = (values) => [...new Set(values)]
 
