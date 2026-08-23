@@ -40,6 +40,7 @@ let userId: string | null = null
 let workspaceId: string | null = null
 let offerId: string | null = null
 let runId: string | null = null
+let cleanupSafe = true
 let smokeResult: Record<string, unknown> = {
   release: brainRelease.release_version,
   manifest_sha256: brainRelease.manifest_sha256,
@@ -206,19 +207,23 @@ try {
     )
   }
   runId = accepted.run_id
+  cleanupSafe = false
 
   let run: Record<string, unknown> | null = null
-  for (let attempt = 0; attempt < 180; attempt += 1) {
+  for (let attempt = 0; attempt < 450; attempt += 1) {
     const { data, error } = await admin
       .from('ai_runs')
       .select(
-        'status,error_message,output_payload,estimated_cost,tokens_input,tokens_output,model,input_payload'
+        'status,error_message,output_payload,envelope,estimated_cost,tokens_input,tokens_output,model,input_payload'
       )
       .eq('id', runId)
       .single()
     if (error) throw error
     run = data as Record<string, unknown>
-    if (['success', 'failed', 'partial'].includes(String(run.status))) break
+    if (['success', 'failed', 'partial'].includes(String(run.status))) {
+      cleanupSafe = true
+      break
+    }
     await new Promise((resolve) => setTimeout(resolve, 4_000))
   }
   if (!run || run.status !== 'success') {
@@ -312,7 +317,12 @@ try {
   )
   throw error
 } finally {
-  if (offerId) {
+  if (!cleanupSafe) {
+    console.warn(
+      `Smoke cleanup skipped because ai_run ${runId ?? 'unknown'} is still active; fixture preserved.`
+    )
+  }
+  if (cleanupSafe && offerId) {
     await admin.from('copy_source_snapshots').delete().eq('offer_id', offerId)
     await admin.from('ad_copy_generations').delete().eq('offer_id', offerId)
     await admin.from('ai_runs').delete().eq('offer_id', offerId)
@@ -323,7 +333,7 @@ try {
     await admin.from('source_documents').delete().eq('offer_id', offerId)
     await admin.from('offers').delete().eq('id', offerId)
   }
-  if (workspaceId) {
+  if (cleanupSafe && workspaceId) {
     await admin.from('credit_ledger').delete().eq('workspace_id', workspaceId)
     await admin
       .from('workspace_credit_caps')
@@ -335,5 +345,5 @@ try {
       .eq('workspace_id', workspaceId)
     await admin.from('workspaces').delete().eq('id', workspaceId)
   }
-  if (userId) await admin.auth.admin.deleteUser(userId)
+  if (cleanupSafe && userId) await admin.auth.admin.deleteUser(userId)
 }
