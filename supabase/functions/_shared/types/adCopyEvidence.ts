@@ -154,12 +154,12 @@ export const EvidenceHookSchema = z.object({
   text: z.string(),
   candidate_id: z.string().min(1).optional(),
   angle_index: z.number().int().min(0),
-  lang: z.literal('he'),
+  lang: z.enum(['he', 'en']),
   payoff_anchor: z.string(),
   is_recommended: z.boolean().optional(),
 })
 export const EvidenceVariantSchema = z.object({
-  lang: z.literal('he'),
+  lang: z.enum(['he', 'en']),
   primary_text: z.string(),
   headline: z.string(),
   subheadline: z.string().optional(),

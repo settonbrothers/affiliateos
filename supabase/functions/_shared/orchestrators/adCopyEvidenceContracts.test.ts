@@ -16,6 +16,7 @@ import {
   ANGLE_STAGE_MAX_TOKENS,
   ANGLE_TOOL_DESCRIPTION,
   normalizeAnglesToolInput,
+  normalizeHookSurface,
   resolveEvidenceStageModel,
 } from './adCopyEvidence.ts'
 import {
@@ -99,6 +100,22 @@ Deno.test(
     })
 
     assert(result.success)
+  }
+)
+
+Deno.test(
+  'hook surface converts forbidden dashes before coverage gates',
+  () => {
+    assertEquals(
+      normalizeHookSurface({
+        text: 'A missed call — without losing the customer – or the caller.',
+        candidate_id: 'story-1',
+      }),
+      {
+        text: 'A missed call - without losing the customer - or the caller.',
+        candidate_id: 'story-1',
+      }
+    )
   }
 )
 

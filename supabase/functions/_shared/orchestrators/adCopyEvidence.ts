@@ -130,6 +130,13 @@ const normalizeRuntimeGateReport = <T extends Record<string, unknown>>(
 
 const shortHyphens = (value: string) => value.replace(/[—–]/gu, '-')
 
+export const normalizeHookSurface = <T extends { text: string }>(
+  hook: T
+): T => ({
+  ...hook,
+  text: shortHyphens(hook.text),
+})
+
 const normalizeCandidateSurface = <
   T extends z.infer<typeof AgencyEvidenceVariantSchema>,
 >(
@@ -979,7 +986,7 @@ export async function runAdCopyEvidence(
     usage: Usage
   } | null = null
   if (!agencyV7Enabled) {
-    hooks = await stage({
+    const generatedHooks = await stage({
       orchestrator: 'CopyHookOrchestrator',
       tool: 'submit_hooks',
       description:
@@ -999,6 +1006,13 @@ export async function runAdCopyEvidence(
         doctrine_bundle: executionBrief?.doctrine_bundle ?? null,
       },
     })
+    hooks = {
+      ...generatedHooks,
+      data: {
+        ...generatedHooks.data,
+        hooks: generatedHooks.data.hooks.map(normalizeHookSurface),
+      },
+    }
     spend(hooks.usage)
   }
 
@@ -1110,11 +1124,13 @@ export async function runAdCopyEvidence(
         },
       })
       spend(generatedHooks.usage)
-      hooks = generatedHooks
-      hookCoverage = validateHookCoverage(
-        directed.data,
-        generatedHooks.data.hooks
-      )
+      const normalizedHooks =
+        generatedHooks.data.hooks.map(normalizeHookSurface)
+      hooks = {
+        ...generatedHooks,
+        data: { ...generatedHooks.data, hooks: normalizedHooks },
+      }
+      hookCoverage = validateHookCoverage(directed.data, normalizedHooks)
       if (!hookCoverage.pass) {
         const output = assembleAgency({
           executionBrief,
@@ -1123,7 +1139,7 @@ export async function runAdCopyEvidence(
             : 'evidence-agency-v7',
           envelope: evidence.data,
           angles: routedAngles,
-          hooks: generatedHooks.data.hooks,
+          hooks: normalizedHooks,
           departmentPlan: directed.data,
           candidates: [],
           reviews: [],
@@ -2061,15 +2077,13 @@ export async function runAdCopyEvidenceAgencyStep(
         angle_validation: checkpoint.angleValidation ?? null,
       },
     })
+    const normalizedHooks = hooks.data.hooks.map(normalizeHookSurface)
     if (agencyV7Enabled) {
-      const hookCoverage = validateHookCoverage(
-        departmentPlan,
-        hooks.data.hooks
-      )
+      const hookCoverage = validateHookCoverage(departmentPlan, normalizedHooks)
       return next(
         {
           stage: hookCoverage.pass ? 'candidate_write' : 'portfolio',
-          hooks: hooks.data.hooks,
+          hooks: normalizedHooks,
           hookCoverage,
           candidates: [],
           reviews: [],
@@ -2078,7 +2092,7 @@ export async function runAdCopyEvidenceAgencyStep(
         hooks.usage
       )
     }
-    return next({ stage: 'director', hooks: hooks.data.hooks }, hooks.usage)
+    return next({ stage: 'director', hooks: normalizedHooks }, hooks.usage)
   }
 
   if (checkpoint.stage === 'director') {
