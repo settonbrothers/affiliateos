@@ -173,7 +173,7 @@ export const CopyBrainInputSnapshotV1Schema = z.object({
     channel: z.string().nullable(),
     geo: z.array(z.string()),
     audience: z.string().nullable(),
-    generation_language: z.literal('he'),
+    generation_language: z.enum(['he', 'en']),
     objective_type: z
       .enum([
         'sale',
