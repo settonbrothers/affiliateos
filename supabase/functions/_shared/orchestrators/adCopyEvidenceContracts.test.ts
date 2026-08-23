@@ -10,7 +10,28 @@ import {
   validateDepartmentPlan,
   validateHookCoverage,
 } from '../brainContracts/validateAgencyContracts.ts'
-import { resolveEvidenceStageModel } from './adCopyEvidence.ts'
+import {
+  normalizeAnglesToolInput,
+  resolveEvidenceStageModel,
+} from './adCopyEvidence.ts'
+
+Deno.test(
+  'lone angle transport is wrapped without changing semantic fields',
+  () => {
+    const angle = {
+      angle_id: 'angle-1',
+      is_recommended: true,
+      narrative_license: { mode: 'non_story' },
+      positioning: 'Keep this exact semantic payload.',
+    }
+    assertEquals(normalizeAnglesToolInput(angle), { angles: [angle] })
+    const alreadyWrapped = { angles: [angle] }
+    assertEquals(normalizeAnglesToolInput(alreadyWrapped), alreadyWrapped)
+    assertEquals(normalizeAnglesToolInput({ angle_id: 'incomplete' }), {
+      angle_id: 'incomplete',
+    })
+  }
+)
 
 Deno.test(
   'economy smoke uses Sonnet without changing production models',
