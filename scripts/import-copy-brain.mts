@@ -37,6 +37,10 @@ const sha = (path: string) =>
 let drift = 0
 
 for (const file of manifest.files) {
+  if (file.kind === 'source_evidence') {
+    console.log(`AUDIT  ${file.target}`)
+    continue
+  }
   if (!allowed.some((pattern) => pattern.test(file.target))) {
     throw new Error(
       `Release target is outside the copy ownership allowlist: ${file.target}`

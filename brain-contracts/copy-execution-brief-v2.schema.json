@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": [
     "schema_version", "brief_id", "snapshot_id", "readiness_status",
-    "consumer_offer", "affiliate_program", "campaign_objective", "audience",
+    "consumer_offer", "affiliate_program", "campaign_objective", "delivery_language", "audience",
     "evidence", "upstream_context", "taste_selection", "doctrine_bundle",
     "internal_economics", "critical_missing", "conflicts", "trace"
   ],
@@ -15,7 +15,7 @@
     "brief_id": { "type": "string", "minLength": 1 },
     "snapshot_id": { "type": "string", "minLength": 1 },
     "readiness_status": {
-      "enum": ["ready_to_write", "needs_avatar", "needs_audience", "needs_objective", "objective_conflict", "blocked"]
+      "enum": ["ready_to_write", "needs_avatar", "needs_audience", "needs_objective", "needs_language", "objective_conflict", "blocked"]
     },
     "consumer_offer": {
       "type": "object",
@@ -50,6 +50,16 @@
         "desired_action": { "type": ["string", "null"] },
         "audience_side": { "enum": ["consumer", "affiliate_marketer", "donor", "unknown"] },
         "source": { "enum": ["campaign_context", "deep_brief", "test_kit", "explicit_eval_override", "unknown"] }
+      }
+    },
+    "delivery_language": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["language", "source", "operator_language_independent"],
+      "properties": {
+        "language": { "type": "string", "minLength": 2 },
+        "source": { "enum": ["campaign_context", "offer_market", "explicit_eval_override", "unknown"] },
+        "operator_language_independent": { "const": true }
       }
     },
     "audience": {
@@ -101,6 +111,18 @@
         "requirement_status": { "type": "string", "enum": ["loaded", "none_available"] }
       }
     },
+    "narrative_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile", "synthetic_characters", "synthetic_names_dialogue_quotes", "testimonial_style_framing", "material_product_claims"],
+      "properties": {
+        "profile": { "const": "owner_creative_truth_v1" },
+        "synthetic_characters": { "const": "allowed" },
+        "synthetic_names_dialogue_quotes": { "const": "allowed" },
+        "testimonial_style_framing": { "const": "allowed_without_disclosure" },
+        "material_product_claims": { "const": "evidence_bounded" }
+      }
+    },
     "doctrine_bundle": {
       "type": "object",
       "additionalProperties": false,
@@ -127,6 +149,7 @@
         "input_sections_consumed": { "type": "array", "items": { "type": "string" } },
         "input_sections_rejected": { "type": "array", "items": { "type": "string" } },
         "lesson_routes": { "type": "array", "items": { "type": "object" } },
+        "applied_policy_profiles": { "type": "array", "items": { "type": "string" } },
         "warnings": { "type": "array", "items": { "type": "string" } }
       }
     }

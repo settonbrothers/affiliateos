@@ -1,0 +1,150 @@
+{
+  "schema_version": "brain-role-load-map-v1",
+  "release_version": "copy-brain-release-v3.31",
+  "roles": {
+    "evidence": {
+      "knowledge": [
+        "integration/copy-engine-v3/prompts/copy_excavate_product/v3.md"
+      ],
+      "content_anchors": [
+        "maximum-true outcomes"
+      ]
+    },
+    "angle": {
+      "knowledge": [
+        "brain/knowledge/latest-owner-doctrine-v3.md"
+      ],
+      "content_anchors": [
+        "A supported mechanism is not automatically a proven market difference"
+      ]
+    },
+    "hook": {
+      "knowledge": [
+        "prompts/gomiya-lesson.md",
+        "brain/knowledge/latest-owner-doctrine-v3.md"
+      ],
+      "content_anchors": [
+        "חוק הגומייה"
+      ]
+    },
+    "legacy_writer": {
+      "knowledge": [
+        "prompts/stage-8-write/v3.md",
+        "brain/knowledge/latest-owner-doctrine-v3.md",
+        "brain/knowledge/quality-baseline-v3.md"
+      ],
+      "content_anchors": [
+        "Writing procedure - stage 8 v3"
+      ]
+    },
+    "director": {
+      "knowledge": [
+        "brain/knowledge/latest-owner-doctrine-v3.md",
+        "brain/knowledge/quality-baseline-v3.md",
+        "brain/knowledge/storytelling-craft-pack-v3.29.md",
+        "brain/knowledge/negative-controls-v3.29.md"
+      ],
+      "content_anchors": [
+        "Story is the sale in an anchor ad",
+        "Round5 - components without reader experience"
+      ]
+    },
+    "storytelling_writer": {
+      "knowledge": [
+        "brain/knowledge/latest-owner-doctrine-v3.md",
+        "brain/knowledge/quality-baseline-v3.md",
+        "brain/knowledge/storytelling-craft-pack-v3.29.md",
+        "brain/knowledge/michael-learning-lab-v3.29.md",
+        "brain/knowledge/examples/michael-v5-active.md",
+        "brain/knowledge/examples/avraham-active.txt",
+        "brain/knowledge/examples/leadecho-v3.30-active.md",
+        "brain/knowledge/negative-controls-v3.29.md"
+      ],
+      "content_anchors": [
+        "First person and the bridge to the sale",
+        "V4 to V5 - make the need visible in action",
+        "שני מטר",
+        "The phone rang mid-rinse",
+        "post-peak value bridge",
+        "Round5 - components without reader experience",
+        "LeadEcho Opus 5 - better prose with missing brain and false approval"
+      ]
+    },
+    "direct_response_writer": {
+      "knowledge": [
+        "prompts/stage-8-write/v3.md",
+        "brain/knowledge/latest-owner-doctrine-v3.md",
+        "brain/knowledge/quality-baseline-v3.md"
+      ],
+      "content_anchors": [
+        "Writing procedure - stage 8 v3",
+        "post-peak value bridge"
+      ]
+    },
+    "proof_mechanism_writer": {
+      "knowledge": [
+        "prompts/stage-8-write/v3.md",
+        "brain/knowledge/latest-owner-doctrine-v3.md",
+        "brain/knowledge/quality-baseline-v3.md"
+      ],
+      "content_anchors": [
+        "Writing procedure - stage 8 v3",
+        "post-peak value bridge"
+      ]
+    },
+    "reader": {
+      "knowledge": [
+        "prompts/reader-sim.md"
+      ],
+      "content_anchors": [
+        "Reader-Sim - סוכן-הקורא"
+      ]
+    },
+    "critic": {
+      "knowledge": [
+        "brain/knowledge/latest-owner-doctrine-v3.md",
+        "brain/knowledge/quality-baseline-v3.md",
+        "brain/knowledge/negative-controls-v3.29.md"
+      ],
+      "content_anchors": [
+        "All automated agents approved it",
+        "Round5 - components without reader experience"
+      ]
+    },
+    "judge": {
+      "knowledge": [
+        "brain/knowledge/latest-owner-doctrine-v3.md",
+        "brain/knowledge/quality-baseline-v3.md",
+        "brain/knowledge/negative-controls-v3.29.md"
+      ],
+      "content_anchors": [
+        "Multiple agents sharing the same vocabulary are not independent"
+      ]
+    },
+    "portfolio_judge": {
+      "knowledge": [
+        "brain/knowledge/latest-owner-doctrine-v3.md",
+        "brain/knowledge/quality-baseline-v3.md"
+      ],
+      "content_anchors": [
+        "Diversity is semantic and physical"
+      ]
+    },
+    "diagnosis": {
+      "knowledge": [
+        "integration/copy-engine-v3/prompts/diagnosis/v2.md"
+      ],
+      "content_anchors": [
+        "deterministic economics"
+      ]
+    },
+    "avatar": {
+      "knowledge": [
+        "brain/knowledge/latest-owner-doctrine-v3.md"
+      ],
+      "content_anchors": [
+        "Input integrity"
+      ]
+    }
+  }
+}

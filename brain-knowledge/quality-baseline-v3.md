@@ -1,6 +1,6 @@
 # Quality baseline v3
 
-## Positive control — Michael v5
+## Positive control - Michael v5
 
 Owner verdict: **approved**, 2026-08-16.
 
@@ -20,7 +20,28 @@ Do not imitate its bereavement setting, doors, narrator, sentence shapes or dona
 
 The positive regression passes only when evaluators identify those capabilities. Similar words or structure do not count.
 
-## Negative control — Round5 Elliot/Miriam
+## Positive control - LeadEcho v3.30
+
+Owner verdict: **approved**, 2026-08-23.
+
+The approved English copy is preserved at
+`brain/sources/owner-canon/approved/leadecho-v3.30-owner-approved-en.md`.
+
+This is the commercial counterpart to Michael v5. It proves:
+
+- native writing in the campaign language;
+- immediate recognition of a recurring small-business conflict;
+- first-person discovery instead of a detached product presentation;
+- a mechanism that changes the exact scene-level problem;
+- post-peak expansion of consequence and offer value;
+- supported price, trial and setup facts used without a guaranteed return;
+- limitations that increase credibility without replacing the sale;
+- an owner-approved candidate may retain quality advisories without becoming blocked.
+
+Do not imitate the salon, missed-call plot, narrator, hook or paragraph order.
+One approved commercial example proves capability, not cross-vertical consistency.
+
+## Negative control - Round5 Elliot/Miriam
 
 Owner verdict: **very weak / rejected**, 2026-08-18.
 
@@ -45,4 +66,4 @@ A candidate release fails if it:
 - loads a superseded lesson as active;
 - cannot prove which current lessons and examples reached each runtime agent.
 
-Owner taste is a development calibration layer. Production principles are the general reader, truth, causality, clarity, tension and craft lessons demonstrated by the controls—not imitation of one owner's surface voice.
+Owner taste is a development calibration layer. Production principles are the general reader, truth, causality, clarity, tension and craft lessons demonstrated by the controls - not imitation of one owner's surface voice.

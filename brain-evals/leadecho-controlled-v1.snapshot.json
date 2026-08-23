@@ -1,0 +1,177 @@
+{
+  "schema_version": "copy-brain-input-v1",
+  "snapshot_id": "copy-brain-v3:leadecho-controlled:2026-08-21",
+  "captured_at": "2026-08-21T02:30:00.000Z",
+  "origin": "synthetic_fixture",
+  "fixture_only": true,
+  "offer": {
+    "id": "fixture-leadecho-001",
+    "name": "LeadEcho",
+    "website_url": "https://fixture.invalid/leadecho",
+    "affiliate_program_url": null,
+    "network": null,
+    "vendor_name": "LeadEcho Fixture Lab",
+    "vertical": "local_business_saas",
+    "primary_language": "en",
+    "description": "A missed-call follow-up service that sends an owner-approved text, collects the caller's need and offers a callback window."
+  },
+  "campaign_context": {
+    "channel": "meta",
+    "geo": ["US"],
+    "audience": "Owner-operators of appointment businesses who cannot answer the phone while serving a customer",
+    "generation_language": "en",
+    "objective_type": "trial",
+    "desired_action": "Start a free 14-day LeadEcho trial on one existing business line",
+    "audience_side": "consumer"
+  },
+  "underwriting": {
+    "verdict": "fixture_only",
+    "note": "This offer and every result below exist only for controlled brain evaluation and must never be published as real claims."
+  },
+  "compliance": {
+    "forbidden_claims": [
+      "Guaranteed bookings, revenue or lead recovery",
+      "A result beyond the frozen pilot and documented fixture cases",
+      "A comparison, superiority or uniqueness claim without competitive research"
+    ]
+  },
+  "offer_economics": null,
+  "sources": [
+    {
+      "source_id": "leadecho-product-spec",
+      "source_type": "first_party_document",
+      "source_url": null,
+      "source_quote": "When a connected business line is not answered, LeadEcho sends the business's approved text within 60 seconds, records the reply and offers one of the callback windows configured by the owner.",
+      "claim": "LeadEcho follows an unanswered business call with an approved text and a callback option inside one tracked workflow.",
+      "priority": 3,
+      "verified": true,
+      "snapshot_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    {
+      "source_id": "leadecho-pilot-log",
+      "source_type": "campaign_result",
+      "source_url": null,
+      "source_quote": "Frozen 30-day fixture pilot: 12 appointment businesses connected 1,842 unanswered calls. 1,161 callers replied to the approved follow-up text and 486 selected a callback window. Results varied by business and do not guarantee future outcomes.",
+      "claim": "A controlled fixture pilot recorded caller replies and callback selections after unanswered calls, with substantial variation among businesses.",
+      "priority": 5,
+      "verified": true,
+      "snapshot_sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    {
+      "source_id": "leadecho-case-maya",
+      "source_type": "independent_review",
+      "source_url": null,
+      "source_quote": "I was rinsing a client's hair when the phone rang. I could not stop. LeadEcho texted the caller, she wrote that she wanted a color appointment, chose 5:30 for a callback, and I called her when the chair was empty. Before, that number would have stayed in missed calls until closing.",
+      "claim": "Maya, a salon owner in the documented fixture case, used the workflow to hold a caller's intent until she was free to call back.",
+      "priority": 4,
+      "verified": true,
+      "snapshot_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    {
+      "source_id": "leadecho-case-dental",
+      "source_type": "independent_review",
+      "source_url": null,
+      "source_quote": "During treatment we cannot pick up every call. The follow-up message lets the caller tell us whether it is a new appointment, a change or an urgent question, so the front desk knows what it is returning.",
+      "claim": "A documented dental-office fixture case reported that the reply gives staff useful context before the callback.",
+      "priority": 4,
+      "verified": true,
+      "snapshot_sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    {
+      "source_id": "leadecho-trial-and-setup",
+      "source_type": "first_party_document",
+      "source_url": null,
+      "source_quote": "The controlled fixture plan includes a free 14-day trial on one existing business line. After the trial, the plan costs $39 per month. No new hardware is required. Before activation, the owner approves one follow-up text and configures callback windows. The account can be cancelled before the trial ends.",
+      "claim": "LeadEcho can be tested on one existing business line for 14 days, with a documented $39 monthly price after trial and a bounded setup workflow.",
+      "priority": 4,
+      "verified": true,
+      "snapshot_sha256": "6666666666666666666666666666666666666666666666666666666666666666"
+    },
+    {
+      "source_id": "maya-salon-price-list",
+      "source_type": "first_party_document",
+      "source_url": null,
+      "source_quote": "Maya's fixture salon lists new color appointments from $120.",
+      "claim": "The starting listed price of the service requested in the Maya fixture case is $120.",
+      "priority": 3,
+      "verified": true,
+      "snapshot_sha256": "7777777777777777777777777777777777777777777777777777777777777777"
+    }
+  ],
+  "research_documents": [
+    {
+      "document_id": "leadecho-mechanism-pack",
+      "source_ids": ["leadecho-product-spec", "leadecho-pilot-log"],
+      "summary": "The offer does not promise that every missed call becomes a booking. Its verified mechanism preserves the caller's intent and creates a clear callback action while the owner is busy."
+    },
+    {
+      "document_id": "leadecho-case-pack",
+      "source_ids": ["leadecho-case-maya", "leadecho-case-dental"],
+      "summary": "The documented fixture cases show the same general problem in two appointment businesses: the phone rings while the team is serving someone and cannot answer."
+    },
+    {
+      "document_id": "leadecho-value-pack",
+      "source_ids": ["leadecho-trial-and-setup", "maya-salon-price-list"],
+      "summary": "The fixture supports a free 14-day trial on one existing line, a $39 monthly price after trial, no new hardware, a bounded approval-and-callback-window setup and a $120 starting listed price for the color service requested in the documented Maya case. This supports a price-to-service comparison, not a guaranteed recovered booking or revenue claim."
+    }
+  ],
+  "deep_brief": {
+    "consumer_product": "LeadEcho missed-call follow-up",
+    "objective": "Move an owner-operator from accepting missed calls as unavoidable to testing whether caller intent can be held until the owner is free.",
+    "audience": "Appointment-business owners who personally serve customers and also carry responsibility for incoming calls.",
+    "awareness": "problem_aware",
+    "sophistication": 2,
+    "live_problem": "The owner cannot answer a new caller without interrupting the customer already in front of them, and the caller may disappear before the owner is free.",
+    "mechanism": "An unanswered call triggers an approved text, captures what the caller needs and offers an owner-configured callback window.",
+    "supported_result": "The owner can return a call with the caller's intent and requested callback time already visible. The pilot supports reply and callback-selection behavior, not guaranteed bookings.",
+    "honest_limit": "LeadEcho does not answer the call, guarantee a reply or guarantee a booking. The team still has to return the call.",
+    "decision_point": "Whether to connect one existing business line for a free 14-day controlled trial. The documented fixture price after trial is $39 per month, no new hardware is required, and the setup consists of approving one follow-up text and configuring callback windows.",
+    "supported_value_contrast": "The requested color service in Maya's fixture case starts at $120, while the documented LeadEcho plan costs $39 per month after the free trial. The copy may compare those listed prices but may not claim that LeadEcho recovered or guarantees the appointment.",
+    "conversion_spine": {
+      "person": "An owner serving a customer when a new caller phones.",
+      "unmet_need": "Keep the new caller's intent alive without abandoning the customer already in the chair.",
+      "scene_evidence": "Maya hears the salon phone while rinsing a client's hair and cannot answer it.",
+      "consequence_without_offer": "The number remains an unexplained missed call until Maya is free, and the caller may move on before she returns it.",
+      "causal_solution": "LeadEcho sends the approved follow-up, captures the requested service and offers a callback window while Maya keeps serving the current client.",
+      "open_at_cta": "The reader's own phone line is not connected, so the next unanswered caller still has no follow-up path.",
+      "swap_test": "Removing the missed-call trigger and reply workflow leaves the caller's intent unknown until the owner manually returns the call."
+    }
+  },
+  "spy_analyses": [],
+  "market_examples": [],
+  "performance_winners": [],
+  "avatar": {
+    "who": "An owner-operator of a salon, clinic, repair service or appointment business",
+    "life_situation": "Their hands and attention are often occupied by the customer in front of them when the phone rings.",
+    "pain_points": ["Unexplained missed calls", "Interrupting a paying customer", "Returning calls after intent has cooled"],
+    "objections": ["Automated texts may feel impersonal", "The caller may not reply", "The team still has to call back"],
+    "desires": ["Protect the current customer", "Know why the next caller called", "Return the right calls at the promised time"],
+    "voice_of_customer": ["I cannot stop in the middle of a customer just because the phone rings.", "Before, that number would have stayed in missed calls until closing."],
+    "market_position": {
+      "awareness_sophistication": {
+        "awareness_stage": "problem_aware",
+        "sophistication_stage": 2
+      }
+    },
+    "action_fields": {
+      "voc_lines": [
+        { "line": "I cannot stop in the middle of a customer just because the phone rings.", "anchor": "quote", "source": "leadecho-case-maya" },
+        { "line": "Before, that number would have stayed in missed calls until closing.", "anchor": "quote", "source": "leadecho-case-maya" }
+      ]
+    },
+    "transformation": "From seeing a mystery number after the customer leaves to seeing a named need and requested callback time.",
+    "emotional_trigger": "Realizing they can care for the person in front of them without silently losing the person on the phone.",
+    "trust_signals": ["Documented call sequence", "Owner-approved message", "Pilot logs with an explicit no-guarantee limit"]
+  },
+  "test_kit": {
+    "primary_hypothesis": "A documented in-the-chair missed-call scene will make the problem concrete; the reply-and-callback sequence will make LeadEcho the direct solution.",
+    "required_proof": ["Exact Maya case sequence", "Exact product trigger", "Honest no-booking-guarantee limit", "Exact trial, setup and price facts for any value comparison"],
+    "prohibited_shortcuts": ["Calling LeadEcho unique", "Attacking voicemail or competitors", "Turning pilot response into guaranteed bookings"]
+  },
+  "taste_corpus": [],
+  "hook_library": [],
+  "creative_hint": "Open inside Maya's documented salon moment. Build toward the realization that she did not have to choose between the customer in the chair and the caller on the phone.",
+  "missing_inputs": ["spy_analyses", "performance_winners", "competitive_research"],
+  "omitted_context": [],
+  "snapshot_sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+}
