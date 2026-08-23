@@ -4,6 +4,8 @@ import {
   CopyDepartmentPlanSchema,
   CREATIVE_DEPARTMENT_FOUNDATION,
   EvidenceEnvelopeSchema,
+  EvidenceHookSchema,
+  EvidenceVariantSchema,
 } from './adCopyEvidence'
 
 describe('EvidenceEnvelopeSchema', () => {
@@ -51,6 +53,28 @@ describe('EvidenceEnvelopeSchema', () => {
 })
 
 describe('agency foundations', () => {
+  it('accepts the native campaign language on hooks and copy', () => {
+    expect(
+      EvidenceHookSchema.safeParse({
+        text: 'The next caller should not have to wait.',
+        angle_index: 0,
+        lang: 'en',
+        payoff_anchor: 'The caller keeps moving.',
+      }).success
+    ).toBe(true)
+    expect(
+      EvidenceVariantSchema.safeParse({
+        lang: 'en',
+        primary_text: 'Native campaign copy.',
+        headline: 'Keep the caller moving',
+        hook: 'The phone rang while both hands were busy.',
+        angle_index: 0,
+        block_ids: ['b1'],
+        line_purpose_map: [],
+      }).success
+    ).toBe(true)
+  })
+
   it('accepts a director plan with materially distinct specialists', () => {
     const result = CopyDepartmentPlanSchema.safeParse({
       schema_version: 'copy-department-v1',
