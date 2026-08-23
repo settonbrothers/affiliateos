@@ -69,6 +69,7 @@ Deno.serve(async (req: Request) => {
       template?: string
       creative_hint?: string
       additional_source_urls?: string[]
+      model_profile?: 'economy_smoke'
       campaign_context?: {
         channel?: string
         geo?: string
@@ -80,6 +81,9 @@ Deno.serve(async (req: Request) => {
     }
     const offerId = body.offer_id
     if (!offerId) return jsonResponse({ error: 'offer_id is required' }, 400)
+    if (body.model_profile && body.model_profile !== 'economy_smoke') {
+      return jsonResponse({ error: 'invalid model_profile' }, 400)
+    }
     if (
       body.creative_hint &&
       (typeof body.creative_hint !== 'string' ||
@@ -120,6 +124,16 @@ Deno.serve(async (req: Request) => {
     const template = body.template ?? undefined
 
     const admin = getAdminClient()
+    if (body.model_profile === 'economy_smoke') {
+      const { data: callerProfile, error: callerProfileError } = await admin
+        .from('profiles')
+        .select('system_role')
+        .eq('id', user.id)
+        .single()
+      if (callerProfileError || callerProfile?.system_role !== 'admin') {
+        throw new ForbiddenError('Admin role required for economy smoke mode')
+      }
+    }
     const { data: offer, error: offerErr } = await admin
       .from('offers')
       .select(
@@ -559,6 +573,7 @@ Deno.serve(async (req: Request) => {
             : 'legacy-v2',
         creative_hint_present: !!body.creative_hint?.trim(),
         additional_source_url_count: additionalSourceUrls.length,
+        model_profile: body.model_profile ?? 'production',
       },
       userId: user.id,
       workspaceId: offer.workspace_id ?? undefined,
@@ -600,6 +615,7 @@ Deno.serve(async (req: Request) => {
               audience: null,
             },
             brainSnapshot,
+            modelProfile: body.model_profile ?? 'production',
           }
 
           const result = await runAdCopy(input)

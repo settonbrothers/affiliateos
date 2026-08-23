@@ -11,11 +11,15 @@ if (!url || !serviceRole) {
 const admin = createClient(url, serviceRole, {
   auth: { persistSession: false },
 })
+const brainRelease = JSON.parse(
+  await (
+    await import('node:fs/promises')
+  ).readFile('brain-release/manifest.json', 'utf8')
+) as { release_version: string; manifest_sha256: string }
 const fixture = JSON.parse(
-  await (await import('node:fs/promises')).readFile(
-    'brain-evals/leadecho-controlled-v1.snapshot.json',
-    'utf8'
-  )
+  await (
+    await import('node:fs/promises')
+  ).readFile('brain-evals/leadecho-controlled-v1.snapshot.json', 'utf8')
 ) as {
   offer: Record<string, unknown>
   sources: Array<{
@@ -37,12 +41,13 @@ let workspaceId: string | null = null
 let offerId: string | null = null
 let runId: string | null = null
 let smokeResult: Record<string, unknown> = {
-  release: 'copy-brain-release-v3.31',
+  release: brainRelease.release_version,
+  manifest_sha256: brainRelease.manifest_sha256,
   fixture: 'leadecho-controlled-v1',
   started_at: new Date().toISOString(),
 }
 
-const requireData = <T>(data: T | null, error: unknown, label: string): T => {
+const requireData = <T,>(data: T | null, error: unknown, label: string): T => {
   if (error || data === null) {
     throw new Error(`${label}: ${JSON.stringify(error)}`)
   }
@@ -184,9 +189,11 @@ try {
         audience:
           'Owner-operators of appointment businesses who cannot answer while serving a customer',
         objective_type: 'trial',
-        desired_action: 'Start a free 14-day LeadEcho trial on one existing business line',
+        desired_action:
+          'Start a free 14-day LeadEcho trial on one existing business line',
         audience_side: 'consumer',
       },
+      model_profile: 'economy_smoke',
     }),
   })
   const accepted = (await response.json()) as {
@@ -244,12 +251,19 @@ try {
     candidates: payload?.variants ?? [],
   }
   if (payload?.engine_version !== 'evidence-agency-v9') {
-    throw new Error(`unexpected engine: ${payload?.engine_version ?? 'missing'}`)
+    throw new Error(
+      `unexpected engine: ${payload?.engine_version ?? 'missing'}`
+    )
   }
   const variants = payload.variants ?? []
-  if (variants.length === 0) throw new Error('smoke produced no copy candidates')
+  if (variants.length === 0)
+    throw new Error('smoke produced no copy candidates')
   const rendered = variants
-    .flatMap((variant) => [variant.hook, variant.headline, variant.primary_text])
+    .flatMap((variant) => [
+      variant.hook,
+      variant.headline,
+      variant.primary_text,
+    ])
     .filter(Boolean)
     .join('\n')
   if (/[֐-׿]/u.test(rendered)) {
@@ -277,7 +291,10 @@ try {
     trace: payload.trace ?? null,
     candidates: variants,
   }
-  writeFileSync('copy-brain-v331-smoke-result.json', `${JSON.stringify(smokeResult, null, 2)}\n`)
+  writeFileSync(
+    'copy-brain-v331-smoke-result.json',
+    `${JSON.stringify(smokeResult, null, 2)}\n`
+  )
   console.log(
     `PASS ${payload.engine_version} ${payload.output_status} candidates=${variants.length} cost=$${Number(run.estimated_cost).toFixed(4)}`
   )
@@ -289,7 +306,10 @@ try {
     run_id: runId,
     error: error instanceof Error ? error.message : String(error),
   }
-  writeFileSync('copy-brain-v331-smoke-result.json', `${JSON.stringify(smokeResult, null, 2)}\n`)
+  writeFileSync(
+    'copy-brain-v331-smoke-result.json',
+    `${JSON.stringify(smokeResult, null, 2)}\n`
+  )
   throw error
 } finally {
   if (offerId) {
@@ -305,8 +325,14 @@ try {
   }
   if (workspaceId) {
     await admin.from('credit_ledger').delete().eq('workspace_id', workspaceId)
-    await admin.from('workspace_credit_caps').delete().eq('workspace_id', workspaceId)
-    await admin.from('workspace_members').delete().eq('workspace_id', workspaceId)
+    await admin
+      .from('workspace_credit_caps')
+      .delete()
+      .eq('workspace_id', workspaceId)
+    await admin
+      .from('workspace_members')
+      .delete()
+      .eq('workspace_id', workspaceId)
     await admin.from('workspaces').delete().eq('id', workspaceId)
   }
   if (userId) await admin.auth.admin.deleteUser(userId)

@@ -1,6 +1,6 @@
 {
   "schema_version": "brain-role-load-map-v1",
-  "release_version": "copy-brain-release-v3.31",
+  "release_version": "copy-brain-release-v3.32",
   "roles": {
     "evidence": {
       "knowledge": [

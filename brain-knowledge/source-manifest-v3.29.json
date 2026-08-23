@@ -1,6 +1,6 @@
 {
   "schema_version": "brain-source-manifest-v1",
-  "release_version": "copy-brain-release-v3.31",
+  "release_version": "copy-brain-release-v3.32",
   "source_policy": "Historical owner evidence is preserved byte-for-byte. Active role packs are derived, dash-normalized and independently checked.",
   "sources": [
     { "path": "brain/sources/owner-canon/COPY-MANUAL.original.md", "sha256": "1ba1bccd6d7fac2cc0105e33889fd0231c35772bc4897ce75a77ad63b5999831", "authority": "base_manual" },
