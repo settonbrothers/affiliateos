@@ -45,6 +45,15 @@ declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void }
 const MOCK_LATENCY_MS = 8_000
 const ACTION = 'generate-ad-copy'
 const ORCHESTRATOR = 'AdCopyOrchestrator'
+const OBJECTIVE_TYPES = [
+  'sale',
+  'lead',
+  'donation',
+  'trial',
+  'signup',
+  'affiliate_recruitment',
+] as const
+type ObjectiveType = (typeof OBJECTIVE_TYPES)[number]
 // Cap how many human-labelled examples feed the few-shot context, newest first.
 const CORPUS_LIMIT = 60
 
@@ -60,7 +69,14 @@ Deno.serve(async (req: Request) => {
       template?: string
       creative_hint?: string
       additional_source_urls?: string[]
-      campaign_context?: { channel?: string; geo?: string; audience?: string }
+      campaign_context?: {
+        channel?: string
+        geo?: string
+        audience?: string
+        objective_type?: ObjectiveType
+        desired_action?: string
+        audience_side?: 'consumer' | 'affiliate_marketer' | 'donor'
+      }
     }
     const offerId = body.offer_id
     if (!offerId) return jsonResponse({ error: 'offer_id is required' }, 400)
@@ -261,6 +277,40 @@ Deno.serve(async (req: Request) => {
     const spyContext =
       (spyRows?.[0]?.payload as Record<string, unknown> | undefined) ?? null
 
+    const deepBriefRecord = deepBriefContext ?? {}
+    const testKitRecord =
+      testKit && typeof testKit === 'object'
+        ? (testKit as Record<string, unknown>)
+        : {}
+    const objectiveText = [
+      deepBriefRecord.objective,
+      deepBriefRecord.decision_point,
+      testKitRecord.primary_hypothesis,
+    ]
+      .filter((value): value is string => typeof value === 'string')
+      .join(' ')
+      .toLowerCase()
+    const inferredObjective: ObjectiveType | undefined =
+      body.campaign_context?.objective_type ??
+      (/(free )?trial|ניסיון/u.test(objectiveText)
+        ? 'trial'
+        : /donat|תרומ/u.test(objectiveText)
+          ? 'donation'
+          : /sign[ -]?up|הרשמ/u.test(objectiveText)
+            ? 'signup'
+            : /book|contact|lead|השארת פרטים|ליד/u.test(objectiveText)
+              ? 'lead'
+              : /buy|purchase|sale|רכיש|קני/u.test(objectiveText)
+                ? 'sale'
+                : undefined)
+    const inferredDesiredAction =
+      body.campaign_context?.desired_action ??
+      (typeof deepBriefRecord.desired_action === 'string'
+        ? deepBriefRecord.desired_action
+        : typeof deepBriefRecord.decision_point === 'string'
+          ? deepBriefRecord.decision_point
+          : null)
+
     const { data: campaignRows } = await admin
       .from('campaigns')
       .select('id')
@@ -451,6 +501,11 @@ Deno.serve(async (req: Request) => {
         geo: body.campaign_context?.geo ? [body.campaign_context.geo] : [],
         audience: body.campaign_context?.audience ?? null,
         generation_language: generationLanguage,
+        objective_type: inferredObjective,
+        desired_action: inferredDesiredAction,
+        audience_side:
+          body.campaign_context?.audience_side ??
+          (inferredObjective === 'donation' ? 'donor' : 'consumer'),
       },
       underwriting: underwritingContext,
       compliance: complianceContext,
