@@ -11,9 +11,13 @@ import {
   validateHookCoverage,
 } from '../brainContracts/validateAgencyContracts.ts'
 import {
+  ANGLE_STAGE_MAX_RETRIES,
+  ANGLE_STAGE_MAX_TOKENS,
+  ANGLE_TOOL_DESCRIPTION,
   normalizeAnglesToolInput,
   resolveEvidenceStageModel,
 } from './adCopyEvidence.ts'
+import { EvidenceAngleSchema } from '../types/adCopyEvidence.ts'
 
 Deno.test(
   'lone angle transport is wrapped without changing semantic fields',
@@ -30,6 +34,66 @@ Deno.test(
     assertEquals(normalizeAnglesToolInput({ angle_id: 'incomplete' }), {
       angle_id: 'incomplete',
     })
+  }
+)
+
+Deno.test(
+  'angle stage preserves the v8 contract and enough output room',
+  () => {
+    assertEquals(ANGLE_STAGE_MAX_TOKENS, 8192)
+    assertEquals(ANGLE_STAGE_MAX_RETRIES, 2)
+    assert(ANGLE_TOOL_DESCRIPTION.includes('exactly 2 concise'))
+
+    const result = EvidenceAngleSchema.safeParse({
+      name: 'The cost of the missed call',
+      positioning: 'Show the unresolved lead before explaining the mechanism.',
+      rooted_in: 'source-1',
+      positive_differentiation: {
+        offer_strength: 'LeadEcho gives the caller a supported next step.',
+        offer_strength_source_ids: ['source-1'],
+        market_claim_mode: 'offer_only',
+        market_claim: null,
+        market_claim_evidence_ids: [],
+        competitor_denigration_used: false,
+      },
+      narrative_license: {
+        mode: 'evidence_based_dramatization',
+        decision_reason: 'The material result remains evidence-bounded.',
+        basis_outcome_ids: ['outcome-1'],
+        character_status: 'synthetic',
+        voice_mode: 'dramatized_first_person',
+        disclosure_required: false,
+        allowed_inventions: ['identity', 'scene'],
+        forbidden_inventions: ['measured performance'],
+        fallback_format: null,
+        requirements_met: true,
+      },
+      conversion_spine: {
+        person: 'A small-business owner',
+        unmet_need_now: 'Recover a caller while intent is still live.',
+        scene_evidence:
+          'The owner sees the missed call after serving a customer.',
+        consequence_without_offer:
+          'The opportunity may disappear before a callback.',
+        truth_sources: ['source-1'],
+        dominant_emotional_peak:
+          'The owner realizes silence can cost the relationship.',
+        build_to_peak: ['The phone rings', 'The work cannot stop'],
+        offer_mechanism:
+          'LeadEcho creates an immediate next step for the caller.',
+        why_offer_is_causal_solution:
+          'It keeps the caller moving before the callback.',
+        unresolved_at_ask: 'The next missed call still has no immediate path.',
+        causal_dependency_test: {
+          removed_offer_mechanism: 'Remove the immediate caller next step.',
+          reader_problem_still_resolves: false,
+          explanation: 'The owner returns to the same unresolved gap.',
+        },
+      },
+      is_recommended: true,
+    })
+
+    assert(result.success)
   }
 )
 

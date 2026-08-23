@@ -33,7 +33,8 @@ export class AnthropicValidationError extends Error {
     public readonly zodError: z.ZodError,
     public readonly rawInput: unknown,
     public readonly usage: { input_tokens: number; output_tokens: number },
-    public readonly costUsd: number
+    public readonly costUsd: number,
+    public readonly stopReason: string | null
   ) {
     super(
       `Anthropic tool_use output failed Zod validation: ${zodError.message}`
@@ -156,7 +157,8 @@ export async function callAnthropicWithTool<T extends ZodTypeAny>(
           parsed.error,
           toolUse.input,
           { ...cumulativeUsage },
-          calculateAnthropicCostUsd(args.model, cumulativeUsage)
+          calculateAnthropicCostUsd(args.model, cumulativeUsage),
+          resp.stop_reason
         )
       }
 
@@ -198,6 +200,8 @@ export async function callAnthropicWithTool<T extends ZodTypeAny>(
               err instanceof AnthropicValidationError ? err.usage : null,
             failedCostUsd:
               err instanceof AnthropicValidationError ? err.costUsd : null,
+            stopReason:
+              err instanceof AnthropicValidationError ? err.stopReason : null,
           },
         })
         throw err

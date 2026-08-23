@@ -57,6 +57,16 @@ export const resolveEvidenceStageModel = (
   prepModel = MODEL
 ) => (profile === 'economy_smoke' ? prepModel : preferredModel)
 
+// CopyAngle v8 returns several nested evidence and causality fields per angle.
+// The former 4,096-token default truncated every Sonnet attempt in the smoke
+// run (12,288 output tokens across three attempts), leaving an empty tool
+// input. Two concise angles preserve a real strategic choice while the larger
+// ceiling prevents transport truncation.
+export const ANGLE_STAGE_MAX_TOKENS = 8192
+export const ANGLE_STAGE_MAX_RETRIES = 2
+export const ANGLE_TOOL_DESCRIPTION =
+  'Submit exactly 2 concise, materially distinct evidence-licensed angles in one call.'
+
 // Sonnet occasionally submits one valid AngleV8 directly even though the tool
 // JSON Schema and prompt both require { angles: [...] }. This adapter repairs
 // only that outer transport shape. The angle itself still has to satisfy the
@@ -194,6 +204,8 @@ async function stage<T extends ZodTypeAny>(args: {
   version?: string
   frozenPromptContent?: string
   inputNormalizer?: (rawInput: unknown) => unknown
+  maxTokens?: number
+  maxRetries?: number
 }): Promise<{ data: z.infer<T>; usage: Usage }> {
   const result = await callAnthropicWithTool({
     model: args.model ?? MODEL,
@@ -211,6 +223,8 @@ async function stage<T extends ZodTypeAny>(args: {
     toolDescription: args.description,
     responseSchema: args.schema,
     inputNormalizer: args.inputNormalizer,
+    maxTokens: args.maxTokens,
+    maxRetries: args.maxRetries,
   })
   return {
     data: result.data,
@@ -845,9 +859,11 @@ export async function runAdCopyEvidence(
   const angles = await stage({
     orchestrator: 'CopyAngleOrchestrator',
     tool: 'submit_angles',
-    description: 'Submit evidence-licensed angles once.',
+    description: ANGLE_TOOL_DESCRIPTION,
     schema: AnglesSchema,
     inputNormalizer: normalizeAnglesToolInput,
+    maxTokens: ANGLE_STAGE_MAX_TOKENS,
+    maxRetries: ANGLE_STAGE_MAX_RETRIES,
     version: input.promptVersions?.CopyAngleOrchestrator,
     frozenPromptContent: input.promptContents?.CopyAngleOrchestrator,
     vertical,
@@ -1916,9 +1932,11 @@ export async function runAdCopyEvidenceAgencyStep(
     const angles = await stage({
       orchestrator: 'CopyAngleOrchestrator',
       tool: 'submit_angles',
-      description: 'Submit evidence-licensed angles once.',
+      description: ANGLE_TOOL_DESCRIPTION,
       schema: AnglesSchema,
       inputNormalizer: normalizeAnglesToolInput,
+      maxTokens: ANGLE_STAGE_MAX_TOKENS,
+      maxRetries: ANGLE_STAGE_MAX_RETRIES,
       version: input.promptVersions?.CopyAngleOrchestrator,
       frozenPromptContent: input.promptContents?.CopyAngleOrchestrator,
       vertical,
