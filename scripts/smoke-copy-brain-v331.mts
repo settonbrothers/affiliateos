@@ -239,6 +239,11 @@ try {
         primary_text?: string
         headline?: string
       }>
+      angles?: Array<Record<string, unknown>>
+      hooks?: Array<Record<string, unknown>>
+      reader_report?: Record<string, unknown> | null
+      critic_report?: Record<string, unknown> | null
+      judge?: Record<string, unknown> | null
       trace?: Record<string, unknown>
     }
   }
@@ -253,6 +258,11 @@ try {
     tokens_input: run.tokens_input,
     tokens_output: run.tokens_output,
     trace: payload?.trace ?? null,
+    angles: payload?.angles ?? [],
+    hooks: payload?.hooks ?? [],
+    reader_report: payload?.reader_report ?? null,
+    critic_report: payload?.critic_report ?? null,
+    judge: payload?.judge ?? null,
     candidates: payload?.variants ?? [],
   }
   if (payload?.engine_version !== 'evidence-agency-v9') {
