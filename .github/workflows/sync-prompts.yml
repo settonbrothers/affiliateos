@@ -21,6 +21,7 @@ on:
           - brain-stage
           - brain-release
           - brain-restore-scope
+          - brain-smoke
 
 jobs:
   sync:
@@ -71,3 +72,16 @@ jobs:
       - name: Restore prompts outside the copy department
         if: ${{ github.event.inputs.mode == 'brain-restore-scope' }}
         run: pnpm brain:restore-scope -- --confirm-scope-repair
+
+      - name: Run one controlled LeadEcho system smoke
+        if: ${{ github.event.inputs.mode == 'brain-smoke' }}
+        run: pnpm exec tsx scripts/smoke-copy-brain-v331.mts
+
+      - name: Preserve smoke trace
+        if: ${{ always() && github.event.inputs.mode == 'brain-smoke' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: copy-brain-smoke-${{ github.run_id }}
+          path: copy-brain-v331-smoke-result.json
+          if-no-files-found: error
+          retention-days: 90
