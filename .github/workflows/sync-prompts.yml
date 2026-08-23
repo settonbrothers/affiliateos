@@ -20,6 +20,7 @@ on:
           - sync
           - brain-stage
           - brain-release
+          - brain-restore-scope
 
 jobs:
   sync:
@@ -66,3 +67,7 @@ jobs:
           path: brain-release/rollback-copy-brain-release-v3.31.json
           if-no-files-found: error
           retention-days: 90
+
+      - name: Restore prompts outside the copy department
+        if: ${{ github.event.inputs.mode == 'brain-restore-scope' }}
+        run: pnpm brain:restore-scope -- --confirm-scope-repair
