@@ -1,0 +1,35 @@
+name: Smoke Copy Brain
+
+on:
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Run one controlled LeadEcho system smoke
+        run: pnpm exec tsx scripts/smoke-copy-brain-v331.mts
+
+      - name: Preserve smoke trace
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: copy-brain-smoke-${{ github.run_id }}
+          path: copy-brain-v331-smoke-result.json
+          if-no-files-found: error
+          retention-days: 90
