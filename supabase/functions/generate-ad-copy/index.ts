@@ -494,8 +494,8 @@ Deno.serve(async (req: Request) => {
         corpus_example_count: corpus.length,
         vertical: verticalSlug ?? null,
         engine_version:
-          Deno.env.get('AD_COPY_EVIDENCE_V4_ENABLED') === 'true'
-            ? 'evidence-story-v4'
+          Deno.env.get('AD_COPY_BRAIN_V331_ENABLED') !== 'false'
+            ? 'evidence-agency-v9'
             : 'legacy-v2',
         creative_hint_present: !!body.creative_hint?.trim(),
         additional_source_url_count: additionalSourceUrls.length,

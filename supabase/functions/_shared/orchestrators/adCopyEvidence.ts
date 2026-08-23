@@ -25,8 +25,11 @@ import { compileCopyBrainContext } from './copyBrainContext.ts'
 import { compileCopyExecutionBriefV2 } from './copyExecutionBrief.ts'
 import type { CopyBrainInputSnapshotV1 } from '../types/copyBrain.ts'
 import {
+  finalizeDepartmentDecision,
+  normalizeCopyGateReport,
   selectCandidateHook,
   selectRevisionCandidate,
+  normalizePermittedSyntheticCharacterFlags,
   normalizeTasteKillFlag,
   tasteRequirementStatus as rawTasteRequirementStatus,
   validateAngleDecision,
@@ -75,6 +78,35 @@ const validateHookCoverage = rawValidateHookCoverage as (
   plan: unknown,
   hooks: unknown[]
 ) => { pass: boolean; flags: string[]; details: string[] }
+
+const normalizeRuntimeGateReport = <T extends Record<string, unknown>>(
+  report: T,
+  status: TasteRequirementStatus
+) =>
+  normalizeCopyGateReport(
+    normalizePermittedSyntheticCharacterFlags(
+      normalizeTasteKillFlag(report, status)
+    )
+  ) as T
+
+const shortHyphens = (value: string) => value.replace(/[—–]/gu, '-')
+
+const normalizeCandidateSurface = <
+  T extends z.infer<typeof AgencyEvidenceVariantSchema>,
+>(candidate: T): T => {
+  const hook = shortHyphens(candidate.hook).trim()
+  let primaryText = shortHyphens(candidate.primary_text).trim()
+  if (hook && primaryText.startsWith(hook)) {
+    primaryText = primaryText.slice(hook.length).replace(/^\s+/, '')
+  }
+  return {
+    ...candidate,
+    hook,
+    primary_text: primaryText,
+    headline: shortHyphens(candidate.headline),
+    subheadline: shortHyphens(candidate.subheadline),
+  }
+}
 const VariantsSchema = z.object({
   variants: z.array(EvidenceVariantSchema).length(1),
 })
@@ -257,7 +289,9 @@ const candidatePreflightFlags = (
 function assembleInputBlocked(
   brief: ExecutionBriefV2,
   engineVersion:
-    'evidence-agency-v6' | 'evidence-agency-v7' = 'evidence-agency-v6'
+    | 'evidence-agency-v6'
+    | 'evidence-agency-v7'
+    | 'evidence-agency-v9' = 'evidence-agency-v6'
 ): AdCopyEvidenceResponse {
   const flags = readinessFlags(brief)
   const envelope = {
@@ -364,6 +398,7 @@ function assemble(parts: {
     | 'evidence-agency-v5'
     | 'evidence-agency-v6'
     | 'evidence-agency-v7'
+    | 'evidence-agency-v9'
 }): AdCopyEvidenceResponse {
   const selected =
     parts.selectedIndex === null ? null : parts.angles[parts.selectedIndex]
@@ -467,7 +502,10 @@ function tokenSimilarity(left: string, right: string): number {
 function assembleAgency(parts: {
   executionBrief: ExecutionBriefV2 | null
   engineVersion:
-    'evidence-agency-v5' | 'evidence-agency-v6' | 'evidence-agency-v7'
+    | 'evidence-agency-v5'
+    | 'evidence-agency-v6'
+    | 'evidence-agency-v7'
+    | 'evidence-agency-v9'
   envelope: z.infer<typeof EvidenceEnvelopeSchema>
   angles: z.infer<typeof EvidenceAngleSchema>[]
   hooks: z.infer<typeof EvidenceHookSchema>[]
@@ -487,16 +525,24 @@ function assembleAgency(parts: {
     revision?: Record<string, unknown>
   }
 }): AdCopyEvidenceResponse {
+  const normalizedReviews = parts.reviews.map((review) => ({
+    ...review,
+    critic: normalizeCopyGateReport(
+      normalizePermittedSyntheticCharacterFlags(review.critic)
+    ),
+    judge: normalizeCopyGateReport(
+      normalizePermittedSyntheticCharacterFlags(review.judge)
+    ),
+  })) as z.infer<typeof CopyCandidateReviewSchema>[]
+  const departmentDecision = finalizeDepartmentDecision(
+    parts.candidates,
+    normalizedReviews,
+    parts.portfolio
+  )
   const safeIds = new Set(
-    parts.reviews
-      .filter(
-        (review) =>
-          review.judge.overall === 'pass' &&
-          review.judge.compliance_ok &&
-          review.judge.kill_flags.length === 0 &&
-          review.critic.kill_flags.length === 0
-      )
-      .map((review) => review.candidate_id)
+    departmentDecision.ready_candidates.map((candidate: { candidate_id: string }) =>
+      candidate.candidate_id
+    )
   )
   const ranked: z.infer<typeof AgencyEvidenceVariantSchema>[] = []
   for (const candidateId of parts.portfolio.ranked_candidate_ids) {
@@ -517,9 +563,9 @@ function assembleAgency(parts: {
   }
   const recommended = ranked[0] ?? null
   const topReview =
-    parts.reviews.find(
+    normalizedReviews.find(
       (review) => review.candidate_id === recommended?.candidate_id
-    ) ?? parts.reviews[0]
+    ) ?? normalizedReviews[0]
   const selectedAngleIndex = recommended?.angle_index ?? 0
   const selectedAngle = parts.angles[selectedAngleIndex] ?? parts.angles[0]
   const outputStatus =
@@ -565,7 +611,7 @@ function assembleAgency(parts: {
       variants: ranked,
       department_plan: parts.departmentPlan,
       recommended_candidate_id: recommended?.candidate_id ?? null,
-      candidate_reviews: parts.reviews,
+      candidate_reviews: normalizedReviews,
       portfolio_decision: {
         ...parts.portfolio,
         ranked_candidate_ids: ranked.map((candidate) => candidate.candidate_id),
@@ -620,7 +666,8 @@ function assembleAgency(parts: {
         ),
         models:
           parts.engineVersion === 'evidence-agency-v6' ||
-          parts.engineVersion === 'evidence-agency-v7'
+          parts.engineVersion === 'evidence-agency-v7' ||
+          parts.engineVersion === 'evidence-agency-v9'
             ? {
                 preparation: MODEL,
                 hook_and_writers: WRITER_MODEL,
@@ -641,10 +688,22 @@ export async function runAdCopyEvidence(
   input: EvidenceAdCopyInput
 ): Promise<{ output: Record<string, unknown>; usage: Usage; mode: 'real' }> {
   const vertical = input.verticalSlug ?? input.offer.vertical ?? undefined
+  const activeDirectorContent =
+    input.promptContents?.CopyDirectorOrchestrator ??
+    (!input.promptVersions?.CopyDirectorOrchestrator
+      ? await loadActivePrompt('CopyDirectorOrchestrator', vertical)
+      : null)
+  const agencyV9Enabled = Boolean(
+    Object.values(input.promptVersions ?? {}).some((version) =>
+      version.endsWith('brain-v3.31')
+    ) ||
+      activeDirectorContent?.includes('LeadEcho v3.30')
+  )
   const agencyV7Enabled = Boolean(
+    agencyV9Enabled ||
     input.promptVersions?.CopyDirectorOrchestrator === 'v3' ||
     input.promptVersions?.CopyAngleOrchestrator === 'v6' ||
-    input.promptContents?.CopyDirectorOrchestrator?.includes('Copy Director v3')
+    activeDirectorContent?.includes('Copy Director v3')
   )
   const agencyV6Enabled = Boolean(
     agencyV7Enabled ||
@@ -677,7 +736,11 @@ export async function runAdCopyEvidence(
     return {
       output: assembleInputBlocked(
         executionBrief!,
-        agencyV7Enabled ? 'evidence-agency-v7' : 'evidence-agency-v6'
+        agencyV9Enabled
+          ? 'evidence-agency-v9'
+          : agencyV7Enabled
+            ? 'evidence-agency-v7'
+            : 'evidence-agency-v6'
       ) as unknown as Record<string, unknown>,
       usage: { input_tokens: 0, output_tokens: 0, cost_usd: 0 },
       mode: 'real',
@@ -840,8 +903,10 @@ export async function runAdCopyEvidence(
       ),
       selectedIndex,
       refineIterations: 0,
-      engineVersion: agencyV7Enabled
-        ? 'evidence-agency-v7'
+      engineVersion: agencyV9Enabled
+        ? 'evidence-agency-v9'
+        : agencyV7Enabled
+          ? 'evidence-agency-v7'
         : agencyEnabled
           ? 'evidence-agency-v5'
           : 'evidence-story-v4',
@@ -861,7 +926,7 @@ export async function runAdCopyEvidence(
     hooks = await stage({
       orchestrator: 'CopyHookOrchestrator',
       tool: 'submit_hooks',
-      description: 'Submit Hebrew evidence-bound hooks once.',
+      description: 'Submit evidence-bound hooks in the campaign delivery language.',
       schema: HooksSchema,
       version: input.promptVersions?.CopyHookOrchestrator,
       frozenPromptContent: input.promptContents?.CopyHookOrchestrator,
@@ -900,7 +965,7 @@ export async function runAdCopyEvidence(
         campaign_context: input.campaignContext ?? null,
         relevant_taste_examples: executionBrief?.taste_selection.selected ?? [],
         doctrine_bundle: executionBrief?.doctrine_bundle ?? null,
-        latest_quality_baseline: 'michael-v5-positive / round5-negative',
+        latest_quality_baseline: 'michael-v5-fundraising-positive / leadecho-v3.30-commercial-positive / round5-negative',
         spy_intelligence: preparedSnapshot
           ? {
               analyses: preparedSnapshot.spy_analyses,
@@ -933,7 +998,9 @@ export async function runAdCopyEvidence(
       }))
       const output = assembleAgency({
         executionBrief,
-        engineVersion: 'evidence-agency-v7',
+        engineVersion: agencyV9Enabled
+          ? 'evidence-agency-v9'
+          : 'evidence-agency-v7',
         envelope: evidence.data,
         angles: angles.data.angles,
         hooks: [],
@@ -966,7 +1033,7 @@ export async function runAdCopyEvidence(
         orchestrator: 'CopyHookOrchestrator',
         tool: 'submit_hooks',
         description:
-          'Submit a compatible Hebrew hook pool for every candidate.',
+          'Submit a compatible hook pool in the campaign delivery language for every candidate.',
         schema: AgencyV7HooksSchema,
         version: input.promptVersions?.CopyHookOrchestrator,
         frozenPromptContent: input.promptContents?.CopyHookOrchestrator,
@@ -993,7 +1060,9 @@ export async function runAdCopyEvidence(
       if (!hookCoverage.pass) {
         const output = assembleAgency({
           executionBrief,
-          engineVersion: 'evidence-agency-v7',
+          engineVersion: agencyV9Enabled
+            ? 'evidence-agency-v9'
+            : 'evidence-agency-v7',
           envelope: evidence.data,
           angles: angles.data.angles,
           hooks: generatedHooks.data.hooks,
@@ -1055,7 +1124,7 @@ export async function runAdCopyEvidence(
       const written = await stage({
         orchestrator,
         tool: 'submit_copy_candidate',
-        description: 'Submit one Hebrew specialist candidate.',
+        description: 'Submit one specialist candidate in the campaign delivery language.',
         schema: agencyV7Enabled
           ? AgencyV7VariantSchema
           : AgencyEvidenceVariantSchema,
@@ -1081,20 +1150,20 @@ export async function runAdCopyEvidence(
             executionBrief?.taste_selection.requirement_status ??
             'none_available',
           doctrine_bundle: executionBrief?.doctrine_bundle ?? null,
-          latest_quality_baseline: 'michael-v5-positive / round5-negative',
+          latest_quality_baseline: 'michael-v5-fundraising-positive / leadecho-v3.30-commercial-positive / round5-negative',
           previous_candidate: null,
           revision_request: null,
         },
       })
       spend(written.usage)
-      const candidate = AgencyEvidenceVariantSchema.parse({
+      const candidate = normalizeCandidateSurface(AgencyEvidenceVariantSchema.parse({
         ...written.data,
         candidate_id: brief.candidate_id,
         specialist: brief.specialist,
         test_hypothesis: brief.test_hypothesis,
         angle_index: brief.angle_index,
         revision_number: agencyV7Enabled ? 0 : written.data.revision_number,
-      })
+      }))
       candidates.push(candidate)
 
       const read = await stage({
@@ -1141,7 +1210,7 @@ export async function runAdCopyEvidence(
         },
       })
       spend(critiqued.usage)
-      const criticData = normalizeTasteKillFlag(
+      const criticData = normalizeRuntimeGateReport(
         critiqued.data,
         candidateTasteStatus
       )
@@ -1186,15 +1255,15 @@ export async function runAdCopyEvidence(
               : null
           )
         : []
-      const normalizedJudgment = normalizeTasteKillFlag(
+      const normalizedJudgment = normalizeRuntimeGateReport(
         judged.data,
         candidateTasteStatus
       )
       const judgedData = EvidenceJudgeSchema.parse(
-        deterministicFlags.length
-          ? {
+        normalizeRuntimeGateReport(
+          deterministicFlags.length
+            ? {
               ...normalizedJudgment,
-              overall: 'fail',
               kill_flags: [
                 ...new Set([
                   ...normalizedJudgment.kill_flags,
@@ -1206,7 +1275,9 @@ export async function runAdCopyEvidence(
                 'Deterministic candidate preflight failed.',
               ],
             }
-          : normalizedJudgment
+            : normalizedJudgment,
+          candidateTasteStatus
+        )
       )
       reviews.push({
         candidate_id: brief.candidate_id,
@@ -1269,7 +1340,7 @@ export async function runAdCopyEvidence(
               taste_requirement_status:
                 executionBrief.taste_selection.requirement_status,
               doctrine_bundle: executionBrief.doctrine_bundle,
-              latest_quality_baseline: 'michael-v5-positive / round5-negative',
+              latest_quality_baseline: 'michael-v5-fundraising-positive / leadecho-v3.30-commercial-positive / round5-negative',
               previous_candidate: previousCandidate,
               revision_request: {
                 revision_number: 1,
@@ -1282,14 +1353,14 @@ export async function runAdCopyEvidence(
             },
           })
           spend(revised.usage)
-          const revisedCandidate = AgencyEvidenceVariantSchema.parse({
+          const revisedCandidate = normalizeCandidateSurface(AgencyEvidenceVariantSchema.parse({
             ...revised.data,
             candidate_id: brief.candidate_id,
             specialist: brief.specialist,
             test_hypothesis: brief.test_hypothesis,
             angle_index: brief.angle_index,
             revision_number: 1,
-          })
+          }))
           const reread = await stage({
             orchestrator: 'CopyReaderOrchestrator',
             tool: 'submit_reader_report',
@@ -1331,7 +1402,7 @@ export async function runAdCopyEvidence(
             },
           })
           spend(recritic.usage)
-          const revisionCriticData = normalizeTasteKillFlag(
+          const revisionCriticData = normalizeRuntimeGateReport(
             recritic.data,
             revisionTasteStatus
           )
@@ -1365,26 +1436,30 @@ export async function runAdCopyEvidence(
             },
           })
           spend(rejudge.usage)
-          const revisionJudgeData = normalizeTasteKillFlag(
+          const revisionJudgeData = normalizeRuntimeGateReport(
             rejudge.data,
             revisionTasteStatus
           )
-          const revisedJudgment = EvidenceJudgeSchema.parse({
-            ...revisionJudgeData,
-            overall: revisionPreflight.length ? 'fail' : rejudge.data.overall,
-            kill_flags: [
-              ...new Set([
-                ...revisionJudgeData.kill_flags,
-                ...revisionPreflight,
-              ]),
-            ],
-            evidence: revisionPreflight.length
-              ? [
-                  ...revisionJudgeData.evidence,
-                  `Deterministic preflight failed: ${revisionPreflight.join(', ')}`,
-                ]
-              : rejudge.data.evidence,
-          })
+          const revisedJudgment = EvidenceJudgeSchema.parse(
+            normalizeRuntimeGateReport(
+              {
+                ...revisionJudgeData,
+                kill_flags: [
+                  ...new Set([
+                    ...revisionJudgeData.kill_flags,
+                    ...revisionPreflight,
+                  ]),
+                ],
+                evidence: revisionPreflight.length
+                  ? [
+                      ...revisionJudgeData.evidence,
+                      `Deterministic preflight failed: ${revisionPreflight.join(', ')}`,
+                    ]
+                  : rejudge.data.evidence,
+              },
+              revisionTasteStatus
+            )
+          )
           const candidateIndex = candidates.findIndex(
             (item) => item.candidate_id === brief.candidate_id
           )
@@ -1445,7 +1520,9 @@ export async function runAdCopyEvidence(
     const output = assembleAgency({
       executionBrief,
       engineVersion: agencyV6Enabled
-        ? agencyV7Enabled
+        ? agencyV9Enabled
+          ? 'evidence-agency-v9'
+          : agencyV7Enabled
           ? 'evidence-agency-v7'
           : 'evidence-agency-v6'
         : 'evidence-agency-v5',
@@ -1487,7 +1564,7 @@ export async function runAdCopyEvidence(
     const written = await stage({
       orchestrator: 'CopyWriteOrchestrator',
       tool: 'submit_ad_copy',
-      description: 'Submit one Hebrew evidence-bound variant.',
+      description: 'Submit one evidence-bound variant in the campaign delivery language.',
       schema: VariantsSchema,
       version: input.promptVersions?.CopyWriteOrchestrator,
       frozenPromptContent: input.promptContents?.CopyWriteOrchestrator,
@@ -1702,13 +1779,30 @@ export async function runAdCopyEvidenceAgencyStep(
   }
   const preparedSnapshot = snapshotWithCampaignInput(input)!
   const executionBrief = compileCopyExecutionBriefV2(preparedSnapshot)
+  const activeDirectorContent =
+    input.promptContents?.CopyDirectorOrchestrator ??
+    (!input.promptVersions?.CopyDirectorOrchestrator
+      ? await loadActivePrompt(
+          'CopyDirectorOrchestrator',
+          input.verticalSlug ?? input.offer.vertical ?? undefined
+        )
+      : null)
+  const agencyV9Enabled = Boolean(
+    Object.values(input.promptVersions ?? {}).some((version) =>
+      version.endsWith('brain-v3.31')
+    ) ||
+      activeDirectorContent?.includes('LeadEcho v3.30')
+  )
   const agencyV7Enabled = Boolean(
+    agencyV9Enabled ||
     input.promptVersions?.CopyDirectorOrchestrator === 'v3' ||
     input.promptVersions?.CopyAngleOrchestrator === 'v6' ||
-    input.promptContents?.CopyDirectorOrchestrator?.includes('Copy Director v3')
+    activeDirectorContent?.includes('Copy Director v3')
   )
-  const engineVersion = agencyV7Enabled
-    ? ('evidence-agency-v7' as const)
+  const engineVersion = agencyV9Enabled
+    ? ('evidence-agency-v9' as const)
+    : agencyV7Enabled
+      ? ('evidence-agency-v7' as const)
     : ('evidence-agency-v6' as const)
   if (executionBrief.readiness_status !== 'ready_to_write') {
     return {
@@ -1867,7 +1961,7 @@ export async function runAdCopyEvidenceAgencyStep(
     const hooks = await stage({
       orchestrator: 'CopyHookOrchestrator',
       tool: 'submit_hooks',
-      description: 'Submit Hebrew evidence-bound hooks once.',
+      description: 'Submit evidence-bound hooks in the campaign delivery language.',
       schema: agencyV7Enabled ? AgencyV7HooksSchema : HooksSchema,
       version: input.promptVersions?.CopyHookOrchestrator,
       frozenPromptContent: input.promptContents?.CopyHookOrchestrator,
@@ -1931,7 +2025,7 @@ export async function runAdCopyEvidenceAgencyStep(
         },
         relevant_taste_examples: executionBrief.taste_selection.selected,
         doctrine_bundle: executionBrief.doctrine_bundle,
-        latest_quality_baseline: 'michael-v5-positive / round5-negative',
+        latest_quality_baseline: 'michael-v5-fundraising-positive / leadecho-v3.30-commercial-positive / round5-negative',
       },
     })
     const departmentPlanValidation = validateDepartmentPlan(
@@ -1994,7 +2088,7 @@ export async function runAdCopyEvidenceAgencyStep(
         const written = await stage({
           orchestrator,
           tool: 'submit_copy_candidate',
-          description: 'Submit one Hebrew specialist candidate.',
+          description: 'Submit one specialist candidate in the campaign delivery language.',
           schema: agencyV7Enabled
             ? AgencyV7VariantSchema
             : AgencyEvidenceVariantSchema,
@@ -2018,19 +2112,19 @@ export async function runAdCopyEvidenceAgencyStep(
             taste_requirement_status:
               executionBrief.taste_selection.requirement_status,
             doctrine_bundle: executionBrief.doctrine_bundle,
-            latest_quality_baseline: 'michael-v5-positive / round5-negative',
+            latest_quality_baseline: 'michael-v5-fundraising-positive / leadecho-v3.30-commercial-positive / round5-negative',
             previous_candidate: null,
             revision_request: null,
           },
         })
-        const candidate = AgencyEvidenceVariantSchema.parse({
+        const candidate = normalizeCandidateSurface(AgencyEvidenceVariantSchema.parse({
           ...written.data,
           candidate_id: brief.candidate_id,
           specialist: brief.specialist,
           test_hypothesis: brief.test_hypothesis,
           angle_index: brief.angle_index,
           revision_number: agencyV7Enabled ? 0 : written.data.revision_number,
-        })
+        }))
         return next(
           {
             stage: 'candidate_reader',
@@ -2240,7 +2334,7 @@ export async function runAdCopyEvidenceAgencyStep(
         taste_requirement_status:
           executionBrief.taste_selection.requirement_status,
         doctrine_bundle: executionBrief.doctrine_bundle,
-        latest_quality_baseline: 'michael-v5-positive / round5-negative',
+        latest_quality_baseline: 'michael-v5-fundraising-positive / leadecho-v3.30-commercial-positive / round5-negative',
         previous_candidate: previousCandidate,
         revision_request: {
           revision_number: 1,
@@ -2252,14 +2346,14 @@ export async function runAdCopyEvidenceAgencyStep(
         },
       },
     })
-    const revisedCandidate = AgencyEvidenceVariantSchema.parse({
+    const revisedCandidate = normalizeCandidateSurface(AgencyEvidenceVariantSchema.parse({
       ...revised.data,
       candidate_id: brief.candidate_id,
       specialist: brief.specialist,
       test_hypothesis: brief.test_hypothesis,
       angle_index: brief.angle_index,
       revision_number: 1,
-    })
+    }))
     return next(
       {
         stage: 'candidate_revision_reader',
@@ -2332,7 +2426,7 @@ export async function runAdCopyEvidenceAgencyStep(
     return next(
       {
         stage: 'candidate_revision_judge',
-        currentCritic: normalizeTasteKillFlag(
+        currentCritic: normalizeRuntimeGateReport(
           critiqued.data,
           revisionTasteStatus
         ),
@@ -2385,29 +2479,30 @@ export async function runAdCopyEvidenceAgencyStep(
         campaign_context: input.campaignContext ?? null,
       },
     })
-    const normalizedJudgment = normalizeTasteKillFlag(
+    const normalizedJudgment = normalizeRuntimeGateReport(
       judged.data,
       revisionTasteStatus
     )
-    const judgedData = EvidenceJudgeSchema.parse({
-      ...normalizedJudgment,
-      overall:
-        deterministicPreflightFlags.length > 0
-          ? 'fail'
-          : normalizedJudgment.overall,
-      kill_flags: Array.from(
-        new Set([
-          ...normalizedJudgment.kill_flags,
-          ...deterministicPreflightFlags,
-        ])
-      ),
-      evidence: deterministicPreflightFlags.length
-        ? [
-            ...normalizedJudgment.evidence,
-            `Deterministic preflight failed: ${deterministicPreflightFlags.join(', ')}`,
-          ]
-        : judged.data.evidence,
-    })
+    const judgedData = EvidenceJudgeSchema.parse(
+      normalizeRuntimeGateReport(
+        {
+          ...normalizedJudgment,
+          kill_flags: Array.from(
+            new Set([
+              ...normalizedJudgment.kill_flags,
+              ...deterministicPreflightFlags,
+            ])
+          ),
+          evidence: deterministicPreflightFlags.length
+            ? [
+                ...normalizedJudgment.evidence,
+                `Deterministic preflight failed: ${deterministicPreflightFlags.join(', ')}`,
+              ]
+            : judged.data.evidence,
+        },
+        revisionTasteStatus
+      )
+    )
     return next(
       {
         stage: 'portfolio',
@@ -2495,7 +2590,7 @@ export async function runAdCopyEvidenceAgencyStep(
     return next(
       {
         stage: 'candidate_judge',
-        currentCritic: normalizeTasteKillFlag(
+        currentCritic: normalizeRuntimeGateReport(
           critiqued.data,
           candidateTasteStatus
         ),
@@ -2543,30 +2638,31 @@ export async function runAdCopyEvidenceAgencyStep(
         campaign_context: input.campaignContext ?? null,
       },
     })
-    const normalizedJudgment = normalizeTasteKillFlag(
+    const normalizedJudgment = normalizeRuntimeGateReport(
       judged.data,
       candidateTasteStatus
     )
-    const judgedData = EvidenceJudgeSchema.parse({
-      ...normalizedJudgment,
-      overall:
-        deterministicPreflightFlags.length > 0
-          ? 'fail'
-          : normalizedJudgment.overall,
-      kill_flags: Array.from(
-        new Set([
-          ...normalizedJudgment.kill_flags,
-          ...deterministicPreflightFlags,
-        ])
-      ),
-      evidence:
-        deterministicPreflightFlags.length > 0
-          ? [
-              ...normalizedJudgment.evidence,
-              `Deterministic preflight failed: ${deterministicPreflightFlags.join(', ')}`,
-            ]
-          : judged.data.evidence,
-    })
+    const judgedData = EvidenceJudgeSchema.parse(
+      normalizeRuntimeGateReport(
+        {
+          ...normalizedJudgment,
+          kill_flags: Array.from(
+            new Set([
+              ...normalizedJudgment.kill_flags,
+              ...deterministicPreflightFlags,
+            ])
+          ),
+          evidence:
+            deterministicPreflightFlags.length > 0
+              ? [
+                  ...normalizedJudgment.evidence,
+                  `Deterministic preflight failed: ${deterministicPreflightFlags.join(', ')}`,
+                ]
+              : judged.data.evidence,
+        },
+        candidateTasteStatus
+      )
+    )
     return next(
       {
         stage: 'candidate_write',

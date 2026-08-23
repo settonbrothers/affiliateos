@@ -153,13 +153,13 @@ export async function runAdCopy(
     return { output: mockAdCopy(), mode: 'mock' }
   }
 
-  // Staged rollout: the implementation and prompts can ship safely while the
-  // production engine stays bit-for-bit on v2. Enable only after the sealed
-  // 48-job / eight-pair eval and owner blind review pass.
+  // Owner-approved default as of copy-brain-release-v3.31. An explicit
+  // baseline override or kill-switch value of "false" keeps the previous
+  // engine available for rollback and the deferred A/B evaluation.
   if (
     input.engineOverride === 'candidate' ||
     (input.engineOverride !== 'baseline' &&
-      Deno.env.get('AD_COPY_EVIDENCE_V4_ENABLED') === 'true')
+      Deno.env.get('AD_COPY_BRAIN_V331_ENABLED') !== 'false')
   ) {
     return runAdCopyEvidence(input)
   }

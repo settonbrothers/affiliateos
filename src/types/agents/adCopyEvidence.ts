@@ -232,44 +232,10 @@ export const CREATIVE_DEPARTMENT_FOUNDATION =
     activation: 'foundation_only_not_runtime_enabled',
   })
 
-export const KillFlagV4Schema = z.enum([
-  'no_dominant_peak',
-  'unmet_need_not_scene',
-  'problem_closed_before_ask',
-  'offer_not_causal',
-  'swap_test_passes',
-  'wording_stronger_than_fact',
-  'claim_violation',
-  'evidence_threshold_unmet',
-  'fake_testimonial',
-  'disclosure_required',
-  'invented_claim_detail',
-  'vulnerability_stack',
-  'missing_block_coverage',
-  'wrong_audience',
-  'weak_fold',
-  'visual_density',
-  'no_soul',
-  'low_momentum',
-  'boring',
-  'hook_body_duplicate',
-  'hook_assignment_mismatch',
-  'objective_unknown',
-  'audience_unknown',
-  'objective_mismatch',
-  'doctrine_bundle_mismatch',
-  'taste_not_loaded',
-  'generic_angle',
-  'latest_baseline_regression',
-  'angle_recommendation_cardinality',
-  'angle_truth_source_invalid',
-  'angle_unsupported_quantified_detail',
-  'duplicate_candidate_id',
-  'candidate_angle_missing',
-  'candidate_evidence_anchor_invalid',
-  'candidate_hook_pool_missing',
-  'candidate_hook_recommendation_cardinality',
-])
+// The signed runtime classifier is the authority for whether a finding blocks.
+// Unknown model labels remain quality advisories instead of gaining an
+// accidental veto merely because a static enum happened to include them.
+export const KillFlagV4Schema = z.string().min(1)
 export const BlindReaderSchema = z.object({
   perceived_attribution: z.enum([
     'actual_testimonial',
@@ -325,6 +291,7 @@ export const AdCopyEvidencePayloadSchema = z
       'evidence-agency-v5',
       'evidence-agency-v6',
       'evidence-agency-v7',
+      'evidence-agency-v9',
     ]),
     output_status: z.enum([
       'ready_for_user',
