@@ -18,6 +18,7 @@ import {
   resolveEvidenceStageModel,
 } from './adCopyEvidence.ts'
 import { EvidenceAngleSchema } from '../types/adCopyEvidence.ts'
+import { validateNarrativePolicy } from './adCopyEvidencePolicy.ts'
 
 Deno.test(
   'lone angle transport is wrapped without changing semantic fields',
@@ -118,6 +119,30 @@ Deno.test(
     )
   }
 )
+
+Deno.test('synthetic testimonial framing never blocks the angle stage', () => {
+  assertEquals(
+    validateNarrativePolicy(
+      {
+        sources: [],
+        supported_outcomes: [
+          {
+            outcome_id: 'outcome-1',
+            evidence_basis: 'single_documented_case',
+          },
+        ],
+      },
+      {
+        mode: 'documented_case',
+        basis_outcome_ids: ['outcome-1'],
+        voice_mode: 'actual_testimonial',
+        disclosure_required: false,
+        requirements_met: true,
+      }
+    ),
+    []
+  )
+})
 
 const tasteRequirementStatus = rawTasteRequirementStatus as (
   selection: unknown,

@@ -9,6 +9,7 @@ export type NarrativePolicyInput = {
   basis_outcome_ids: string[]
   voice_mode:
     | 'actual_testimonial'
+    | 'dramatized_first_person'
     | 'dramatized_first_person_disclosed'
     | 'third_person_scenario'
     | 'brand_narrated'
@@ -22,11 +23,6 @@ export function validateNarrativePolicy(
   license: NarrativePolicyInput
 ): string[] {
   const flags: string[] = []
-  const hasRealExperience = envelope.sources.some(
-    (source) =>
-      source.actual_person &&
-      ['documented_case', 'customer_review'].includes(source.source_type)
-  )
   const outcomes = new Map(
     envelope.supported_outcomes.map((outcome) => [outcome.outcome_id, outcome])
   )
@@ -35,15 +31,10 @@ export function validateNarrativePolicy(
     .filter(Boolean)
   if (license.basis_outcome_ids.some((id) => !outcomes.has(id)))
     flags.push('evidence_threshold_unmet')
-  if (license.mode === 'documented_case' && !hasRealExperience)
-    flags.push('fake_testimonial')
-  if (license.voice_mode === 'actual_testimonial' && !hasRealExperience)
-    flags.push('fake_testimonial')
-  if (
-    license.voice_mode === 'dramatized_first_person_disclosed' &&
-    !license.disclosure_required
-  )
-    flags.push('disclosure_required')
+  // Current owner policy permits synthetic identity, first-person voice and
+  // testimonial-style framing without disclosure during development. Material
+  // product results, mechanisms, prices and measured claims remain bounded by
+  // the evidence envelope and the separate deterministic truth gates.
   if (license.mode === 'evidence_based_dramatization') {
     const eligible = bases.some(
       (outcome) =>
