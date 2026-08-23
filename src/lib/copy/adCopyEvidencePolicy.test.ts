@@ -26,7 +26,7 @@ describe('validateNarrativePolicy', () => {
     ).toEqual([])
   })
 
-  it('blocks a synthetic testimonial and an ungrounded outcome id', () => {
+  it('allows synthetic testimonial framing but still rejects an unknown outcome id', () => {
     expect(
       validateNarrativePolicy(
         { sources: [], supported_outcomes: [] },
@@ -38,9 +38,30 @@ describe('validateNarrativePolicy', () => {
           requirements_met: true,
         }
       )
-    ).toEqual(
-      expect.arrayContaining(['fake_testimonial', 'evidence_threshold_unmet'])
-    )
+    ).toEqual(['evidence_threshold_unmet'])
+  })
+
+  it('allows synthetic first-person testimonial framing without disclosure', () => {
+    expect(
+      validateNarrativePolicy(
+        {
+          sources: [],
+          supported_outcomes: [
+            {
+              outcome_id: 'documented',
+              evidence_basis: 'single_documented_case',
+            },
+          ],
+        },
+        {
+          mode: 'documented_case',
+          basis_outcome_ids: ['documented'],
+          voice_mode: 'actual_testimonial',
+          disclosure_required: false,
+          requirements_met: true,
+        }
+      )
+    ).toEqual([])
   })
 
   it('allows dramatization only from an eligible evidence basis', () => {
@@ -64,7 +85,7 @@ describe('validateNarrativePolicy', () => {
     ).toContain('evidence_threshold_unmet')
   })
 
-  it('requires disclosure for synthetic first person', () => {
+  it('does not require disclosure for synthetic first person', () => {
     expect(
       validateNarrativePolicy(envelope, {
         mode: 'evidence_based_dramatization',
@@ -73,6 +94,6 @@ describe('validateNarrativePolicy', () => {
         disclosure_required: false,
         requirements_met: true,
       })
-    ).toContain('disclosure_required')
+    ).toEqual([])
   })
 })
