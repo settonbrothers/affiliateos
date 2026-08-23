@@ -1,171 +1,786 @@
 {
-  "release_version": "copy-brain-release-v3.6",
-  "engine_version": "evidence-agency-v7",
-  "activation": "blocked_pending_clean_8_case_eval",
+  "release_version": "copy-brain-release-v3.31",
+  "engine_version": "evidence-agency-v9",
+  "activation": "owner_approved_full_affx_activation_pending_smoke",
+  "activation_decision": {
+    "owner": "Noam Zluf",
+    "approved_at": "2026-08-23",
+    "decision": "Activate the signed copy brain in AffX and defer the sealed eight-case quality evaluation until before external users.",
+    "required_before_external_users": "clean_8_case_eval",
+    "rollback_required": true
+  },
   "files": [
     {
       "source": "integration/copy-engine-v3/prompts/copy_excavate_product/v3.md",
       "target": "prompts/copy_excavate_product/v3.md",
       "kind": "prompt",
+      "role": "evidence",
       "orchestrator": "CopyExcavateProductOrchestrator",
-      "version": "v3",
-      "source_sha256": "37cb09ca1362ca436e63270ab041ce47d10b8b136382a342c2b7d8c30e02791d",
-      "sha256": "37cb09ca1362ca436e63270ab041ce47d10b8b136382a342c2b7d8c30e02791d"
+      "version": "v3-brain-v3.31",
+      "source_sha256": "ca85b70fe056ffc667e9f0037a3ebc886f9f77d6e782508a1169f86bbf9c83d4",
+      "sha256": "ca85b70fe056ffc667e9f0037a3ebc886f9f77d6e782508a1169f86bbf9c83d4",
+      "load_trace": {
+        "role": "evidence",
+        "source_path": "integration/copy-engine-v3/prompts/copy_excavate_product/v3.md",
+        "loaded_references": [
+          {
+            "path": "integration/copy-engine-v3/prompts/copy_excavate_product/v3.md",
+            "sha256": "ca85b70fe056ffc667e9f0037a3ebc886f9f77d6e782508a1169f86bbf9c83d4"
+          }
+        ],
+        "compiled_sha256": "ca85b70fe056ffc667e9f0037a3ebc886f9f77d6e782508a1169f86bbf9c83d4",
+        "unresolved_placeholders": 0,
+        "forbidden_long_or_medium_dashes": 0,
+        "expected_knowledge": [
+          "integration/copy-engine-v3/prompts/copy_excavate_product/v3.md"
+        ],
+        "content_anchors_checked": [
+          "maximum-true outcomes"
+        ],
+        "missing_content_anchors": []
+      }
     },
     {
-      "source": "integration/copy-engine-v3/prompts/copy_angle/v6.md",
-      "target": "prompts/copy_angle/v6.md",
+      "source": "integration/copy-engine-v3/prompts/copy_angle/v8.md",
+      "target": "prompts/copy_angle/v8.md",
       "kind": "prompt",
+      "role": "angle",
       "orchestrator": "CopyAngleOrchestrator",
-      "version": "v6",
-      "source_sha256": "658067f3cf1de9590535d479331834fa80225d470fd728e07277d7f2fcf88419",
-      "sha256": "d4522ea7779f5254ba96dc4b632975151aad5a04251a7b14ab8e0b143744c463"
+      "version": "v8-brain-v3.31",
+      "source_sha256": "b8fdee98e6a4e263ce41d74da74d867f3e39f2bdcfafbc99354b855714e9019b",
+      "sha256": "4517795cacff1d7d1bf3f53e9ac75176309b54ec98163147477cdcd8efba17ea",
+      "load_trace": {
+        "role": "angle",
+        "source_path": "integration/copy-engine-v3/prompts/copy_angle/v8.md",
+        "loaded_references": [
+          {
+            "path": "integration/copy-engine-v3/prompts/copy_angle/v8.md",
+            "sha256": "b8fdee98e6a4e263ce41d74da74d867f3e39f2bdcfafbc99354b855714e9019b"
+          },
+          {
+            "path": "brain/knowledge/latest-owner-doctrine-v3.md",
+            "sha256": "f16c987fbf72ffce51ade72d08b318e1182ea1e8368bd0fafb4537ed552fdb0a"
+          }
+        ],
+        "compiled_sha256": "4517795cacff1d7d1bf3f53e9ac75176309b54ec98163147477cdcd8efba17ea",
+        "unresolved_placeholders": 0,
+        "forbidden_long_or_medium_dashes": 0,
+        "expected_knowledge": [
+          "brain/knowledge/latest-owner-doctrine-v3.md"
+        ],
+        "content_anchors_checked": [
+          "A supported mechanism is not automatically a proven market difference"
+        ],
+        "missing_content_anchors": []
+      }
     },
     {
       "source": "integration/copy-engine-v3/prompts/copy_hook/v7.md",
       "target": "prompts/copy_hook/v7.md",
       "kind": "prompt",
+      "role": "hook",
       "orchestrator": "CopyHookOrchestrator",
-      "version": "v7",
-      "source_sha256": "ac73ad71100c7f487c8e17c69fdd6e06e65630629f2f45f4aa8f820695459504",
-      "sha256": "9d1efeaf616d2b0205b46319aab9286e6ccfbc139c2a9e2fa43fb19b0d03d364"
+      "version": "v7-brain-v3.31",
+      "source_sha256": "4b5f626ddbeb4f86787fb3197baad0706f8aec37a6a3362cc19b3851445381b0",
+      "sha256": "68d4767598073499930a67487cba3d9eb17d753f4478fe32ca4353854b2c6331",
+      "load_trace": {
+        "role": "hook",
+        "source_path": "integration/copy-engine-v3/prompts/copy_hook/v7.md",
+        "loaded_references": [
+          {
+            "path": "integration/copy-engine-v3/prompts/copy_hook/v7.md",
+            "sha256": "4b5f626ddbeb4f86787fb3197baad0706f8aec37a6a3362cc19b3851445381b0"
+          },
+          {
+            "path": "prompts/gomiya-lesson.md",
+            "sha256": "c2e441d116c92e84a5fdbc8c0e5ab398bf3bb6fcee6d296f25beab69dffcab0a"
+          },
+          {
+            "path": "brain/knowledge/latest-owner-doctrine-v3.md",
+            "sha256": "f16c987fbf72ffce51ade72d08b318e1182ea1e8368bd0fafb4537ed552fdb0a"
+          }
+        ],
+        "compiled_sha256": "68d4767598073499930a67487cba3d9eb17d753f4478fe32ca4353854b2c6331",
+        "unresolved_placeholders": 0,
+        "forbidden_long_or_medium_dashes": 0,
+        "expected_knowledge": [
+          "prompts/gomiya-lesson.md",
+          "brain/knowledge/latest-owner-doctrine-v3.md"
+        ],
+        "content_anchors_checked": [
+          "חוק הגומייה"
+        ],
+        "missing_content_anchors": []
+      }
     },
     {
       "source": "integration/copy-engine-v3/prompts/copy_write/v5.md",
       "target": "prompts/copy_write/v5.md",
       "kind": "prompt",
+      "role": "legacy_writer",
       "orchestrator": "CopyWriteOrchestrator",
-      "version": "v5",
-      "source_sha256": "767137facd7d072d1f5072c0af23348497da2054980553593572c00212b5dd9c",
-      "sha256": "9f38bacd6aa3aefaa5425fb349c2ebb771ea6baf9f7b6952164473eda5335dff"
+      "version": "v5-brain-v3.31",
+      "source_sha256": "f1e7e9b3884cb2f4ac0e3f966b2ff5a3bf4e9d3460c77589f58526d2b8a0bf3d",
+      "sha256": "81c66b384d6b4064d7f2f6e1eb57face0d424c2e072198f74774b01f87006d7a",
+      "load_trace": {
+        "role": "legacy_writer",
+        "source_path": "integration/copy-engine-v3/prompts/copy_write/v5.md",
+        "loaded_references": [
+          {
+            "path": "integration/copy-engine-v3/prompts/copy_write/v5.md",
+            "sha256": "f1e7e9b3884cb2f4ac0e3f966b2ff5a3bf4e9d3460c77589f58526d2b8a0bf3d"
+          },
+          {
+            "path": "prompts/stage-8-write/v3.md",
+            "sha256": "bfbb7bd08142370d2b82723726d49394385ad0c141d898a40be713df1904673a"
+          },
+          {
+            "path": "brain/knowledge/latest-owner-doctrine-v3.md",
+            "sha256": "f16c987fbf72ffce51ade72d08b318e1182ea1e8368bd0fafb4537ed552fdb0a"
+          },
+          {
+            "path": "brain/knowledge/quality-baseline-v3.md",
+            "sha256": "cc66c450efc01f8b8098c87bf2436c3236a95b9bd7a8cec2eb1afe3bbdddba54"
+          }
+        ],
+        "compiled_sha256": "81c66b384d6b4064d7f2f6e1eb57face0d424c2e072198f74774b01f87006d7a",
+        "unresolved_placeholders": 0,
+        "forbidden_long_or_medium_dashes": 0,
+        "expected_knowledge": [
+          "prompts/stage-8-write/v3.md",
+          "brain/knowledge/latest-owner-doctrine-v3.md",
+          "brain/knowledge/quality-baseline-v3.md"
+        ],
+        "content_anchors_checked": [
+          "Writing procedure - stage 8 v3"
+        ],
+        "missing_content_anchors": []
+      }
     },
     {
       "source": "integration/copy-engine-v3/prompts/copy_reader/v2.md",
       "target": "prompts/copy_reader/v2.md",
       "kind": "prompt",
+      "role": "reader",
       "orchestrator": "CopyReaderOrchestrator",
-      "version": "v2",
-      "source_sha256": "d37025c791e2ce9ab9548935702ee25a0cf822edcab77db8bf6c9fd304b917d9",
-      "sha256": "8dc76d928d5ae17d54d0b0cb5ad4a5edbd8eff2ce6f7a6c0f94c34ab1862a676"
+      "version": "v2-brain-v3.31",
+      "source_sha256": "9387bbdd1393f01ce2c310a1b6e9627ca3eab4dc496ba4b6fe0a5e2522960b67",
+      "sha256": "31f7e0e425db311214c9b549bb5e66bd148249c1190c8e0196451c5b16e71f59",
+      "load_trace": {
+        "role": "reader",
+        "source_path": "integration/copy-engine-v3/prompts/copy_reader/v2.md",
+        "loaded_references": [
+          {
+            "path": "integration/copy-engine-v3/prompts/copy_reader/v2.md",
+            "sha256": "9387bbdd1393f01ce2c310a1b6e9627ca3eab4dc496ba4b6fe0a5e2522960b67"
+          },
+          {
+            "path": "prompts/reader-sim.md",
+            "sha256": "4e44bbd8ab11b02fea3c76571aecf15e2d373ae1b8a0fd794c94025a78f5e63c"
+          }
+        ],
+        "compiled_sha256": "31f7e0e425db311214c9b549bb5e66bd148249c1190c8e0196451c5b16e71f59",
+        "unresolved_placeholders": 0,
+        "forbidden_long_or_medium_dashes": 0,
+        "expected_knowledge": [
+          "prompts/reader-sim.md"
+        ],
+        "content_anchors_checked": [
+          "Reader-Sim - סוכן-הקורא"
+        ],
+        "missing_content_anchors": []
+      }
     },
     {
-      "source": "integration/copy-engine-v3/prompts/copy_critic/v3.md",
-      "target": "prompts/copy_critic/v3.md",
+      "source": "integration/copy-engine-v3/prompts/copy_critic/v4.md",
+      "target": "prompts/copy_critic/v4.md",
       "kind": "prompt",
+      "role": "critic",
       "orchestrator": "CopyCriticOrchestrator",
-      "version": "v3",
-      "source_sha256": "d5b41b0c5f0c606c6d26ee4af65f8f85ca67090d9e96669867a319da22131ea2",
-      "sha256": "7181d1b883d7de34b0846075a41ede104dcc811b1a56b273f5298ca2280b6375"
+      "version": "v4-brain-v3.31",
+      "source_sha256": "12dd51f909e2e974a38599c060fed029f8300208df2c1e30ce510523684af898",
+      "sha256": "0cd0546301301124c96920d9faf5ab96d6acb56a6976f6681ef1c66af18252cb",
+      "load_trace": {
+        "role": "critic",
+        "source_path": "integration/copy-engine-v3/prompts/copy_critic/v4.md",
+        "loaded_references": [
+          {
+            "path": "integration/copy-engine-v3/prompts/copy_critic/v4.md",
+            "sha256": "12dd51f909e2e974a38599c060fed029f8300208df2c1e30ce510523684af898"
+          },
+          {
+            "path": "prompts/mentor-critic.md",
+            "sha256": "e11e5e4cbd329d26a1e8e30883d41e5cdfab1b83944b5ab6dead889501f1dbfa"
+          },
+          {
+            "path": "brain/knowledge/latest-owner-doctrine-v3.md",
+            "sha256": "f16c987fbf72ffce51ade72d08b318e1182ea1e8368bd0fafb4537ed552fdb0a"
+          },
+          {
+            "path": "brain/knowledge/quality-baseline-v3.md",
+            "sha256": "cc66c450efc01f8b8098c87bf2436c3236a95b9bd7a8cec2eb1afe3bbdddba54"
+          },
+          {
+            "path": "brain/knowledge/negative-controls-v3.29.md",
+            "sha256": "731465de11d4ba09388538d3ea0e6cfff1d51345754496f597fb324016aad604"
+          }
+        ],
+        "compiled_sha256": "0cd0546301301124c96920d9faf5ab96d6acb56a6976f6681ef1c66af18252cb",
+        "unresolved_placeholders": 0,
+        "forbidden_long_or_medium_dashes": 0,
+        "expected_knowledge": [
+          "brain/knowledge/latest-owner-doctrine-v3.md",
+          "brain/knowledge/quality-baseline-v3.md",
+          "brain/knowledge/negative-controls-v3.29.md"
+        ],
+        "content_anchors_checked": [
+          "All automated agents approved it",
+          "Round5 - components without reader experience"
+        ],
+        "missing_content_anchors": []
+      }
     },
     {
       "source": "integration/copy-engine-v3/prompts/copy_judge/v5.md",
       "target": "prompts/copy_judge/v5.md",
       "kind": "prompt",
+      "role": "judge",
       "orchestrator": "CopyJudgeOrchestrator",
-      "version": "v5",
-      "source_sha256": "eb354386f75940986a0f9f95beedf6667005f82983e0654a6f9eb771edf50922",
-      "sha256": "57c0339cff6579691550268db53c3f8e657984dac6471a6c0c35a07d84658d40"
+      "version": "v5-brain-v3.31",
+      "source_sha256": "c5d2f7276e202c562952603e399420d31a68d28957ed26fa808037ee550b8fe2",
+      "sha256": "130efa30ed83112add57c14280383a32d62c45a90cbe439c3ac7519581119f3e",
+      "load_trace": {
+        "role": "judge",
+        "source_path": "integration/copy-engine-v3/prompts/copy_judge/v5.md",
+        "loaded_references": [
+          {
+            "path": "integration/copy-engine-v3/prompts/copy_judge/v5.md",
+            "sha256": "c5d2f7276e202c562952603e399420d31a68d28957ed26fa808037ee550b8fe2"
+          },
+          {
+            "path": "brain/knowledge/latest-owner-doctrine-v3.md",
+            "sha256": "f16c987fbf72ffce51ade72d08b318e1182ea1e8368bd0fafb4537ed552fdb0a"
+          },
+          {
+            "path": "brain/knowledge/quality-baseline-v3.md",
+            "sha256": "cc66c450efc01f8b8098c87bf2436c3236a95b9bd7a8cec2eb1afe3bbdddba54"
+          },
+          {
+            "path": "brain/knowledge/negative-controls-v3.29.md",
+            "sha256": "731465de11d4ba09388538d3ea0e6cfff1d51345754496f597fb324016aad604"
+          }
+        ],
+        "compiled_sha256": "130efa30ed83112add57c14280383a32d62c45a90cbe439c3ac7519581119f3e",
+        "unresolved_placeholders": 0,
+        "forbidden_long_or_medium_dashes": 0,
+        "expected_knowledge": [
+          "brain/knowledge/latest-owner-doctrine-v3.md",
+          "brain/knowledge/quality-baseline-v3.md",
+          "brain/knowledge/negative-controls-v3.29.md"
+        ],
+        "content_anchors_checked": [
+          "Multiple agents sharing the same vocabulary are not independent"
+        ],
+        "missing_content_anchors": []
+      }
     },
     {
       "source": "integration/copy-engine-v3/prompts/copy_director/v3.md",
       "target": "prompts/copy_director/v3.md",
       "kind": "prompt",
+      "role": "director",
       "orchestrator": "CopyDirectorOrchestrator",
-      "version": "v3",
-      "source_sha256": "8a91fd41a3c269a9aee755adca4572ab20e236cbcada2254fd9694970097d63c",
-      "sha256": "ad99e1fd80f7242b9b9fe477d00bb736106883dbdf023c4a7a00f12007043baa"
+      "version": "v3-brain-v3.31",
+      "source_sha256": "da94c65691b69f875120a4fb1f5031bc8df833df456515f1ba5faed615594fab",
+      "sha256": "859d96c400d15b153520ebd730c9a7cff0fff84991fba2b1e5d7a92388fc5e74",
+      "load_trace": {
+        "role": "director",
+        "source_path": "integration/copy-engine-v3/prompts/copy_director/v3.md",
+        "loaded_references": [
+          {
+            "path": "integration/copy-engine-v3/prompts/copy_director/v3.md",
+            "sha256": "da94c65691b69f875120a4fb1f5031bc8df833df456515f1ba5faed615594fab"
+          },
+          {
+            "path": "brain/knowledge/latest-owner-doctrine-v3.md",
+            "sha256": "f16c987fbf72ffce51ade72d08b318e1182ea1e8368bd0fafb4537ed552fdb0a"
+          },
+          {
+            "path": "brain/knowledge/quality-baseline-v3.md",
+            "sha256": "cc66c450efc01f8b8098c87bf2436c3236a95b9bd7a8cec2eb1afe3bbdddba54"
+          },
+          {
+            "path": "brain/knowledge/storytelling-craft-pack-v3.29.md",
+            "sha256": "210ce3255e27f78f0170574aacfcda5c1242711214549bfb249e10e889913980"
+          },
+          {
+            "path": "brain/knowledge/negative-controls-v3.29.md",
+            "sha256": "731465de11d4ba09388538d3ea0e6cfff1d51345754496f597fb324016aad604"
+          }
+        ],
+        "compiled_sha256": "859d96c400d15b153520ebd730c9a7cff0fff84991fba2b1e5d7a92388fc5e74",
+        "unresolved_placeholders": 0,
+        "forbidden_long_or_medium_dashes": 0,
+        "expected_knowledge": [
+          "brain/knowledge/latest-owner-doctrine-v3.md",
+          "brain/knowledge/quality-baseline-v3.md",
+          "brain/knowledge/storytelling-craft-pack-v3.29.md",
+          "brain/knowledge/negative-controls-v3.29.md"
+        ],
+        "content_anchors_checked": [
+          "Story is the sale in an anchor ad",
+          "Round5 - components without reader experience"
+        ],
+        "missing_content_anchors": []
+      }
     },
     {
       "source": "integration/copy-engine-v3/prompts/copy_write_storytelling/v3.md",
       "target": "prompts/copy_write_storytelling/v3.md",
       "kind": "prompt",
+      "role": "storytelling_writer",
       "orchestrator": "CopyStorytellingWriterOrchestrator",
-      "version": "v3",
-      "source_sha256": "86d7784eefe1f94ed23d6a06c50e01703bb4557882a8ae2216942c6715ef27ce",
-      "sha256": "f4795e37074c3de1f2bda99cf7b7cf2320a48c168bc4f344deb79e422d0659ed"
+      "version": "v3-brain-v3.31",
+      "source_sha256": "2c10187886cb7b99db27cb7cc8399de4e7abf3d31f39ea8d451a8f982af2572d",
+      "sha256": "8432818935ccb962ce41d52c2226eea7d712e2e600c0e2a9460a1abffa4512ae",
+      "load_trace": {
+        "role": "storytelling_writer",
+        "source_path": "integration/copy-engine-v3/prompts/copy_write_storytelling/v3.md",
+        "loaded_references": [
+          {
+            "path": "integration/copy-engine-v3/prompts/copy_write_storytelling/v3.md",
+            "sha256": "2c10187886cb7b99db27cb7cc8399de4e7abf3d31f39ea8d451a8f982af2572d"
+          },
+          {
+            "path": "prompts/stage-8-write/v3.md",
+            "sha256": "bfbb7bd08142370d2b82723726d49394385ad0c141d898a40be713df1904673a"
+          },
+          {
+            "path": "brain/knowledge/latest-owner-doctrine-v3.md",
+            "sha256": "f16c987fbf72ffce51ade72d08b318e1182ea1e8368bd0fafb4537ed552fdb0a"
+          },
+          {
+            "path": "brain/knowledge/quality-baseline-v3.md",
+            "sha256": "cc66c450efc01f8b8098c87bf2436c3236a95b9bd7a8cec2eb1afe3bbdddba54"
+          },
+          {
+            "path": "brain/knowledge/storytelling-craft-pack-v3.29.md",
+            "sha256": "210ce3255e27f78f0170574aacfcda5c1242711214549bfb249e10e889913980"
+          },
+          {
+            "path": "brain/knowledge/michael-learning-lab-v3.29.md",
+            "sha256": "26f005726c588091c73c660fc5d9cff0bec50de0b5b4d43db2c6f3aabd7e747f"
+          },
+          {
+            "path": "brain/knowledge/examples/michael-v5-active.md",
+            "sha256": "49c812d3fa01df0684bb744e194aac0682c443b034792911d70255915dde97ac"
+          },
+          {
+            "path": "brain/knowledge/examples/avraham-active.txt",
+            "sha256": "bc37737013d08a2452b8107e18d8cf3b108ffeb77b950a09a05315444a6e0332"
+          },
+          {
+            "path": "brain/knowledge/examples/leadecho-v3.30-active.md",
+            "sha256": "b16c1f83cba7bdecc5ec7cad87b3c5922cd59394c6b0e8161c4fb6793d5e1335"
+          },
+          {
+            "path": "brain/knowledge/negative-controls-v3.29.md",
+            "sha256": "731465de11d4ba09388538d3ea0e6cfff1d51345754496f597fb324016aad604"
+          }
+        ],
+        "compiled_sha256": "8432818935ccb962ce41d52c2226eea7d712e2e600c0e2a9460a1abffa4512ae",
+        "unresolved_placeholders": 0,
+        "forbidden_long_or_medium_dashes": 0,
+        "expected_knowledge": [
+          "brain/knowledge/latest-owner-doctrine-v3.md",
+          "brain/knowledge/quality-baseline-v3.md",
+          "brain/knowledge/storytelling-craft-pack-v3.29.md",
+          "brain/knowledge/michael-learning-lab-v3.29.md",
+          "brain/knowledge/examples/michael-v5-active.md",
+          "brain/knowledge/examples/avraham-active.txt",
+          "brain/knowledge/examples/leadecho-v3.30-active.md",
+          "brain/knowledge/negative-controls-v3.29.md"
+        ],
+        "content_anchors_checked": [
+          "First person and the bridge to the sale",
+          "V4 to V5 - make the need visible in action",
+          "שני מטר",
+          "The phone rang mid-rinse",
+          "post-peak value bridge",
+          "Round5 - components without reader experience",
+          "LeadEcho Opus 5 - better prose with missing brain and false approval"
+        ],
+        "missing_content_anchors": []
+      }
     },
     {
-      "source": "integration/copy-engine-v3/prompts/copy_write_direct_response/v3.md",
-      "target": "prompts/copy_write_direct_response/v3.md",
+      "source": "integration/copy-engine-v3/prompts/copy_write_direct_response/v5.md",
+      "target": "prompts/copy_write_direct_response/v5.md",
       "kind": "prompt",
+      "role": "direct_response_writer",
       "orchestrator": "CopyDirectResponseWriterOrchestrator",
-      "version": "v3",
-      "source_sha256": "5fc46b5360d6adb4bdb2d1c250d516070485a4439fa4f8c0e21f17f50e50d66c",
-      "sha256": "d361ad12b07e4b1ec1a6f27b1722bc958b3120adcd1c9cfbba3fc658e7ac3d77"
+      "version": "v5-brain-v3.31",
+      "source_sha256": "a442c98ed153fd34520d8512f61330cee8558c6d4b5daf41724d0ee0dd16864b",
+      "sha256": "b1cfbc9f6f0ce3abc6f56d4665b01016c2c2160eebdc397988fc7e6596cce423",
+      "load_trace": {
+        "role": "direct_response_writer",
+        "source_path": "integration/copy-engine-v3/prompts/copy_write_direct_response/v5.md",
+        "loaded_references": [
+          {
+            "path": "integration/copy-engine-v3/prompts/copy_write_direct_response/v5.md",
+            "sha256": "a442c98ed153fd34520d8512f61330cee8558c6d4b5daf41724d0ee0dd16864b"
+          },
+          {
+            "path": "prompts/stage-8-write/v3.md",
+            "sha256": "bfbb7bd08142370d2b82723726d49394385ad0c141d898a40be713df1904673a"
+          },
+          {
+            "path": "brain/knowledge/latest-owner-doctrine-v3.md",
+            "sha256": "f16c987fbf72ffce51ade72d08b318e1182ea1e8368bd0fafb4537ed552fdb0a"
+          },
+          {
+            "path": "brain/knowledge/quality-baseline-v3.md",
+            "sha256": "cc66c450efc01f8b8098c87bf2436c3236a95b9bd7a8cec2eb1afe3bbdddba54"
+          }
+        ],
+        "compiled_sha256": "b1cfbc9f6f0ce3abc6f56d4665b01016c2c2160eebdc397988fc7e6596cce423",
+        "unresolved_placeholders": 0,
+        "forbidden_long_or_medium_dashes": 0,
+        "expected_knowledge": [
+          "prompts/stage-8-write/v3.md",
+          "brain/knowledge/latest-owner-doctrine-v3.md",
+          "brain/knowledge/quality-baseline-v3.md"
+        ],
+        "content_anchors_checked": [
+          "Writing procedure - stage 8 v3",
+          "post-peak value bridge"
+        ],
+        "missing_content_anchors": []
+      }
     },
     {
       "source": "integration/copy-engine-v3/prompts/copy_write_proof_mechanism/v4.md",
       "target": "prompts/copy_write_proof_mechanism/v4.md",
       "kind": "prompt",
+      "role": "proof_mechanism_writer",
       "orchestrator": "CopyProofMechanismWriterOrchestrator",
-      "version": "v4",
-      "source_sha256": "49d2338127c53df3713dc0f1ea20c38fb52d220320dfd8edf1420fc3ee9a4816",
-      "sha256": "998e2c20d52de77c59fd517e3bfb7fb78c33d788287b32bb49f91ed5f0d543d7"
+      "version": "v4-brain-v3.31",
+      "source_sha256": "3eb81d27ec9ede9cf30c4fa720cef18a07de4b14650f6f3cf448407941e3b0c5",
+      "sha256": "4c58156f72684aa4bf39facc0877d6d0b5810eeb687b16c7c2ee12fc5f9fcac7",
+      "load_trace": {
+        "role": "proof_mechanism_writer",
+        "source_path": "integration/copy-engine-v3/prompts/copy_write_proof_mechanism/v4.md",
+        "loaded_references": [
+          {
+            "path": "integration/copy-engine-v3/prompts/copy_write_proof_mechanism/v4.md",
+            "sha256": "3eb81d27ec9ede9cf30c4fa720cef18a07de4b14650f6f3cf448407941e3b0c5"
+          },
+          {
+            "path": "prompts/stage-8-write/v3.md",
+            "sha256": "bfbb7bd08142370d2b82723726d49394385ad0c141d898a40be713df1904673a"
+          },
+          {
+            "path": "brain/knowledge/latest-owner-doctrine-v3.md",
+            "sha256": "f16c987fbf72ffce51ade72d08b318e1182ea1e8368bd0fafb4537ed552fdb0a"
+          },
+          {
+            "path": "brain/knowledge/quality-baseline-v3.md",
+            "sha256": "cc66c450efc01f8b8098c87bf2436c3236a95b9bd7a8cec2eb1afe3bbdddba54"
+          }
+        ],
+        "compiled_sha256": "4c58156f72684aa4bf39facc0877d6d0b5810eeb687b16c7c2ee12fc5f9fcac7",
+        "unresolved_placeholders": 0,
+        "forbidden_long_or_medium_dashes": 0,
+        "expected_knowledge": [
+          "prompts/stage-8-write/v3.md",
+          "brain/knowledge/latest-owner-doctrine-v3.md",
+          "brain/knowledge/quality-baseline-v3.md"
+        ],
+        "content_anchors_checked": [
+          "Writing procedure - stage 8 v3",
+          "post-peak value bridge"
+        ],
+        "missing_content_anchors": []
+      }
     },
     {
       "source": "integration/copy-engine-v3/prompts/copy_portfolio_judge/v3.md",
       "target": "prompts/copy_portfolio_judge/v3.md",
       "kind": "prompt",
+      "role": "portfolio_judge",
       "orchestrator": "CopyPortfolioJudgeOrchestrator",
-      "version": "v3",
-      "source_sha256": "9cca4f1cae04c6efa0de9a5c54a22b36b236c45fbfc4c8bd010b9fb70f0b24c4",
-      "sha256": "e285f092cdbfe990fb2ad9511ba7220960fae588457972ab04385497a73e1c96"
+      "version": "v3-brain-v3.31",
+      "source_sha256": "6568ae1999b107e0f91cd3d42e07c1aad843c9a71d17dcf76cf8f8eece825e4e",
+      "sha256": "dd6c305593cfd65829a4e5d92e8d963f9be20c7980cf64718bc7a24498308eca",
+      "load_trace": {
+        "role": "portfolio_judge",
+        "source_path": "integration/copy-engine-v3/prompts/copy_portfolio_judge/v3.md",
+        "loaded_references": [
+          {
+            "path": "integration/copy-engine-v3/prompts/copy_portfolio_judge/v3.md",
+            "sha256": "6568ae1999b107e0f91cd3d42e07c1aad843c9a71d17dcf76cf8f8eece825e4e"
+          },
+          {
+            "path": "brain/knowledge/latest-owner-doctrine-v3.md",
+            "sha256": "f16c987fbf72ffce51ade72d08b318e1182ea1e8368bd0fafb4537ed552fdb0a"
+          },
+          {
+            "path": "brain/knowledge/quality-baseline-v3.md",
+            "sha256": "cc66c450efc01f8b8098c87bf2436c3236a95b9bd7a8cec2eb1afe3bbdddba54"
+          }
+        ],
+        "compiled_sha256": "dd6c305593cfd65829a4e5d92e8d963f9be20c7980cf64718bc7a24498308eca",
+        "unresolved_placeholders": 0,
+        "forbidden_long_or_medium_dashes": 0,
+        "expected_knowledge": [
+          "brain/knowledge/latest-owner-doctrine-v3.md",
+          "brain/knowledge/quality-baseline-v3.md"
+        ],
+        "content_anchors_checked": [
+          "Diversity is semantic and physical"
+        ],
+        "missing_content_anchors": []
+      }
     },
     {
       "source": "integration/copy-engine-v3/prompts/diagnosis/v2.md",
       "target": "prompts/diagnosis/v2.md",
       "kind": "prompt",
+      "role": "diagnosis",
       "orchestrator": "DiagnosisOrchestrator",
-      "version": "v2",
-      "source_sha256": "69b97daba717e7507e093b4b3aa281114e72b1f9898dc7529f3427b34a4a1c0e",
-      "sha256": "69b97daba717e7507e093b4b3aa281114e72b1f9898dc7529f3427b34a4a1c0e"
+      "version": "v2-brain-v3.31",
+      "source_sha256": "5403e8c7084416cdfd128fb733fab6d8593a55ebeda2da5cc3c553355f37a6f3",
+      "sha256": "5403e8c7084416cdfd128fb733fab6d8593a55ebeda2da5cc3c553355f37a6f3",
+      "load_trace": {
+        "role": "diagnosis",
+        "source_path": "integration/copy-engine-v3/prompts/diagnosis/v2.md",
+        "loaded_references": [
+          {
+            "path": "integration/copy-engine-v3/prompts/diagnosis/v2.md",
+            "sha256": "5403e8c7084416cdfd128fb733fab6d8593a55ebeda2da5cc3c553355f37a6f3"
+          }
+        ],
+        "compiled_sha256": "5403e8c7084416cdfd128fb733fab6d8593a55ebeda2da5cc3c553355f37a6f3",
+        "unresolved_placeholders": 0,
+        "forbidden_long_or_medium_dashes": 0,
+        "expected_knowledge": [
+          "integration/copy-engine-v3/prompts/diagnosis/v2.md"
+        ],
+        "content_anchors_checked": [
+          "deterministic economics"
+        ],
+        "missing_content_anchors": []
+      }
     },
     {
       "source": "integration/copy-engine-v3/prompts/avatar_builder/v3.md",
       "target": "prompts/avatar_builder/v3.md",
       "kind": "prompt",
+      "role": "avatar",
       "orchestrator": "AvatarBuilderOrchestrator",
-      "version": "v3",
-      "source_sha256": "2bf9cb63229ebbf416b7e5ec56a6f92f4a36f1d3eaa8d3fae13d8990cc624d58",
-      "sha256": "de9c13bfff5d8ef3c0e85d6689814c70ddcb0a864e38a0ea58a60e999db45343"
+      "version": "v3-brain-v3.31",
+      "source_sha256": "80b96786c0444e6bc7237af6f87ec32a3a5786dd815bd7491e58c32b5e5d9068",
+      "sha256": "e822626d0d245f30c08d9bfaa77d381fe41fe09f5944cc4c77ab15b5b52147ff",
+      "load_trace": {
+        "role": "avatar",
+        "source_path": "integration/copy-engine-v3/prompts/avatar_builder/v3.md",
+        "loaded_references": [
+          {
+            "path": "integration/copy-engine-v3/prompts/avatar_builder/v3.md",
+            "sha256": "80b96786c0444e6bc7237af6f87ec32a3a5786dd815bd7491e58c32b5e5d9068"
+          },
+          {
+            "path": "brain/knowledge/latest-owner-doctrine-v3.md",
+            "sha256": "f16c987fbf72ffce51ade72d08b318e1182ea1e8368bd0fafb4537ed552fdb0a"
+          }
+        ],
+        "compiled_sha256": "e822626d0d245f30c08d9bfaa77d381fe41fe09f5944cc4c77ab15b5b52147ff",
+        "unresolved_placeholders": 0,
+        "forbidden_long_or_medium_dashes": 0,
+        "expected_knowledge": [
+          "brain/knowledge/latest-owner-doctrine-v3.md"
+        ],
+        "content_anchors_checked": [
+          "Input integrity"
+        ],
+        "missing_content_anchors": []
+      }
     },
     {
       "source": "brain/knowledge/latest-owner-doctrine-v3.md",
       "target": "brain-knowledge/latest-owner-doctrine-v3.md",
       "kind": "knowledge",
-      "sha256": "fa94a1cd4fc9cfdf4c40b6c255689de946194590a197659912e1edde08710c19"
+      "sha256": "f16c987fbf72ffce51ade72d08b318e1182ea1e8368bd0fafb4537ed552fdb0a"
     },
     {
       "source": "brain/knowledge/quality-baseline-v3.md",
       "target": "brain-knowledge/quality-baseline-v3.md",
       "kind": "knowledge",
-      "sha256": "fe6ed6b4293d5b8ddef5258a8486e93a726770deffb84d9edc6ee5ad075c5fa9"
+      "sha256": "cc66c450efc01f8b8098c87bf2436c3236a95b9bd7a8cec2eb1afe3bbdddba54"
     },
     {
       "source": "brain/knowledge/lesson-registry-v3.json",
       "target": "brain-knowledge/lesson-registry-v3.json",
       "kind": "knowledge",
-      "sha256": "dbb8c10ec3ba31b5994d494aa6313403a0b00d1d46b217617d4eb2c714d5808b"
+      "sha256": "02014b8797d0740780c78f76011addfddb9b9412983cb9e9f7be88b5aabda3a0"
     },
     {
       "source": "brain/knowledge/lesson-registry-v3.json",
       "target": "src/lib/copy/generated/copyBrainDoctrineV3.ts",
       "kind": "runtime_doctrine",
-      "source_sha256": "dbb8c10ec3ba31b5994d494aa6313403a0b00d1d46b217617d4eb2c714d5808b",
-      "sha256": "5ce12e0d4a628e18742da76bbae2ad304c3fbcb895d6c7cdef5310a1b09d79ce"
+      "source_sha256": "02014b8797d0740780c78f76011addfddb9b9412983cb9e9f7be88b5aabda3a0",
+      "sha256": "9b367dd68594b8072a44ae506d410838cf4807ce69896b682a429530195342ae"
     },
     {
       "source": "brain/knowledge/lesson-registry-v3.json",
       "target": "supabase/functions/_shared/orchestrators/generated/copyBrainDoctrineV3.ts",
       "kind": "runtime_doctrine",
-      "source_sha256": "dbb8c10ec3ba31b5994d494aa6313403a0b00d1d46b217617d4eb2c714d5808b",
-      "sha256": "5ce12e0d4a628e18742da76bbae2ad304c3fbcb895d6c7cdef5310a1b09d79ce"
+      "source_sha256": "02014b8797d0740780c78f76011addfddb9b9412983cb9e9f7be88b5aabda3a0",
+      "sha256": "9b367dd68594b8072a44ae506d410838cf4807ce69896b682a429530195342ae"
     },
     {
       "source": "brain/knowledge/session-source-manifest-v3.json",
       "target": "brain-knowledge/session-source-manifest-v3.json",
       "kind": "knowledge",
       "sha256": "ba51a02e61e05fda8ebe0ce44b7927c2262e52f00a591b0a55853b1dc450bb79"
+    },
+    {
+      "source": "brain/knowledge/storytelling-craft-pack-v3.29.md",
+      "target": "brain-knowledge/storytelling-craft-pack-v3.29.md",
+      "kind": "knowledge",
+      "sha256": "210ce3255e27f78f0170574aacfcda5c1242711214549bfb249e10e889913980"
+    },
+    {
+      "source": "brain/knowledge/michael-learning-lab-v3.29.md",
+      "target": "brain-knowledge/michael-learning-lab-v3.29.md",
+      "kind": "knowledge",
+      "sha256": "26f005726c588091c73c660fc5d9cff0bec50de0b5b4d43db2c6f3aabd7e747f"
+    },
+    {
+      "source": "brain/knowledge/negative-controls-v3.29.md",
+      "target": "brain-knowledge/negative-controls-v3.29.md",
+      "kind": "knowledge",
+      "sha256": "731465de11d4ba09388538d3ea0e6cfff1d51345754496f597fb324016aad604"
+    },
+    {
+      "source": "brain/knowledge/role-load-map-v3.29.json",
+      "target": "brain-knowledge/role-load-map-v3.29.json",
+      "kind": "knowledge",
+      "sha256": "c11005c1f35e4e7daa4f33ea106c626c4487245665a0d16d301e58f0b8e4782f"
+    },
+    {
+      "source": "brain/knowledge/source-manifest-v3.29.json",
+      "target": "brain-knowledge/source-manifest-v3.29.json",
+      "kind": "knowledge",
+      "sha256": "486f2fe500191ec1d69c7eb189664e5051d0f55c68446e1401c67691dfa7d471"
+    },
+    {
+      "source": "brain/knowledge/examples/michael-v5-active.md",
+      "target": "brain-knowledge/examples/michael-v5-active.md",
+      "kind": "knowledge",
+      "sha256": "49c812d3fa01df0684bb744e194aac0682c443b034792911d70255915dde97ac"
+    },
+    {
+      "source": "brain/knowledge/examples/avraham-active.txt",
+      "target": "brain-knowledge/examples/avraham-active.txt",
+      "kind": "knowledge",
+      "sha256": "bc37737013d08a2452b8107e18d8cf3b108ffeb77b950a09a05315444a6e0332"
+    },
+    {
+      "source": "brain/knowledge/examples/leadecho-v3.30-active.md",
+      "target": "brain-knowledge/examples/leadecho-v3.30-active.md",
+      "kind": "knowledge",
+      "sha256": "b16c1f83cba7bdecc5ec7cad87b3c5922cd59394c6b0e8161c4fb6793d5e1335"
+    },
+    {
+      "source": "brain/sources/owner-canon/COPY-MANUAL.original.md",
+      "target": "brain-sources/owner-canon/COPY-MANUAL.original.md",
+      "kind": "source_evidence",
+      "sha256": "1ba1bccd6d7fac2cc0105e33889fd0231c35772bc4897ce75a77ad63b5999831"
+    },
+    {
+      "source": "brain/sources/owner-canon/COPY-MANUAL-LATEST-SUPPLEMENT.md",
+      "target": "brain-sources/owner-canon/COPY-MANUAL-LATEST-SUPPLEMENT.md",
+      "kind": "source_evidence",
+      "sha256": "c5375044f7754b246a21f4aec3db8bc4892d8b5fdaf605bff4e20aa8fde827f1"
+    },
+    {
+      "source": "brain/sources/owner-canon/michael/michael-v2.md",
+      "target": "brain-sources/owner-canon/michael/michael-v2.md",
+      "kind": "source_evidence",
+      "sha256": "9be4e81c959a5fb1e98d243d2d64a6c6db0a0be7f4d02d24afeb14bcfe780247"
+    },
+    {
+      "source": "brain/sources/owner-canon/michael/michael-v3.md",
+      "target": "brain-sources/owner-canon/michael/michael-v3.md",
+      "kind": "source_evidence",
+      "sha256": "64a0c1389bbbd603565e4e72a6249207eef050aa352f47a47a10b2205cc939d7"
+    },
+    {
+      "source": "brain/sources/owner-canon/michael/michael-v4.md",
+      "target": "brain-sources/owner-canon/michael/michael-v4.md",
+      "kind": "source_evidence",
+      "sha256": "5d2e5affecdaeaf26075d847080c9fbbe3b6d6557cfafcf80a023ae166c3a3d2"
+    },
+    {
+      "source": "brain/sources/owner-canon/michael/michael-v5.md",
+      "target": "brain-sources/owner-canon/michael/michael-v5.md",
+      "kind": "source_evidence",
+      "sha256": "2da7a94f68c3746970f6b320502ee54a03b0670d2a54ef29d68835591ff8bf8f"
+    },
+    {
+      "source": "brain/sources/owner-canon/michael/michael-evolution-evidence.md",
+      "target": "brain-sources/owner-canon/michael/michael-evolution-evidence.md",
+      "kind": "source_evidence",
+      "sha256": "a7052a43663c5ffaa6cf7652ec48fa7972d76ef529fb5ed9540b283d52f1b03a"
+    },
+    {
+      "source": "brain/sources/owner-canon/approved/avraham-final.txt",
+      "target": "brain-sources/owner-canon/approved/avraham-final.txt",
+      "kind": "source_evidence",
+      "sha256": "bc37737013d08a2452b8107e18d8cf3b108ffeb77b950a09a05315444a6e0332"
+    },
+    {
+      "source": "brain/sources/owner-canon/negative/round5-owner-feedback.md",
+      "target": "brain-sources/owner-canon/negative/round5-owner-feedback.md",
+      "kind": "source_evidence",
+      "sha256": "8c0b9af5a9557b735c0861d0591050c8a322bb314c136f77de6e5e7df2527048"
+    },
+    {
+      "source": "brain/sources/owner-canon/negative/round5-learning-diagnosis.md",
+      "target": "brain-sources/owner-canon/negative/round5-learning-diagnosis.md",
+      "kind": "source_evidence",
+      "sha256": "fff732fc46f8ecbf3a01b21cec965d94e8f11b4bbccd75630468953f2b492e01"
+    },
+    {
+      "source": "brain/sources/owner-canon/negative/leadecho-opus5-v3.28-result.md",
+      "target": "brain-sources/owner-canon/negative/leadecho-opus5-v3.28-result.md",
+      "kind": "source_evidence",
+      "sha256": "8df09030274247e4bd8e4ce0deaecb093e2e11cff61796dd344210e843772922"
+    },
+    {
+      "source": "brain/sources/owner-canon/approved/leadecho-v3.29-owner-approved-he.md",
+      "target": "brain-sources/owner-canon/approved/leadecho-v3.29-owner-approved-he.md",
+      "kind": "source_evidence",
+      "sha256": "9ebb913637854cfcab60418b87bf16438153740edeef6c2e80d792fb1ddc8d91"
+    },
+    {
+      "source": "brain/sources/owner-canon/approved/leadecho-v3.30-owner-approved-en.md",
+      "target": "brain-sources/owner-canon/approved/leadecho-v3.30-owner-approved-en.md",
+      "kind": "source_evidence",
+      "sha256": "cbcf5d5a3240af91f33baa2218315525b9b6d7d14323b8468a282250bac7df91"
+    },
+    {
+      "source": "brain/sources/owner-canon/feedback/leadecho-v3.29-owner-followup-he.md",
+      "target": "brain-sources/owner-canon/feedback/leadecho-v3.29-owner-followup-he.md",
+      "kind": "source_evidence",
+      "sha256": "caacaaeca986a722b4ef7a1c9d0e8def2b6c61c4e62bb89f82dc8d8b1354422e"
+    },
+    {
+      "source": "brain/sources/owner-canon/feedback/development-gate-policy-owner-2026-08-22-he.md",
+      "target": "brain-sources/owner-canon/feedback/development-gate-policy-owner-2026-08-22-he.md",
+      "kind": "source_evidence",
+      "sha256": "78777c8ec45afb173a28632ea4cad46b7d5c1c98da39a4ae5f9e4fdc91c47907"
     },
     {
       "source": "schemas/deep-avatar.schema.json",
@@ -183,7 +798,13 @@
       "source": "integration/copy-engine-v3/schemas/copy-execution-brief-v2.schema.json",
       "target": "brain-contracts/copy-execution-brief-v2.schema.json",
       "kind": "contract",
-      "sha256": "f2b3e86f6f8731c108471124d2b6d3368f50e942bb85f2283af4ed6aacbe30f5"
+      "sha256": "dc901d9fb5d5af333e0428e9f1ca10eed37aac3f2b291931ac253d2a710f9e67"
+    },
+    {
+      "source": "integration/copy-engine-v3/schemas/angle-v7.schema.json",
+      "target": "brain-contracts/angle-v7.schema.json",
+      "kind": "contract",
+      "sha256": "033897e1b70a88eede24cd2a6e701ca26b24c597cc07a50f28921348aa28ffd3"
     },
     {
       "source": "integration/copy-engine-v3/schemas/ad-copy-v4.schema.json",
@@ -204,6 +825,12 @@
       "sha256": "5da440b1f1b99646db452cc9119abc08ebf35f12afd36ab31d715526e3b4b208"
     },
     {
+      "source": "integration/copy-engine-v3/schemas/ad-copy-v7.schema.json",
+      "target": "brain-contracts/ad-copy-v7.schema.json",
+      "kind": "contract",
+      "sha256": "4400a54bbf2b18d2e5a6629d1a7bebead621aa2ddfe078de9156ad46e1529a2f"
+    },
+    {
       "source": "integration/copy-engine-v3/schemas/offer-economics-v1.schema.json",
       "target": "brain-contracts/offer-economics-v1.schema.json",
       "kind": "contract",
@@ -213,7 +840,7 @@
       "source": "integration/copy-engine-v3/schemas/copy-department-v1.schema.json",
       "target": "brain-contracts/copy-department-v1.schema.json",
       "kind": "contract",
-      "sha256": "5771e0c0003b19de550cb1bcd761c64703f3cda39da2a93e574d0cbff4fb4319"
+      "sha256": "bea7acd761de2728927ce6b9985bb61de1fe0b2bb4588a2e2af763d251812a49"
     },
     {
       "source": "integration/copy-engine-v3/schemas/creative-department-v1.schema.json",
@@ -231,25 +858,49 @@
       "source": "integration/copy-engine-v3/types/copyExecutionBriefV2.node.ts",
       "target": "brain-contracts/copyExecutionBriefV2.node.ts",
       "kind": "contract_mapping",
-      "sha256": "c44cce8cd0ded273365d25b98bef4dfad8a5e9a29ad2f6269eb763e7e274cab7"
+      "sha256": "65e5c139fa79a83359c0a9292d3073ca68c571815bcc5f9d07ce05c1c15f706d"
     },
     {
       "source": "integration/copy-engine-v3/types/copyExecutionBriefV2.deno.ts",
       "target": "brain-contracts/copyExecutionBriefV2.deno.ts",
       "kind": "contract_mapping",
-      "sha256": "f5f3470ec082f069033228c8eb9cfa023ec18dd42e46980898118c11e33a9812"
+      "sha256": "077599924e91c23be33df4ea6272ab357d858b81ef66b22f3c17291f78a04c86"
+    },
+    {
+      "source": "integration/copy-engine-v3/types/angleV7.node.ts",
+      "target": "brain-contracts/angleV7.node.ts",
+      "kind": "contract_mapping",
+      "sha256": "d0420cadce5da081e5e03f87625301c89a31d3d46c28d2176eafa38ef0739ced"
+    },
+    {
+      "source": "integration/copy-engine-v3/types/angleV7.deno.ts",
+      "target": "brain-contracts/angleV7.deno.ts",
+      "kind": "contract_mapping",
+      "sha256": "24842a720865b7200bfd7f4b9baacae8786ecd18f10440459fb571253b29c10f"
     },
     {
       "source": "integration/copy-engine-v3/runtime/validateAgencyContracts.mjs",
       "target": "supabase/functions/_shared/brainContracts/validateAgencyContracts.ts",
       "kind": "runtime_contract",
-      "sha256": "6e0a95fcfa4f7b76fd76ed20bdacdd089c11bae42763ac1aeb9168ed58bbba66"
+      "sha256": "d0cb2bbaeecc0a79a6c075725aa513ce6ecdbba26a0069d1b1e3d6f976ea1803"
+    },
+    {
+      "source": "integration/copy-engine-v3/runtime/classifyCopyFindings.mjs",
+      "target": "supabase/functions/_shared/brainContracts/classifyCopyFindings.mjs",
+      "kind": "runtime_contract",
+      "sha256": "122ef443e36a01cd19b3852c17eb287858896678215db48100ed74c7e67b74ff"
     },
     {
       "source": "integration/copy-engine-v3/fixtures/jasper-corrected-v3.snapshot.json",
       "target": "brain-evals/jasper-corrected-v3.snapshot.json",
       "kind": "eval_fixture",
       "sha256": "46df3fea53d83bc4f640850e851394b040b17e87b6c764a9c03565eaf31fe422"
+    },
+    {
+      "source": "integration/copy-engine-v3/fixtures/leadecho-controlled-v1.snapshot.json",
+      "target": "brain-evals/leadecho-controlled-v1.snapshot.json",
+      "kind": "eval_fixture",
+      "sha256": "1f4c2024aabfbcf26bc7225b9f60825a8a08d5efd19941db4ff2516da770b100"
     },
     {
       "source": "integration/copy-engine-v3/fixtures/jasper-v3.1-routing-regression.json",
@@ -271,9 +922,10 @@
     }
   ],
   "source_repository": "creation-engine",
-  "source_git_sha": "d5779d30b89700e95c5ab7df3d5766b7f6198a15",
-  "compiled_at": "2026-08-20T17:21:45.307Z",
+  "source_git_sha": "78459b7d1acebca6883a23f710a3bf5b1a9c592c",
+  "compiled_at": "2026-08-23T07:39:39.483Z",
   "regression_commands": [
+    "node tests/run-brain-loading-v3.29.mjs",
     "node tests/run-conversion-regressions.mjs",
     "node tests/run-story-evidence-evals.mjs",
     "node tests/run-copy-system-v2.mjs",
@@ -282,6 +934,11 @@
     "node integration/copy-engine-v3/scripts/check-package.mjs"
   ],
   "regression_results": [
+    {
+      "command": "node tests/run-brain-loading-v3.29.mjs",
+      "status": "passed",
+      "output": "PASS brain v3.29 loading: canonical sources, recursive compile, role traces, active punctuation and story routing"
+    },
     {
       "command": "node tests/run-conversion-regressions.mjs",
       "status": "passed",
@@ -310,8 +967,8 @@
     {
       "command": "node integration/copy-engine-v3/scripts/check-package.mjs",
       "status": "passed",
-      "output": "PASS copy-brain-release-v3.6: 37 artifacts, 26 active lessons, compiled doctrine routes and Zod parity"
+      "output": "PASS copy-brain-release-v3.31: 66 artifacts, 40 active lessons, compiled doctrine routes and Zod parity"
     }
   ],
-  "manifest_sha256": "5053f416a2e8d577627f045a93e046a0222508fa11eeb1d5312edf1c20df1e4e"
+  "manifest_sha256": "8fb47ec7e086cc7064e9baf2bb60e0df91306f17199f4d1456581d87c39c89ea"
 }

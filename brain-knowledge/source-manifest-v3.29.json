@@ -1,0 +1,22 @@
+{
+  "schema_version": "brain-source-manifest-v1",
+  "release_version": "copy-brain-release-v3.31",
+  "source_policy": "Historical owner evidence is preserved byte-for-byte. Active role packs are derived, dash-normalized and independently checked.",
+  "sources": [
+    { "path": "brain/sources/owner-canon/COPY-MANUAL.original.md", "sha256": "1ba1bccd6d7fac2cc0105e33889fd0231c35772bc4897ce75a77ad63b5999831", "authority": "base_manual" },
+    { "path": "brain/sources/owner-canon/COPY-MANUAL-LATEST-SUPPLEMENT.md", "sha256": "c5375044f7754b246a21f4aec3db8bc4892d8b5fdaf605bff4e20aa8fde827f1", "authority": "latest_supplement" },
+    { "path": "brain/sources/owner-canon/michael/michael-v2.md", "sha256": "9be4e81c959a5fb1e98d243d2d64a6c6db0a0be7f4d02d24afeb14bcfe780247", "authority": "owner_iteration" },
+    { "path": "brain/sources/owner-canon/michael/michael-v3.md", "sha256": "64a0c1389bbbd603565e4e72a6249207eef050aa352f47a47a10b2205cc939d7", "authority": "owner_iteration" },
+    { "path": "brain/sources/owner-canon/michael/michael-v4.md", "sha256": "5d2e5affecdaeaf26075d847080c9fbbe3b6d6557cfafcf80a023ae166c3a3d2", "authority": "owner_iteration" },
+    { "path": "brain/sources/owner-canon/michael/michael-v5.md", "sha256": "2da7a94f68c3746970f6b320502ee54a03b0670d2a54ef29d68835591ff8bf8f", "authority": "owner_approved_positive" },
+    { "path": "brain/sources/owner-canon/michael/michael-evolution-evidence.md", "sha256": "a7052a43663c5ffaa6cf7652ec48fa7972d76ef529fb5ed9540b283d52f1b03a", "authority": "chronological_evidence" },
+    { "path": "brain/sources/owner-canon/approved/avraham-final.txt", "sha256": "bc37737013d08a2452b8107e18d8cf3b108ffeb77b950a09a05315444a6e0332", "authority": "owner_approved_positive" },
+    { "path": "brain/sources/owner-canon/negative/round5-owner-feedback.md", "sha256": "8c0b9af5a9557b735c0861d0591050c8a322bb314c136f77de6e5e7df2527048", "authority": "latest_owner_rejection" },
+    { "path": "brain/sources/owner-canon/negative/round5-learning-diagnosis.md", "sha256": "fff732fc46f8ecbf3a01b21cec965d94e8f11b4bbccd75630468953f2b492e01", "authority": "verified_failure_diagnosis" },
+    { "path": "brain/sources/owner-canon/negative/leadecho-opus5-v3.28-result.md", "sha256": "8df09030274247e4bd8e4ce0deaecb093e2e11cff61796dd344210e843772922", "authority": "latest_owner_and_manual_rejection" },
+    { "path": "brain/sources/owner-canon/approved/leadecho-v3.29-owner-approved-he.md", "sha256": "9ebb913637854cfcab60418b87bf16438153740edeef6c2e80d792fb1ddc8d91", "authority": "owner_approved_positive_with_followup" },
+    { "path": "brain/sources/owner-canon/approved/leadecho-v3.30-owner-approved-en.md", "sha256": "cbcf5d5a3240af91f33baa2218315525b9b6d7d14323b8468a282250bac7df91", "authority": "latest_owner_approved_commercial_positive" },
+    { "path": "brain/sources/owner-canon/feedback/leadecho-v3.29-owner-followup-he.md", "sha256": "caacaaeca986a722b4ef7a1c9d0e8def2b6c61c4e62bb89f82dc8d8b1354422e", "authority": "superseded_where_conflicting" },
+    { "path": "brain/sources/owner-canon/feedback/development-gate-policy-owner-2026-08-22-he.md", "sha256": "78777c8ec45afb173a28632ea4cad46b7d5c1c98da39a4ae5f9e4fdc91c47907", "authority": "latest_explicit_owner_feedback" }
+  ]
+}

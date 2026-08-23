@@ -1,6 +1,6 @@
 {
   "schema_version": "lesson-registry-v3",
-  "registry_version": "2026-08-19.1",
+  "registry_version": "2026-08-23.1",
   "precedence_rule": "A later explicit owner correction supersedes an older rule. Approval confirms the resulting output, not every reusable surface pattern inside it.",
   "lessons": [
     {
@@ -78,7 +78,7 @@
       "date": "2026-08-10",
       "status": "still_valid",
       "authority": "explicit_owner_feedback",
-      "principle": "Diversity must be visible in the silhouette, narrator, rhythm and argument—not merely in changed nouns.",
+      "principle": "Diversity must be visible in the silhouette, narrator, rhythm and argument-not merely in changed nouns.",
       "writer_question": "Would these candidates still look and move differently with product names removed?",
       "routes": ["director", "all_writers", "portfolio_judge"],
       "regression": "same_silhouette"
@@ -89,7 +89,7 @@
       "status": "active_latest",
       "authority": "explicit_owner_feedback",
       "principle": "Power comes from maximizing the resolution of a true fact, never by increasing the claim beyond evidence.",
-      "writer_question": "Is the underlying fact powerful, specific and earned—or is the wording shouting around a weak fact?",
+      "writer_question": "Is the underlying fact powerful, specific and earned-or is the wording shouting around a weak fact?",
       "routes": ["hook", "all_writers", "critic", "judge"],
       "regression": "adjective_inflation"
     },
@@ -129,7 +129,7 @@
       "status": "active_latest",
       "authority": "latest_explicit_owner_feedback",
       "principle": "A conversion story must expose a present unmet need in-scene and make the offer the direct causal bridge to the same outcome while the gap remains open at the ask.",
-      "writer_question": "Who remains without what now, where did the reader experience it, and why does this offer—not an adjacent one—change that exact result?",
+      "writer_question": "Who remains without what now, where did the reader experience it, and why does this offer-not an adjacent one-change that exact result?",
       "routes": ["director", "angle", "all_writers", "reader", "critic", "judge"],
       "regression": "round5_problem_closed_or_offer_not_causal"
     },
@@ -138,8 +138,8 @@
       "date": "2026-08-16",
       "status": "active_latest",
       "authority": "owner_approved_output",
-      "principle": "Michael v5 is the latest approved quality baseline, including tension, causal funding dependence, human specificity, emotional transfer and visual rhythm.",
-      "writer_question": "Does this candidate preserve the applicable capabilities of the latest approved baseline without imitating its surface?",
+      "principle": "Michael v5 is the approved long-form fundraising baseline, including tension, causal funding dependence, human specificity, emotional transfer and visual rhythm.",
+      "writer_question": "Does this fundraising candidate preserve the applicable Michael v5 capabilities without imitating its surface?",
       "routes": ["director", "all_writers", "critic", "judge", "release_governance"],
       "regression": "michael_v5_positive_control"
     },
@@ -158,7 +158,7 @@
       "date": "2026-08-18",
       "status": "active_latest",
       "authority": "latest_explicit_owner_feedback",
-      "principle": "Readiness requires predicting the owner's latest critique from reader experience, but owner taste remains a development calibration—not a universal user voice.",
+      "principle": "Readiness requires predicting the owner's latest critique from reader experience, but owner taste remains a development calibration-not a universal user voice.",
       "writer_question": "What would the owner reject immediately, and which part is universal reader logic versus personal taste?",
       "routes": ["critic", "judge", "release_governance"],
       "regression": "owner_lens_false_pass"
@@ -198,8 +198,8 @@
       "date": "2026-08-19",
       "status": "active_latest",
       "authority": "latest_explicit_owner_feedback",
-      "principle": "Evidence-based dramatization may invent scene texture but never outcomes, measurements, diagnoses, urgency, scarcity, testimonial attribution or increased severity.",
-      "writer_question": "Does the invented detail only make the scene visible, or make the reader believe a stronger claim?",
+      "principle": "Evidence-based dramatization may invent a representative character, name, dialogue, quotation and testimonial-style attribution, while the product outcome, measurement, diagnosis, urgency, scarcity and severity remain bounded by evidence.",
+      "writer_question": "Is the character creatively expressing a supported experience, or quietly making the product result stronger than the evidence?",
       "routes": ["evidence", "director", "all_writers", "critic", "judge"],
       "regression": "invented_claim_detail"
     },
@@ -219,7 +219,7 @@
       "status": "active_latest",
       "authority": "latest_explicit_owner_feedback",
       "principle": "Copy cannot begin when product, consumer audience or campaign objective is unknown or confused with the affiliate program.",
-      "writer_question": "What is sold, to whom, for which action—and is affiliate economics kept internal?",
+      "writer_question": "What is sold, to whom, for which action-and is affiliate economics kept internal?",
       "routes": ["execution_brief", "director", "all_writers", "judge"],
       "regression": "jasper_objective_audience_mismatch"
     },
@@ -239,7 +239,7 @@
       "status": "active_latest",
       "authority": "jasper_v3_1_clean_runtime_finding",
       "principle": "Evidence bounds the scope of every claim-bearing verb and relationship, not only numbers and outcomes. Do not expand a supported feature into broader permanence, reach, compatibility or architecture language.",
-      "writer_question": "Does the source prove this exact subject, verb and scope—or did I quietly widen who can access what, where it persists or how broadly it applies?",
+      "writer_question": "Does the source prove this exact subject, verb and scope-or did I quietly widen who can access what, where it persists or how broadly it applies?",
       "routes": ["evidence", "all_writers", "critic", "judge"],
       "regression": "source_scope_expansion"
     },
@@ -262,6 +262,192 @@
       "writer_question": "Am I describing what the reader and product evidence prove, or quietly turning missing competitor evidence into a claim about what an entire category forgets, lacks or cannot do?",
       "routes": ["angle", "director", "hook", "all_writers", "critic", "judge"],
       "regression": "unsupported_category_behavior_in_hook"
+    },
+    {
+      "lesson_id": "L132",
+      "date": "2026-08-21",
+      "status": "active_latest",
+      "authority": "latest_explicit_owner_feedback",
+      "principle": "Differentiate by making the offer's verified strength concrete, not by lowering competitors. Test causality by removing the offer mechanism, not by inventing a weaker replacement. Comparison requires direct comparative evidence; uniqueness or no-competitor claims require explicit competitive research with adequate market coverage.",
+      "writer_question": "What supported strength makes this offer worth choosing, would the same result survive if that mechanism were removed, and do I have direct research for any market comparison or uniqueness claim?",
+      "routes": ["evidence", "angle", "director", "hook", "all_writers", "critic", "judge"],
+      "regression": "positive_differentiation_without_invented_competitor"
+    },
+    {
+      "lesson_id": "L133",
+      "date": "2026-08-21",
+      "status": "active_latest",
+      "authority": "leadecho_v3_20_runtime_finding",
+      "principle": "A synthetic character may carry supported proof or a representative experience and is not a readiness failure. Material product claims still remain evidence-bounded; honest qualifiers should be attached to the claim they qualify rather than stacked before the CTA when that destroys momentum, and the close returns to the strongest concrete unresolved pain.",
+      "writer_question": "Did the character stay inside the supported result, did I place each honest qualifier beside its claim, and did the final movement collect the reader's strongest unresolved moment?",
+      "routes": ["all_writers", "reader", "critic", "judge"],
+      "regression": "invented_endorsement_frame_or_pre_cta_disclaimer_stack"
+    },
+    {
+      "lesson_id": "L134",
+      "date": "2026-08-21",
+      "status": "active_latest",
+      "authority": "leadecho_v3_21_runtime_finding",
+      "principle": "Preserve exact numeric meaning and calibrate criticism: an ambiguous source time cannot be converted into a specific 24-hour time, a stronger later line does not by itself make a stopping fold weak, and a recovered local momentum dip or hypothetical fast-scroller prediction is advisory rather than a kill flag.",
+      "writer_question": "Did I preserve the source's exact number and time meaning, put the strongest available recognition inside the fold, and distinguish an actual broken reader journey from an improvement opportunity?",
+      "routes": ["all_writers", "reader", "critic", "judge"],
+      "regression": "ambiguous_time_conversion_or_overcalibrated_fold_momentum_kill"
+    },
+    {
+      "lesson_id": "L135",
+      "date": "2026-08-21",
+      "status": "active_latest",
+      "authority": "latest_explicit_owner_feedback",
+      "principle": "Use only the short hyphen in active prompts, generated copy, translation and user-visible text. Long and medium dashes are forbidden. Historical evidence remains unchanged and is not loaded directly when it violates the active policy.",
+      "writer_question": "Does every active text surface use only the short hyphen without altering historical source evidence?",
+      "routes": ["director", "hook", "all_writers", "reader", "critic", "judge", "release_governance"],
+      "regression": "active_text_long_dash"
+    },
+    {
+      "lesson_id": "L136",
+      "date": "2026-08-21",
+      "status": "active_latest",
+      "authority": "latest_explicit_owner_feedback",
+      "principle": "When evidence supports a real emotional journey, Storytelling is the primary route for an anchor conversion ad. A non-story primary route requires an explicit reason grounded in evidence, audience awareness or format.",
+      "writer_question": "Can this offer carry an honest emotional journey, and if so why is Storytelling not the primary anchor route?",
+      "routes": ["director", "angle", "release_governance"],
+      "regression": "anchor_story_bypassed_without_reason"
+    },
+    {
+      "lesson_id": "L137",
+      "date": "2026-08-21",
+      "status": "active_latest",
+      "authority": "latest_explicit_owner_feedback",
+      "principle": "First person is preferred when it lets the reader discover the problem with the narrator. Third person is an optional rhetorical bridge to the wider problem or product, not a disclosure or compliance requirement.",
+      "writer_question": "Which point of view lets the reader undergo the discovery, and what bridge introduces the product without waking the reader from the story?",
+      "routes": ["director", "storytelling_writer", "critic", "judge"],
+      "regression": "forced_third_person_or_presentation_bridge"
+    },
+    {
+      "lesson_id": "L138",
+      "date": "2026-08-21",
+      "status": "active_latest",
+      "authority": "verified_runtime_failure",
+      "principle": "A file existing on disk is not proof that an agent received it. Every active release requires recursive resolution, zero unresolved placeholders, content-anchor checks and per-agent load traces.",
+      "writer_question": "Can the release prove the exact doctrine and examples present in this agent's final compiled prompt?",
+      "routes": ["release_governance"],
+      "regression": "leadecho_unresolved_library_placeholders"
+    },
+    {
+      "lesson_id": "L139",
+      "date": "2026-08-21",
+      "status": "active_latest",
+      "authority": "round5_and_leadecho_false_pass_diagnosis",
+      "principle": "Blind agents are not independent when they share the same doctrine vocabulary and test component presence. Reader, critic and judge require different inputs, questions and evidence duties.",
+      "writer_question": "Did each evaluator observe a different layer of truth, or did several agents simply repeat the writer's labels?",
+      "routes": ["reader", "critic", "judge", "release_governance"],
+      "regression": "shared_vocabulary_false_pass"
+    },
+    {
+      "lesson_id": "L140",
+      "date": "2026-08-22",
+      "status": "active_latest",
+      "authority": "latest_explicit_owner_feedback",
+      "principle": "Generate natively in the campaign audience's delivery language. Interface language, operator language and source-document language do not override the market-facing language. Translation is a separate post-approval operation, never a substitute for native generation when the campaign language is already known.",
+      "writer_question": "What language will the target reader actually encounter in this campaign, and am I writing natively in it rather than translating from the operator's language?",
+      "routes": [
+        "director",
+        "hook",
+        "all_writers",
+        "reader",
+        "critic",
+        "judge",
+        "release_governance"
+      ],
+      "regression": "operator_language_overrides_campaign_language"
+    },
+    {
+      "lesson_id": "L141",
+      "date": "2026-08-22",
+      "status": "active_latest",
+      "authority": "latest_explicit_owner_feedback",
+      "principle": "The emotional peak is not the end of the persuasion. After the peak, preserve its emotional capital while making the no-offer counterfactual, the human or business consequence, the repeating pattern and the offer's exact value fully legible before the CTA. A short leap from realization to trial language under-sells both pain and solution.",
+      "writer_question": "After the strongest moment, can the reader explain what is lost without action, why that loss matters repeatedly and what exact value the offer creates before I ask?",
+      "routes": [
+        "storytelling_writer",
+        "direct_response_writer",
+        "proof_mechanism_writer",
+        "reader",
+        "critic",
+        "judge"
+      ],
+      "regression": "post_peak_value_bridge_too_short"
+    },
+    {
+      "lesson_id": "L142",
+      "date": "2026-08-22",
+      "status": "active_latest",
+      "authority": "latest_explicit_owner_feedback",
+      "principle": "Raise perceived offer value by contrasting the consequence with the known implementation burden, price, trial terms or setup. Preserve exact factual terms and never use internal affiliate payout as consumer proof. Rhetorical value framing is allowed when it does not fabricate a measurable cost, setup promise or guaranteed return.",
+      "writer_question": "Which known facts make the action feel proportionate to the consequence, and have I avoided inventing a measurable price, setup term or guaranteed return?",
+      "routes": [
+        "evidence",
+        "angle",
+        "director",
+        "all_writers",
+        "critic",
+        "judge"
+      ],
+      "regression": "unsupported_cheap_or_easy_value_claim"
+    },
+    {
+      "lesson_id": "L143",
+      "date": "2026-08-22",
+      "status": "active_latest",
+      "authority": "latest_explicit_owner_feedback",
+      "principle": "Read the post-peak movement as the target small-business owner. The mechanism must rise from a feature into protection of a meaningful opportunity without turning the story into a product presentation. The bridge succeeds only when pain grows more consequential, the offer grows more valuable and both remain the same causal story.",
+      "writer_question": "Did the post-peak bridge deepen the same lived problem and same causal solution, or did I merely mention the product and rush to the CTA?",
+      "routes": [
+        "storytelling_writer",
+        "reader",
+        "critic",
+        "judge"
+      ],
+      "regression": "mechanism_named_but_value_not_felt"
+    },
+    {
+      "lesson_id": "L144",
+      "date": "2026-08-22",
+      "status": "active_latest",
+      "authority": "latest_explicit_owner_feedback",
+      "principle": "Separate system errors, direct material truth blocks and quality findings. Only a broken input/runtime contract or a direct false product result, mechanism, measured performance, price, trial term, explicit unsupported competitor fact or extreme invented consequence may hide copy during development. Plausible dramatization and craft weaknesses remain visible to the owner.",
+      "writer_question": "Is this a concrete material falsehood, an internal pipeline defect or a creative improvement opportunity - and am I wrongly turning the third category into a veto?",
+      "routes": [
+        "evidence",
+        "angle",
+        "director",
+        "hook",
+        "all_writers",
+        "reader",
+        "critic",
+        "judge",
+        "portfolio_judge",
+        "release_governance"
+      ],
+      "regression": "quality_advisory_misclassified_as_hard_block"
+    },
+    {
+      "lesson_id": "L145",
+      "date": "2026-08-23",
+      "status": "active_latest",
+      "authority": "owner_approved_output",
+      "principle": "LeadEcho v3.30 is the approved native-English commercial storytelling control. It proves that a recognizable work conflict, first-person discovery, a scene-changing mechanism and a supported post-peak value bridge can sell a commercial offer without a detached product presentation. Its salon, missed-call plot, narrator and silhouette are not reusable templates.",
+      "writer_question": "Does this commercial story make the target reader live a recurring business conflict, experience the mechanism changing that same conflict and feel the supported offer value before the CTA - without copying the LeadEcho surface?",
+      "routes": [
+        "director",
+        "storytelling_writer",
+        "direct_response_writer",
+        "proof_mechanism_writer",
+        "critic",
+        "judge",
+        "release_governance"
+      ],
+      "regression": "leadecho_v330_commercial_positive_control"
     },
     {
       "lesson_id": "OLD_FIXED_LINE_COUNTS",

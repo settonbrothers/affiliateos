@@ -7,13 +7,13 @@ const manifest = JSON.parse(
   readFileSync(join(root, 'brain-release/manifest.json'), 'utf8')
 ) as {
   release_version: string
-  files: Array<{ target: string; sha256: string }>
+  files: Array<{ target: string; sha256: string; kind: string }>
 }
 const sha = (path: string) =>
   createHash('sha256').update(readFileSync(path)).digest('hex')
-const drift = manifest.files.filter(
-  (file) => sha(join(root, file.target)) !== file.sha256
-)
+const drift = manifest.files
+  .filter((file) => file.kind !== 'source_evidence')
+  .filter((file) => sha(join(root, file.target)) !== file.sha256)
 if (drift.length) {
   throw new Error(
     `Generated copy-brain drift detected in: ${drift.map((file) => file.target).join(', ')}`
