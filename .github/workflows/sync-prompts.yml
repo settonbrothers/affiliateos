@@ -19,6 +19,7 @@ on:
         options:
           - sync
           - brain-stage
+          - brain-release
 
 jobs:
   sync:
@@ -48,3 +49,20 @@ jobs:
       - name: Stage signed copy-brain prompts inactive
         if: ${{ github.event.inputs.mode == 'brain-stage' }}
         run: pnpm brain:stage -- --package brain-release/manifest.json
+
+      - name: Activate the owner-approved signed copy brain
+        if: ${{ github.event.inputs.mode == 'brain-release' }}
+        run: >-
+          pnpm brain:release --
+          --package brain-release/manifest.json
+          --confirm-owner-approved
+          --confirm-eight-case-eval-deferred
+
+      - name: Preserve rollback snapshot
+        if: ${{ github.event.inputs.mode == 'brain-release' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: copy-brain-rollback-${{ github.run_id }}
+          path: brain-release/rollback-copy-brain-release-v3.31.json
+          if-no-files-found: error
+          retention-days: 90

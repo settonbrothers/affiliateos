@@ -61,19 +61,41 @@ const spine = {
   offer_mechanism: 'Brand context is applied in the drafting workflow.',
   why_offer_is_causal_solution: 'The context stays with the draft.',
   unresolved_at_ask: 'The next campaign still needs first drafts.',
+  causal_dependency_test: {
+    removed_offer_mechanism: 'Stored brand context is removed from the drafting workflow.',
+    reader_problem_still_resolves: false,
+    explanation: 'Without stored context, the manual rewrite bottleneck remains.',
+  },
+}
+
+const positiveDifferentiation = {
+  offer_strength: 'Jasper applies stored brand context during drafting.',
+  offer_strength_source_ids: ['s1'],
+  market_claim_mode: 'offer_only',
+  market_claim: '',
+  market_claim_evidence_ids: [],
+  competitor_denigration_used: false,
 }
 
 Deno.test(
   'angle contract rejects Jasper recommendation and source regressions',
   () => {
     const valid = [
-      { is_recommended: true, conversion_spine: spine },
-      { is_recommended: false, conversion_spine: null },
+      {
+        is_recommended: true,
+        conversion_spine: spine,
+        positive_differentiation: positiveDifferentiation,
+      },
+      {
+        is_recommended: false,
+        conversion_spine: spine,
+        positive_differentiation: positiveDifferentiation,
+      },
     ]
     assertEquals(validateAngleDecision(valid, envelope).pass, true)
     assert(
       validateAngleDecision(
-        [valid[0], { is_recommended: true, conversion_spine: null }],
+        [valid[0], { ...valid[1], is_recommended: true }],
         envelope
       ).flags.includes('angle_recommendation_cardinality')
     )
@@ -83,6 +105,7 @@ Deno.test(
           {
             is_recommended: true,
             conversion_spine: { ...spine, truth_sources: ['s1: quote'] },
+            positive_differentiation: positiveDifferentiation,
           },
         ],
         envelope
@@ -91,7 +114,7 @@ Deno.test(
   }
 )
 
-Deno.test('unsupported Jasper timings fail before judging', () => {
+Deno.test('unsupported Jasper timings are classified before judging', () => {
   assertEquals(
     validateCandidateClaims(
       {
@@ -101,11 +124,11 @@ Deno.test('unsupported Jasper timings fail before judging', () => {
       },
       envelope
     ).flags,
-    ['invented_claim_detail']
+    ['unsupported_scene_detail']
   )
 })
 
-Deno.test('unsupported Hebrew-word timings fail before judging', () => {
+Deno.test('unsupported Hebrew-word timings and forbidden dashes are classified', () => {
   assertEquals(
     validateCandidateClaims(
       {
@@ -115,7 +138,7 @@ Deno.test('unsupported Hebrew-word timings fail before judging', () => {
       },
       envelope
     ).flags,
-    ['invented_claim_detail']
+    ['unsupported_scene_detail', 'forbidden_dash']
   )
 })
 
@@ -257,7 +280,7 @@ Deno.test('unsupported category behavior fails at the angle gate', () => {
 })
 
 Deno.test(
-  'empty relevant Taste is valid and bounded revision skips unrepairable candidates',
+  'empty relevant Taste is valid and quality-only findings stay non-blocking',
   () => {
     assertEquals(tasteRequirementStatus({ selected: [] }), 'none_available')
     assertEquals(
@@ -300,12 +323,12 @@ Deno.test(
         },
       ]
     )
-    assertEquals(selected?.candidate.candidate_id, 'c1')
+    assertEquals(selected, null)
   }
 )
 
 Deno.test(
-  'Jasper revision routing prefers a bounded proof repair over a structural rewrite',
+  'Jasper quality findings remain visible without forcing a revision',
   () => {
     const selected = selectRevisionCandidate(
       [
@@ -335,6 +358,6 @@ Deno.test(
         },
       ]
     )
-    assertEquals(selected?.candidate.candidate_id, 'proof-bounded-repair')
+    assertEquals(selected, null)
   }
 )
