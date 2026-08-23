@@ -39,6 +39,15 @@ describe('copy brain v3.31 activation contract', () => {
     expect(release).toContain('isCopyBrainRuntimeOrchestrator')
   })
 
+  it('passes the campaign objective and delivery language into the brain snapshot', () => {
+    const endpoint = read('supabase/functions/generate-ad-copy/index.ts')
+
+    expect(endpoint).toContain('generation_language: generationLanguage')
+    expect(endpoint).toContain('objective_type: inferredObjective')
+    expect(endpoint).toContain('desired_action: inferredDesiredAction')
+    expect(endpoint).toContain("? 'donor' : 'consumer'")
+  })
+
   it('keeps a separate explicit rollback command', () => {
     const rollback = read('scripts/rollback-copy-brain.mts')
 

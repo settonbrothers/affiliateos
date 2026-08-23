@@ -183,6 +183,9 @@ try {
         geo: 'US',
         audience:
           'Owner-operators of appointment businesses who cannot answer while serving a customer',
+        objective_type: 'trial',
+        desired_action: 'Start a free 14-day LeadEcho trial on one existing business line',
+        audience_side: 'consumer',
       },
     }),
   })
@@ -228,6 +231,18 @@ try {
     }
   }
   const payload = output.payload
+  smokeResult = {
+    ...smokeResult,
+    run_id: runId,
+    engine_version: payload?.engine_version ?? null,
+    output_status: payload?.output_status ?? null,
+    model: run.model,
+    estimated_cost_usd: Number(run.estimated_cost ?? 0),
+    tokens_input: run.tokens_input,
+    tokens_output: run.tokens_output,
+    trace: payload?.trace ?? null,
+    candidates: payload?.variants ?? [],
+  }
   if (payload?.engine_version !== 'evidence-agency-v9') {
     throw new Error(`unexpected engine: ${payload?.engine_version ?? 'missing'}`)
   }
