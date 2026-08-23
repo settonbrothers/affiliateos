@@ -43,6 +43,8 @@ jobs:
             node scripts/check-ad-copy-jobs-db.mjs
           elif [ "$FN" = "__ad_copy_jobs_db_apply__" ]; then
             node scripts/deploy-ad-copy-jobs-db.mjs
+          elif [ "$FN" = "__copy_angle_error_check__" ]; then
+            node scripts/check-copy-angle-error.mjs
           elif [ -n "$FN" ]; then
             supabase functions deploy "$FN" --project-ref "$REF"
           else
