@@ -3,6 +3,8 @@ import { join, resolve } from 'node:path'
 
 import { createClient } from '@supabase/supabase-js'
 
+import { isCopyBrainRuntimeOrchestrator } from './copy-brain-scope.mts'
+
 const argv = process.argv.slice(2)
 const valueAfter = (flag: string) => {
   const index = argv.indexOf(flag)
@@ -105,7 +107,10 @@ const planned: Array<{
   previous: PromptRow | null
 }> = []
 
-for (const file of manifest.files.filter((item) => item.kind === 'prompt')) {
+for (const file of manifest.files.filter(
+  (item) =>
+    item.kind === 'prompt' && isCopyBrainRuntimeOrchestrator(item.orchestrator)
+)) {
   if (!file.orchestrator || !file.version) {
     throw new Error('Prompt metadata missing')
   }

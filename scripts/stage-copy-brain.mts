@@ -4,6 +4,8 @@ import { dirname, join, resolve } from 'node:path'
 
 import { createClient } from '@supabase/supabase-js'
 
+import { isCopyBrainRuntimeOrchestrator } from './copy-brain-scope.mts'
+
 const argv = process.argv.slice(2)
 const packageIndex = argv.indexOf('--package')
 const rawManifestPath = packageIndex >= 0 ? argv[packageIndex + 1] : null
@@ -41,7 +43,10 @@ const db = createClient(
   env.SUPABASE_SERVICE_ROLE_KEY,
   { auth: { persistSession: false } }
 )
-for (const file of manifest.files.filter((item) => item.kind === 'prompt')) {
+for (const file of manifest.files.filter(
+  (item) =>
+    item.kind === 'prompt' && isCopyBrainRuntimeOrchestrator(item.orchestrator)
+)) {
   if (!file.orchestrator || !file.version) {
     throw new Error(`${file.target}: prompt metadata missing`)
   }

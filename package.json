@@ -24,6 +24,7 @@
     "brain:stage": "tsx scripts/stage-copy-brain.mts",
     "brain:release": "tsx scripts/release-copy-brain.mts",
     "brain:rollback": "tsx scripts/rollback-copy-brain.mts",
+    "brain:restore-scope": "tsx scripts/restore-non-copy-brain-scope.mts",
     "brain:drift": "tsx scripts/check-copy-brain-drift.mts",
     "brain:ownership": "tsx scripts/check-copy-path-ownership.mts",
     "prompts:activate": "node scripts/prompts-sync.mjs --activate",

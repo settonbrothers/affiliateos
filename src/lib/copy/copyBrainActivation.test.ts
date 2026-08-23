@@ -26,6 +26,19 @@ describe('copy brain v3.31 activation contract', () => {
     expect(release).toContain('Activation failed and previous prompts were restored')
   })
 
+  it('limits staging and activation to the owned copy department', () => {
+    const scope = read('scripts/copy-brain-scope.mts')
+    const stage = read('scripts/stage-copy-brain.mts')
+    const release = read('scripts/release-copy-brain.mts')
+
+    expect(scope).toContain('CopyDirectorOrchestrator')
+    expect(scope).toContain('CopyPortfolioJudgeOrchestrator')
+    expect(scope).not.toContain('DiagnosisOrchestrator')
+    expect(scope).not.toContain('AvatarBuilderOrchestrator')
+    expect(stage).toContain('isCopyBrainRuntimeOrchestrator')
+    expect(release).toContain('isCopyBrainRuntimeOrchestrator')
+  })
+
   it('keeps a separate explicit rollback command', () => {
     const rollback = read('scripts/rollback-copy-brain.mts')
 
