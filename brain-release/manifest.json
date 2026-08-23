@@ -792,7 +792,7 @@
       "source": "integration/copy-engine-v3/schemas/copy-brain-input-v1.schema.json",
       "target": "brain-contracts/copy-brain-input-v1.schema.json",
       "kind": "contract",
-      "sha256": "8a7790195d11427b03660748ace9f75b75c33a8dc00149a35fc784abb5cc6485"
+      "sha256": "a518c3307b59d6f895ef05197b46549334e5565f43f121961267a71a2e912626"
     },
     {
       "source": "integration/copy-engine-v3/schemas/copy-execution-brief-v2.schema.json",
@@ -922,8 +922,8 @@
     }
   ],
   "source_repository": "creation-engine",
-  "source_git_sha": "6aa4c0a34f2dc996c53f48af6313cda4a893cddb",
-  "compiled_at": "2026-08-23T07:42:04.702Z",
+  "source_git_sha": "a80664e114e8b8354ff79d929815bb67e6d91393",
+  "compiled_at": "2026-08-23T07:51:10.140Z",
   "regression_commands": [
     "node tests/run-brain-loading-v3.29.mjs",
     "node tests/run-conversion-regressions.mjs",
@@ -970,5 +970,5 @@
       "output": "PASS copy-brain-release-v3.31: 66 artifacts, 40 active lessons, compiled doctrine routes and Zod parity"
     }
   ],
-  "manifest_sha256": "6c2bece68a9d405da5336fb9427432066e1ff19458891885d97cbbda1e7bc68e"
+  "manifest_sha256": "d04fa9bddbafd49c116bdf4058e5777511b1b85ac7ef1c72bf0f5c9d430814e0"
 }

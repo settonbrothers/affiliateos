@@ -14,6 +14,11 @@ describe('CopyBrainInputSnapshotV1 contract parity', () => {
       )
     ) as {
       required: string[]
+      properties: {
+        campaign_context: {
+          properties: { generation_language: { enum: string[] } }
+        }
+      }
       $defs: { source: { properties: { source_type: { enum: string[] } } } }
     }
     expect(schema.required).toEqual(
@@ -32,6 +37,9 @@ describe('CopyBrainInputSnapshotV1 contract parity', () => {
     expect(schema.$defs.source.properties.source_type.enum).toContain(
       'campaign_result'
     )
+    expect(
+      schema.properties.campaign_context.properties.generation_language.enum
+    ).toEqual(['he', 'en'])
   })
 
   it('keeps all deployment-critical fields in both Node and Deno Zod adapters', () => {
@@ -52,6 +60,7 @@ describe('CopyBrainInputSnapshotV1 contract parity', () => {
       'campaign_result',
       'snapshot_sha256',
       'offer_economics',
+      "generation_language: z.enum(['he', 'en'])",
     ]) {
       expect(node).toContain(token)
       expect(deno).toContain(token)

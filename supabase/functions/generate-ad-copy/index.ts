@@ -149,6 +149,11 @@ Deno.serve(async (req: Request) => {
     const verticalSlug =
       (offer as unknown as { verticals?: { slug: string } | null }).verticals
         ?.slug ?? undefined
+    const generationLanguage = String(offer.primary_language ?? '')
+      .toLowerCase()
+      .startsWith('he')
+      ? 'he'
+      : 'en'
 
     // Product grounding: the offer's verified facts (same source the underwriting
     // verdict is built from) feed product excavation.
@@ -445,7 +450,7 @@ Deno.serve(async (req: Request) => {
         channel: body.campaign_context?.channel ?? 'meta_facebook',
         geo: body.campaign_context?.geo ? [body.campaign_context.geo] : [],
         audience: body.campaign_context?.audience ?? null,
-        generation_language: 'he',
+        generation_language: generationLanguage,
       },
       underwriting: underwritingContext,
       compliance: complianceContext,
