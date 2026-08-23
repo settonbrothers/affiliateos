@@ -57,6 +57,26 @@ export const resolveEvidenceStageModel = (
   prepModel = MODEL
 ) => (profile === 'economy_smoke' ? prepModel : preferredModel)
 
+// Sonnet occasionally submits one valid AngleV8 directly even though the tool
+// JSON Schema and prompt both require { angles: [...] }. This adapter repairs
+// only that outer transport shape. The angle itself still has to satisfy the
+// complete EvidenceAngleSchema and all deterministic angle gates.
+export const normalizeAnglesToolInput = (rawInput: unknown): unknown => {
+  if (!rawInput || typeof rawInput !== 'object' || Array.isArray(rawInput)) {
+    return rawInput
+  }
+  const record = rawInput as Record<string, unknown>
+  if ('angles' in record) return rawInput
+  if (
+    'angle_id' in record &&
+    'is_recommended' in record &&
+    'narrative_license' in record
+  ) {
+    return { angles: [rawInput] }
+  }
+  return rawInput
+}
+
 const AnglesSchema = z.object({
   angles: z.array(EvidenceAngleSchema).min(1).max(5),
 })
@@ -173,6 +193,7 @@ async function stage<T extends ZodTypeAny>(args: {
   model?: string
   version?: string
   frozenPromptContent?: string
+  inputNormalizer?: (rawInput: unknown) => unknown
 }): Promise<{ data: z.infer<T>; usage: Usage }> {
   const result = await callAnthropicWithTool({
     model: args.model ?? MODEL,
@@ -189,6 +210,7 @@ async function stage<T extends ZodTypeAny>(args: {
     toolName: args.tool,
     toolDescription: args.description,
     responseSchema: args.schema,
+    inputNormalizer: args.inputNormalizer,
   })
   return {
     data: result.data,
@@ -825,6 +847,7 @@ export async function runAdCopyEvidence(
     tool: 'submit_angles',
     description: 'Submit evidence-licensed angles once.',
     schema: AnglesSchema,
+    inputNormalizer: normalizeAnglesToolInput,
     version: input.promptVersions?.CopyAngleOrchestrator,
     frozenPromptContent: input.promptContents?.CopyAngleOrchestrator,
     vertical,
@@ -1895,6 +1918,7 @@ export async function runAdCopyEvidenceAgencyStep(
       tool: 'submit_angles',
       description: 'Submit evidence-licensed angles once.',
       schema: AnglesSchema,
+      inputNormalizer: normalizeAnglesToolInput,
       version: input.promptVersions?.CopyAngleOrchestrator,
       frozenPromptContent: input.promptContents?.CopyAngleOrchestrator,
       vertical,

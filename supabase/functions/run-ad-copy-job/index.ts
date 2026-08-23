@@ -1,4 +1,5 @@
 import { ForbiddenError, UnauthorizedError } from '../_shared/auth.ts'
+import { AnthropicValidationError } from '../_shared/anthropicJson.ts'
 import { invokeSelf, requireAdminOrCron } from '../_shared/backgroundWork.ts'
 import { handleCors, jsonResponse } from '../_shared/cors.ts'
 import { refundCredits, type CreditHold } from '../_shared/credits.ts'
@@ -286,6 +287,35 @@ async function runClaimedJob(job: AdCopyJob): Promise<void> {
       throw new Error('Could not hand off ad-copy job to a fresh Edge runtime')
     }
   } catch (error) {
+    if (error instanceof AnthropicValidationError) {
+      const previous = job.checkpoint?.total ?? {
+        input_tokens: 0,
+        output_tokens: 0,
+        cost_usd: 0,
+      }
+      const failedUsage = {
+        input_tokens: previous.input_tokens + error.usage.input_tokens,
+        output_tokens: previous.output_tokens + error.usage.output_tokens,
+        cost_usd: previous.cost_usd + error.costUsd,
+      }
+      await getAdminClient()
+        .from('ad_copy_jobs')
+        .update({
+          tokens_input: failedUsage.input_tokens,
+          tokens_output: failedUsage.output_tokens,
+          cost_usd: failedUsage.cost_usd,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', job.id)
+      await getAdminClient()
+        .from('ai_runs')
+        .update({
+          tokens_input: failedUsage.input_tokens,
+          tokens_output: failedUsage.output_tokens,
+          estimated_cost: failedUsage.cost_usd,
+        })
+        .eq('id', job.ai_run_id)
+    }
     await markFailed(job, error)
   }
 }

@@ -31,7 +31,9 @@ export function calculateAnthropicCostUsd(
 export class AnthropicValidationError extends Error {
   constructor(
     public readonly zodError: z.ZodError,
-    public readonly rawInput: unknown
+    public readonly rawInput: unknown,
+    public readonly usage: { input_tokens: number; output_tokens: number },
+    public readonly costUsd: number
   ) {
     super(
       `Anthropic tool_use output failed Zod validation: ${zodError.message}`
@@ -47,6 +49,7 @@ export type CallOptions<T extends ZodTypeAny> = {
   toolName: string
   toolDescription: string
   responseSchema: T
+  inputNormalizer?: (rawInput: unknown) => unknown
   maxTokens?: number
   maxRetries?: number
 }
@@ -95,6 +98,7 @@ export async function callAnthropicWithTool<T extends ZodTypeAny>(
   const maxRetries = args.maxRetries ?? 3
   let attempt = 0
   let lastError: unknown
+  const cumulativeUsage = { input_tokens: 0, output_tokens: 0 }
 
   // Conversation state. On a Zod validation failure we append the model's
   // invalid tool_use plus a tool_result describing the error, so the retry can
@@ -124,7 +128,12 @@ export async function callAnthropicWithTool<T extends ZodTypeAny>(
         throw new Error('No tool_use block in Anthropic response')
       }
 
-      const parsed = args.responseSchema.safeParse(toolUse.input)
+      cumulativeUsage.input_tokens += resp.usage.input_tokens
+      cumulativeUsage.output_tokens += resp.usage.output_tokens
+      const normalizedInput = args.inputNormalizer
+        ? args.inputNormalizer(toolUse.input)
+        : toolUse.input
+      const parsed = args.responseSchema.safeParse(normalizedInput)
       if (!parsed.success) {
         // Feed the failure back into the conversation so the next attempt fixes
         // the specific problem (e.g. "angles must contain at least 2 items").
@@ -143,16 +152,21 @@ export async function callAnthropicWithTool<T extends ZodTypeAny>(
             },
           ],
         })
-        throw new AnthropicValidationError(parsed.error, toolUse.input)
+        throw new AnthropicValidationError(
+          parsed.error,
+          toolUse.input,
+          { ...cumulativeUsage },
+          calculateAnthropicCostUsd(args.model, cumulativeUsage)
+        )
       }
 
-      const costUsd = calculateAnthropicCostUsd(args.model, resp.usage)
+      const costUsd = calculateAnthropicCostUsd(args.model, cumulativeUsage)
 
       return {
         data: parsed.data,
         usage: {
-          input_tokens: resp.usage.input_tokens,
-          output_tokens: resp.usage.output_tokens,
+          input_tokens: cumulativeUsage.input_tokens,
+          output_tokens: cumulativeUsage.output_tokens,
         },
         cost_usd: costUsd,
         raw_input: toolUse.input,
@@ -176,6 +190,14 @@ export async function callAnthropicWithTool<T extends ZodTypeAny>(
             attempt,
             toolName: args.toolName,
             status,
+            rawInputShape:
+              err instanceof AnthropicValidationError
+                ? describeToolInput(err.rawInput)
+                : null,
+            failedUsage:
+              err instanceof AnthropicValidationError ? err.usage : null,
+            failedCostUsd:
+              err instanceof AnthropicValidationError ? err.costUsd : null,
           },
         })
         throw err
@@ -189,4 +211,12 @@ export async function callAnthropicWithTool<T extends ZodTypeAny>(
   }
 
   throw lastError ?? new Error('Anthropic call failed after retries')
+}
+
+function describeToolInput(value: unknown): Record<string, unknown> {
+  if (Array.isArray(value)) return { type: 'array', length: value.length }
+  if (value && typeof value === 'object') {
+    return { type: 'object', keys: Object.keys(value as object).sort() }
+  }
+  return { type: typeof value }
 }
