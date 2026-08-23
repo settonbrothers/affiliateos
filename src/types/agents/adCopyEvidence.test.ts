@@ -54,6 +54,10 @@ describe('agency foundations', () => {
   it('accepts a director plan with materially distinct specialists', () => {
     const result = CopyDepartmentPlanSchema.safeParse({
       schema_version: 'copy-department-v1',
+      is_anchor_ad: false,
+      story_feasibility: 'not_required',
+      dominant_emotional_center: null,
+      why_not_story: 'This test covers a short proof-led format.',
       primary_specialist: 'proof_mechanism',
       challenger_specialist: 'direct_response',
       routing_reason: 'Proof is the main reason to believe.',
@@ -82,6 +86,29 @@ describe('agency foundations', () => {
       diversity_limitations: [],
     })
     expect(result.success).toBe(true)
+  })
+
+  it('requires the director to make the anchor and story decision', () => {
+    const result = CopyDepartmentPlanSchema.safeParse({
+      schema_version: 'copy-department-v1',
+      primary_specialist: 'proof_mechanism',
+      challenger_specialist: null,
+      routing_reason: 'Legacy plan without the current routing decision.',
+      candidate_briefs: [],
+      diversity_limitations: [],
+    })
+
+    expect(result.success).toBe(false)
+    if (result.success)
+      throw new Error('Legacy director plan unexpectedly passed')
+    expect(result.error.issues.map((issue) => issue.path.join('.'))).toEqual(
+      expect.arrayContaining([
+        'is_anchor_ad',
+        'story_feasibility',
+        'dominant_emotional_center',
+        'why_not_story',
+      ])
+    )
   })
 
   it('keeps the visual department present but disabled', () => {

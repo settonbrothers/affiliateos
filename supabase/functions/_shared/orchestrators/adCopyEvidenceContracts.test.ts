@@ -18,7 +18,10 @@ import {
   normalizeAnglesToolInput,
   resolveEvidenceStageModel,
 } from './adCopyEvidence.ts'
-import { EvidenceAngleSchema } from '../types/adCopyEvidence.ts'
+import {
+  CopyDepartmentPlanSchema,
+  EvidenceAngleSchema,
+} from '../types/adCopyEvidence.ts'
 import { validateNarrativePolicy } from './adCopyEvidencePolicy.ts'
 
 Deno.test(
@@ -120,6 +123,40 @@ Deno.test(
     )
   }
 )
+
+Deno.test('director tool contract requires anchor-story routing fields', () => {
+  const legacyPlan = {
+    schema_version: 'copy-department-v1',
+    primary_specialist: 'storytelling',
+    challenger_specialist: null,
+    routing_reason: 'A legacy plan without the current routing decision.',
+    candidate_briefs: [
+      {
+        candidate_id: 'story-1',
+        specialist: 'storytelling',
+        test_hypothesis: 'A scene makes the problem concrete.',
+        reader_change: 'The cost becomes visible.',
+        evidence_anchor_ids: ['s1'],
+        spy_influence: 'none',
+        material_difference: 'Story-led route.',
+        angle_index: 0,
+      },
+    ],
+    diversity_limitations: [],
+  }
+  assertEquals(CopyDepartmentPlanSchema.safeParse(legacyPlan).success, false)
+  assertEquals(
+    CopyDepartmentPlanSchema.safeParse({
+      ...legacyPlan,
+      is_anchor_ad: true,
+      story_feasibility: 'supported',
+      dominant_emotional_center:
+        'The owner sees what the unanswered call can cost.',
+      why_not_story: null,
+    }).success,
+    true
+  )
+})
 
 Deno.test('synthetic testimonial framing never blocks the angle stage', () => {
   assertEquals(

@@ -192,6 +192,10 @@ export const CopyCandidateBriefSchema = z.object({
 })
 export const CopyDepartmentPlanSchema = z.object({
   schema_version: z.literal('copy-department-v1'),
+  is_anchor_ad: z.boolean(),
+  story_feasibility: z.enum(['supported', 'unsupported', 'not_required']),
+  dominant_emotional_center: z.string().min(1).nullable(),
+  why_not_story: z.string().min(1).nullable(),
   primary_specialist: CopySpecialistSchema,
   challenger_specialist: CopySpecialistSchema.nullable(),
   routing_reason: z.string().min(1),
