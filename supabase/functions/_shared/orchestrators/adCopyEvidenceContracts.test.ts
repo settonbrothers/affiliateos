@@ -10,6 +10,29 @@ import {
   validateDepartmentPlan,
   validateHookCoverage,
 } from '../brainContracts/validateAgencyContracts.ts'
+import { resolveEvidenceStageModel } from './adCopyEvidence.ts'
+
+Deno.test(
+  'economy smoke uses Sonnet without changing production models',
+  () => {
+    assertEquals(
+      resolveEvidenceStageModel(
+        'economy_smoke',
+        'claude-opus-4-6',
+        'claude-sonnet-4-6'
+      ),
+      'claude-sonnet-4-6'
+    )
+    assertEquals(
+      resolveEvidenceStageModel(
+        'production',
+        'claude-opus-4-6',
+        'claude-sonnet-4-6'
+      ),
+      'claude-opus-4-6'
+    )
+  }
+)
 
 const tasteRequirementStatus = rawTasteRequirementStatus as (
   selection: unknown,
@@ -62,9 +85,11 @@ const spine = {
   why_offer_is_causal_solution: 'The context stays with the draft.',
   unresolved_at_ask: 'The next campaign still needs first drafts.',
   causal_dependency_test: {
-    removed_offer_mechanism: 'Stored brand context is removed from the drafting workflow.',
+    removed_offer_mechanism:
+      'Stored brand context is removed from the drafting workflow.',
     reader_problem_still_resolves: false,
-    explanation: 'Without stored context, the manual rewrite bottleneck remains.',
+    explanation:
+      'Without stored context, the manual rewrite bottleneck remains.',
   },
 }
 
@@ -128,19 +153,22 @@ Deno.test('unsupported Jasper timings are classified before judging', () => {
   )
 })
 
-Deno.test('unsupported Hebrew-word timings and forbidden dashes are classified', () => {
-  assertEquals(
-    validateCandidateClaims(
-      {
-        hook: 'הוק',
-        primary_text: 'שלושים שניות — ויש טיוטה.',
-        headline: 'כותרת',
-      },
-      envelope
-    ).flags,
-    ['unsupported_scene_detail', 'forbidden_dash']
-  )
-})
+Deno.test(
+  'unsupported Hebrew-word timings and forbidden dashes are classified',
+  () => {
+    assertEquals(
+      validateCandidateClaims(
+        {
+          hook: 'הוק',
+          primary_text: 'שלושים שניות — ויש טיוטה.',
+          headline: 'כותרת',
+        },
+        envelope
+      ).flags,
+      ['unsupported_scene_detail', 'forbidden_dash']
+    )
+  }
+)
 
 Deno.test('digits inside G2 are not treated as invented measurements', () => {
   assertEquals(

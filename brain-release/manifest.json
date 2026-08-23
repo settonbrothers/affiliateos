@@ -1,5 +1,5 @@
 {
-  "release_version": "copy-brain-release-v3.31",
+  "release_version": "copy-brain-release-v3.32",
   "engine_version": "evidence-agency-v9",
   "activation": "owner_approved_full_affx_activation_pending_smoke",
   "activation_decision": {
@@ -46,23 +46,23 @@
       "kind": "prompt",
       "role": "angle",
       "orchestrator": "CopyAngleOrchestrator",
-      "version": "v8-brain-v3.31",
-      "source_sha256": "b8fdee98e6a4e263ce41d74da74d867f3e39f2bdcfafbc99354b855714e9019b",
-      "sha256": "4517795cacff1d7d1bf3f53e9ac75176309b54ec98163147477cdcd8efba17ea",
+      "version": "v8-brain-v3.32",
+      "source_sha256": "893de283d5cc00c5b5f74cc4d57c468a03cacfcf22357067f0cd5fcffe6297c4",
+      "sha256": "114c58c5f589f8e1b003fad8ba345727b8ff7d909928ef9c436348e556237fbe",
       "load_trace": {
         "role": "angle",
         "source_path": "integration/copy-engine-v3/prompts/copy_angle/v8.md",
         "loaded_references": [
           {
             "path": "integration/copy-engine-v3/prompts/copy_angle/v8.md",
-            "sha256": "b8fdee98e6a4e263ce41d74da74d867f3e39f2bdcfafbc99354b855714e9019b"
+            "sha256": "893de283d5cc00c5b5f74cc4d57c468a03cacfcf22357067f0cd5fcffe6297c4"
           },
           {
             "path": "brain/knowledge/latest-owner-doctrine-v3.md",
             "sha256": "f16c987fbf72ffce51ade72d08b318e1182ea1e8368bd0fafb4537ed552fdb0a"
           }
         ],
-        "compiled_sha256": "4517795cacff1d7d1bf3f53e9ac75176309b54ec98163147477cdcd8efba17ea",
+        "compiled_sha256": "114c58c5f589f8e1b003fad8ba345727b8ff7d909928ef9c436348e556237fbe",
         "unresolved_placeholders": 0,
         "forbidden_long_or_medium_dashes": 0,
         "expected_knowledge": [
@@ -666,13 +666,13 @@
       "source": "brain/knowledge/role-load-map-v3.29.json",
       "target": "brain-knowledge/role-load-map-v3.29.json",
       "kind": "knowledge",
-      "sha256": "c11005c1f35e4e7daa4f33ea106c626c4487245665a0d16d301e58f0b8e4782f"
+      "sha256": "a1c307d0af00df76b3abe3966758349de0dc3dc2d45c6e5169f0ff23e404cf0e"
     },
     {
       "source": "brain/knowledge/source-manifest-v3.29.json",
       "target": "brain-knowledge/source-manifest-v3.29.json",
       "kind": "knowledge",
-      "sha256": "486f2fe500191ec1d69c7eb189664e5051d0f55c68446e1401c67691dfa7d471"
+      "sha256": "307d600dc88e56114a0d949d6d40c17b471b877245e13b9a4dd7421ca2ba610c"
     },
     {
       "source": "brain/knowledge/examples/michael-v5-active.md",
@@ -922,8 +922,8 @@
     }
   ],
   "source_repository": "creation-engine",
-  "source_git_sha": "a80664e114e8b8354ff79d929815bb67e6d91393",
-  "compiled_at": "2026-08-23T07:51:10.140Z",
+  "source_git_sha": "1da295e8e5773843fb596caab2a7dbee21a91c8b",
+  "compiled_at": "2026-08-23T09:05:06.152Z",
   "regression_commands": [
     "node tests/run-brain-loading-v3.29.mjs",
     "node tests/run-conversion-regressions.mjs",
@@ -967,8 +967,8 @@
     {
       "command": "node integration/copy-engine-v3/scripts/check-package.mjs",
       "status": "passed",
-      "output": "PASS copy-brain-release-v3.31: 66 artifacts, 40 active lessons, compiled doctrine routes and Zod parity"
+      "output": "PASS copy-brain-release-v3.32: 66 artifacts, 40 active lessons, compiled doctrine routes and Zod parity"
     }
   ],
-  "manifest_sha256": "d04fa9bddbafd49c116bdf4058e5777511b1b85ac7ef1c72bf0f5c9d430814e0"
+  "manifest_sha256": "899c4ca02da38fee69aab33ac1deb6df420ac1f0f47cbeee2c64d70016982b52"
 }

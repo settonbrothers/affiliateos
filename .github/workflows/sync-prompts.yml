@@ -65,7 +65,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: copy-brain-rollback-${{ github.run_id }}
-          path: brain-release/rollback-copy-brain-release-v3.31.json
+          path: brain-release/rollback-copy-brain-release-*.json
           if-no-files-found: error
           retention-days: 90
 

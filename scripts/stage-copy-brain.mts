@@ -38,6 +38,8 @@ const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
   }>
 }
 const root = dirname(manifestPath)
+const shaText = (value: string) =>
+  createHash('sha256').update(value).digest('hex')
 const db = createClient(
   env.NEXT_PUBLIC_SUPABASE_URL,
   env.SUPABASE_SERVICE_ROLE_KEY,
@@ -60,7 +62,7 @@ for (const file of manifest.files.filter(
   }
   const { data: existing, error } = await db
     .from('prompts')
-    .select('id,is_active')
+    .select('id,is_active,content')
     .eq('orchestrator_name', file.orchestrator)
     .eq('prompt_type', 'main')
     .eq('version', file.version)
@@ -68,6 +70,12 @@ for (const file of manifest.files.filter(
     .maybeSingle()
   if (error) throw error
   if (existing?.is_active) {
+    if (shaText(String(existing.content ?? '')) === file.sha256) {
+      console.log(
+        `ALREADY ACTIVE UNCHANGED ${file.orchestrator}/${file.version}`
+      )
+      continue
+    }
     throw new Error(
       `${file.orchestrator}/${file.version} is active; staging refuses to edit live content`
     )

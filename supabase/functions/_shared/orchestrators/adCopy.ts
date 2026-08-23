@@ -89,6 +89,9 @@ export type AdCopyInput = {
   }
   brainSnapshot?: CopyBrainInputSnapshotV1
   engineOverride?: 'production' | 'baseline' | 'candidate'
+  // Admin-only technical smoke profile. It exercises the full production
+  // pipeline with the prep model at every stage without changing live defaults.
+  modelProfile?: 'production' | 'economy_smoke'
   // Exact orchestrator→version map captured when an eval starts. This prevents
   // an active-prompt change mid-run from contaminating either A/B arm.
   promptVersions?: Record<string, string>
