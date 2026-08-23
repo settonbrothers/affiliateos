@@ -2,6 +2,7 @@ import { assertEquals, assert } from 'jsr:@std/assert'
 
 import {
   selectCandidateHook,
+  selectEligibleAngles,
   selectRevisionCandidate,
   normalizeTasteKillFlag,
   tasteRequirementStatus as rawTasteRequirementStatus,
@@ -246,6 +247,45 @@ Deno.test(
         envelope
       ).flags.includes('angle_truth_source_invalid')
     )
+  }
+)
+
+Deno.test(
+  'an invalid alternate angle does not discard a valid recommended route',
+  () => {
+    const validRecommended = {
+      name: 'Supported route',
+      is_recommended: true,
+      narrative_license: { mode: 'non_story' },
+      conversion_spine: spine,
+      positive_differentiation: positiveDifferentiation,
+    }
+    const invalidAlternate = {
+      ...validRecommended,
+      name: 'Unsupported alternate',
+      is_recommended: false,
+      positive_differentiation: {
+        ...positiveDifferentiation,
+        market_claim_mode: 'offer_only',
+        market_claim: 'No other product can do this.',
+      },
+    }
+
+    assertEquals(
+      validateAngleDecision([validRecommended, invalidAlternate], envelope)
+        .pass,
+      false
+    )
+
+    const routed = selectEligibleAngles(
+      [validRecommended, invalidAlternate],
+      envelope
+    )
+    assertEquals(routed.pass, true)
+    assertEquals(routed.angles.length, 1)
+    assertEquals(routed.angles[0].name, 'Supported route')
+    assertEquals(routed.angles[0].is_recommended, true)
+    assertEquals(routed.rejected.length, 1)
   }
 )
 

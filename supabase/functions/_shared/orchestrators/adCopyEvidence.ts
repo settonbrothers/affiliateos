@@ -31,6 +31,7 @@ import {
   selectRevisionCandidate,
   normalizePermittedSyntheticCharacterFlags,
   normalizeTasteKillFlag,
+  selectEligibleAngles,
   tasteRequirementStatus as rawTasteRequirementStatus,
   validateAngleDecision,
   validateCandidateClaims,
@@ -883,10 +884,16 @@ export async function runAdCopyEvidence(
   })
   spend(angles.usage)
 
-  const angleValidation = validateAngleDecision(
-    angles.data.angles,
-    evidence.data
-  )
+  const angleSelection = agencyV7Enabled
+    ? selectEligibleAngles(angles.data.angles, evidence.data)
+    : { pass: true, angles: angles.data.angles, rejected: [] }
+  const routedAngles = angleSelection.pass
+    ? angleSelection.angles
+    : angles.data.angles
+  const angleValidation = {
+    ...validateAngleDecision(routedAngles, evidence.data),
+    rejected_angles: angleSelection.rejected,
+  }
   const angleContractFlags = agencyV7Enabled
     ? (angleValidation.flags as z.infer<
         typeof EvidenceJudgeSchema
@@ -894,9 +901,9 @@ export async function runAdCopyEvidence(
     : []
   const selectedIndex = Math.max(
     0,
-    angles.data.angles.findIndex((angle) => angle.is_recommended)
+    routedAngles.findIndex((angle) => angle.is_recommended)
   )
-  const selected = angles.data.angles[selectedIndex]
+  const selected = routedAngles[selectedIndex]
   const policyFlags = validateNarrativePolicy(
     evidence.data,
     selected.narrative_license
@@ -938,7 +945,7 @@ export async function runAdCopyEvidence(
   ) {
     const output = assemble({
       envelope: evidence.data,
-      angles: angles.data.angles,
+      angles: routedAngles,
       hooks: [],
       variants: [],
       reader: null,
@@ -983,7 +990,7 @@ export async function runAdCopyEvidence(
       model: agencyV6Enabled ? WRITER_MODEL : undefined,
       vertical,
       payload: {
-        angles: angles.data.angles,
+        angles: routedAngles,
         selected_angle_index: selectedIndex,
         evidence_envelope: evidence.data,
         avatar: avatar.data,
@@ -1010,7 +1017,7 @@ export async function runAdCopyEvidence(
         execution_brief: executionBrief,
         evidence_envelope: evidence.data,
         avatar: avatar.data,
-        angles: angles.data.angles,
+        angles: routedAngles,
         angle_validation: angleValidation,
         campaign_context: input.campaignContext ?? null,
         relevant_taste_examples: executionBrief?.taste_selection.selected ?? [],
@@ -1030,7 +1037,7 @@ export async function runAdCopyEvidence(
 
     const departmentPlanValidation = validateDepartmentPlan(
       directed.data,
-      angles.data.angles,
+      routedAngles,
       evidence.data
     )
     let hookCoverage: {
@@ -1053,7 +1060,7 @@ export async function runAdCopyEvidence(
           ? 'evidence-agency-v9'
           : 'evidence-agency-v7',
         envelope: evidence.data,
-        angles: angles.data.angles,
+        angles: routedAngles,
         hooks: [],
         departmentPlan: directed.data,
         candidates: [],
@@ -1091,7 +1098,7 @@ export async function runAdCopyEvidence(
         model: resolveEvidenceStageModel(input.modelProfile, WRITER_MODEL),
         vertical,
         payload: {
-          angles: angles.data.angles,
+          angles: routedAngles,
           candidate_briefs: directed.data.candidate_briefs,
           evidence_envelope: evidence.data,
           avatar: avatar.data,
@@ -1115,7 +1122,7 @@ export async function runAdCopyEvidence(
             ? 'evidence-agency-v9'
             : 'evidence-agency-v7',
           envelope: evidence.data,
-          angles: angles.data.angles,
+          angles: routedAngles,
           hooks: generatedHooks.data.hooks,
           departmentPlan: directed.data,
           candidates: [],
@@ -1158,7 +1165,7 @@ export async function runAdCopyEvidence(
       proof_mechanism: 'CopyProofMechanismWriterOrchestrator',
     } as const
     for (const brief of directed.data.candidate_briefs) {
-      const angle = angles.data.angles[brief.angle_index]
+      const angle = routedAngles[brief.angle_index]
       if (!angle) continue
       const narrativePolicyFlags = validateNarrativePolicy(
         evidence.data,
@@ -1360,7 +1367,7 @@ export async function runAdCopyEvidence(
         const brief = directed.data.candidate_briefs.find(
           (item) => item.candidate_id === previousCandidate.candidate_id
         )
-        const angle = brief ? angles.data.angles[brief.angle_index] : null
+        const angle = brief ? routedAngles[brief.angle_index] : null
         const selectedHook = brief
           ? selectCandidateHook(brief, hooks.data.hooks)
           : null
@@ -1588,7 +1595,7 @@ export async function runAdCopyEvidence(
             : 'evidence-agency-v6'
         : 'evidence-agency-v5',
       envelope: evidence.data,
-      angles: angles.data.angles,
+      angles: routedAngles,
       hooks: hooks.data.hooks,
       departmentPlan: directed.data,
       candidates,
@@ -1710,7 +1717,7 @@ export async function runAdCopyEvidence(
 
   const output = assemble({
     envelope: evidence.data,
-    angles: angles.data.angles,
+    angles: routedAngles,
     hooks: hooks.data.hooks,
     variants: variants!.variants,
     reader: reader!,
@@ -1954,12 +1961,21 @@ export async function runAdCopyEvidenceAgencyStep(
         doctrine_bundle: executionBrief.doctrine_bundle,
       },
     })
+    const angleSelection = agencyV7Enabled
+      ? selectEligibleAngles(angles.data.angles, evidence)
+      : { pass: true, angles: angles.data.angles, rejected: [] }
+    const routedAngles = angleSelection.pass
+      ? angleSelection.angles
+      : angles.data.angles
     const selectedIndex = Math.max(
       0,
-      angles.data.angles.findIndex((angle) => angle.is_recommended)
+      routedAngles.findIndex((angle) => angle.is_recommended)
     )
-    const selected = angles.data.angles[selectedIndex]
-    const angleValidation = validateAngleDecision(angles.data.angles, evidence)
+    const selected = routedAngles[selectedIndex]
+    const angleValidation = {
+      ...validateAngleDecision(routedAngles, evidence),
+      rejected_angles: angleSelection.rejected,
+    }
     const angleContractFlags = agencyV7Enabled
       ? (angleValidation.flags as z.infer<
           typeof EvidenceJudgeSchema
@@ -1978,7 +1994,7 @@ export async function runAdCopyEvidenceAgencyStep(
     ) {
       const output = assemble({
         envelope: evidence,
-        angles: angles.data.angles,
+        angles: routedAngles,
         hooks: [],
         variants: [],
         reader: null,
@@ -2007,7 +2023,7 @@ export async function runAdCopyEvidenceAgencyStep(
       checkpoint: {
         ...checkpoint,
         stage: agencyV7Enabled ? 'director' : 'hooks',
-        angles: angles.data.angles,
+        angles: routedAngles,
         selectedIndex,
         angleValidation,
         total,
