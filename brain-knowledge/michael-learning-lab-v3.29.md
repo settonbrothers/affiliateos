@@ -48,4 +48,3 @@ When not: do not add biography or vulnerability only to force emotion.
 Do not reuse bereavement, a door, daily knocking, an elderly neighbor, a flight home, a late-night message, a waiting list or the same paragraph silhouette unless the new offer independently creates those facts and needs them.
 
 Transfer the capabilities: curiosity, scene, accumulation, dominant realization, causal product entry, open need and a human action.
-

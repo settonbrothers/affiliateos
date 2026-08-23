@@ -369,7 +369,7 @@
           },
           {
             "path": "brain/knowledge/michael-learning-lab-v3.29.md",
-            "sha256": "26f005726c588091c73c660fc5d9cff0bec50de0b5b4d43db2c6f3aabd7e747f"
+            "sha256": "f07d5966cea227461d922cdeedd2888869705c616cddf66420ae34ac28308289"
           },
           {
             "path": "brain/knowledge/examples/michael-v5-active.md",
@@ -654,7 +654,7 @@
       "source": "brain/knowledge/michael-learning-lab-v3.29.md",
       "target": "brain-knowledge/michael-learning-lab-v3.29.md",
       "kind": "knowledge",
-      "sha256": "26f005726c588091c73c660fc5d9cff0bec50de0b5b4d43db2c6f3aabd7e747f"
+      "sha256": "f07d5966cea227461d922cdeedd2888869705c616cddf66420ae34ac28308289"
     },
     {
       "source": "brain/knowledge/negative-controls-v3.29.md",
@@ -922,8 +922,8 @@
     }
   ],
   "source_repository": "creation-engine",
-  "source_git_sha": "78459b7d1acebca6883a23f710a3bf5b1a9c592c",
-  "compiled_at": "2026-08-23T07:39:39.483Z",
+  "source_git_sha": "6aa4c0a34f2dc996c53f48af6313cda4a893cddb",
+  "compiled_at": "2026-08-23T07:42:04.702Z",
   "regression_commands": [
     "node tests/run-brain-loading-v3.29.mjs",
     "node tests/run-conversion-regressions.mjs",
@@ -970,5 +970,5 @@
       "output": "PASS copy-brain-release-v3.31: 66 artifacts, 40 active lessons, compiled doctrine routes and Zod parity"
     }
   ],
-  "manifest_sha256": "8fb47ec7e086cc7064e9baf2bb60e0df91306f17199f4d1456581d87c39c89ea"
+  "manifest_sha256": "6c2bece68a9d405da5336fb9427432066e1ff19458891885d97cbbda1e7bc68e"
 }
