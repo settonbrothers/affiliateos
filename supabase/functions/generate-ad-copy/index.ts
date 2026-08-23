@@ -3,6 +3,7 @@ import {
   requireUser,
   UnauthorizedError,
 } from '../_shared/auth.ts'
+import { invokeSelf } from '../_shared/backgroundWork.ts'
 import { handleCors, jsonResponse } from '../_shared/cors.ts'
 import {
   assertUnderDailyCap,
@@ -56,6 +57,20 @@ const OBJECTIVE_TYPES = [
 type ObjectiveType = (typeof OBJECTIVE_TYPES)[number]
 // Cap how many human-labelled examples feed the few-shot context, newest first.
 const CORPUS_LIMIT = 60
+const COPY_PROMPT_ORCHESTRATORS = [
+  'CopyExcavateProductOrchestrator',
+  'CopyAngleOrchestrator',
+  'CopyHookOrchestrator',
+  'CopyDirectorOrchestrator',
+  'CopyStorytellingWriterOrchestrator',
+  'CopyDirectResponseWriterOrchestrator',
+  'CopyProofMechanismWriterOrchestrator',
+  'CopyWriteOrchestrator',
+  'CopyReaderOrchestrator',
+  'CopyCriticOrchestrator',
+  'CopyJudgeOrchestrator',
+  'CopyPortfolioJudgeOrchestrator',
+] as const
 
 Deno.serve(async (req: Request) => {
   const preflight = handleCors(req)
@@ -164,17 +179,9 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // Credit guard — reserve (debit) before any LLM work; refunded on failure.
+    // The hold is created only after the entire deterministic input + frozen
+    // prompt bundle is ready. This avoids charging for a preflight/data error.
     let creditHold: CreditHold | null = null
-    if (offer.workspace_id) {
-      try {
-        creditHold = await reserveCredits(offer.workspace_id, ACTION)
-      } catch (err) {
-        if (err instanceof InsufficientCreditsError)
-          return jsonResponse({ error: err.message }, 402)
-        throw err
-      }
-    }
 
     const verticalSlug =
       (offer as unknown as { verticals?: { slug: string } | null }).verticals
@@ -557,29 +564,163 @@ Deno.serve(async (req: Request) => {
     const model = willCallReal
       ? (Deno.env.get('AD_COPY_MODEL') ?? 'claude-sonnet-4-6')
       : 'mock'
+    const useResumableAgency =
+      willCallReal && Deno.env.get('AD_COPY_BRAIN_V331_ENABLED') !== 'false'
 
-    const runId = await recordRunStart({
-      orchestratorName: ORCHESTRATOR,
-      agentVersion: willCallReal ? 'real-v1' : 'mock-v1',
-      model,
-      inputPayload: {
-        offer_id: offerId,
-        verified_fact_count: facts.length,
-        corpus_example_count: corpus.length,
+    let promptVersions: Record<string, string> | undefined
+    let promptContents: Record<string, string> | undefined
+    let promptBundleSha256: string | null = null
+    if (useResumableAgency) {
+      const { data: promptRows, error: promptError } = await admin
+        .from('prompts')
+        .select('orchestrator_name,version,content,vertical_id,created_at')
+        .in('orchestrator_name', [...COPY_PROMPT_ORCHESTRATORS])
+        .eq('prompt_type', 'main')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+      if (promptError) throw promptError
+      promptVersions = {}
+      promptContents = {}
+      for (const orchestrator of COPY_PROMPT_ORCHESTRATORS) {
+        const candidates = (promptRows ?? []).filter(
+          (row) => row.orchestrator_name === orchestrator
+        )
+        const selected =
+          candidates.find(
+            (row) => offer.vertical_id && row.vertical_id === offer.vertical_id
+          ) ?? candidates.find((row) => row.vertical_id === null)
+        if (!selected?.content || !selected.version) {
+          throw new Error(`No active frozen prompt for ${orchestrator}`)
+        }
+        promptVersions[orchestrator] = selected.version
+        promptContents[orchestrator] = selected.content
+      }
+      promptBundleSha256 = await sha256Text(
+        JSON.stringify({ promptVersions, promptContents })
+      )
+    }
+
+    const input: AdCopyInput = {
+      offer: {
+        id: offer.id,
+        name: offer.name,
+        url: offer.website_url ?? null,
         vertical: verticalSlug ?? null,
-        engine_version:
-          Deno.env.get('AD_COPY_BRAIN_V331_ENABLED') !== 'false'
-            ? 'evidence-agency-v9'
-            : 'legacy-v2',
-        creative_hint_present: !!body.creative_hint?.trim(),
-        additional_source_url_count: additionalSourceUrls.length,
-        model_profile: body.model_profile ?? 'production',
+        description: offer.operator_notes ?? null,
       },
-      userId: user.id,
-      workspaceId: offer.workspace_id ?? undefined,
-      offerId,
-    })
-    await linkCreditToRun(creditHold, runId)
+      productContext: { verified_facts: facts },
+      testKit,
+      corpus,
+      verticalSlug,
+      template,
+      hookLibrary,
+      deepBriefContext,
+      avatarContext,
+      spyContext,
+      creativeHint: body.creative_hint?.trim() || null,
+      additionalSourceUrls,
+      campaignContext: body.campaign_context ?? {
+        channel: 'meta_facebook',
+        geo: null,
+        audience: null,
+      },
+      brainSnapshot,
+      modelProfile: body.model_profile ?? 'production',
+      promptVersions,
+      promptContents,
+    }
+
+    // Credit guard - reserve immediately before opening the durable run/job.
+    if (offer.workspace_id) {
+      try {
+        creditHold = await reserveCredits(offer.workspace_id, ACTION)
+      } catch (err) {
+        if (err instanceof InsufficientCreditsError)
+          return jsonResponse({ error: err.message }, 402)
+        throw err
+      }
+    }
+
+    let runId: string
+    try {
+      runId = await recordRunStart({
+        orchestratorName: ORCHESTRATOR,
+        agentVersion: willCallReal ? 'real-v1' : 'mock-v1',
+        model,
+        inputPayload: {
+          offer_id: offerId,
+          verified_fact_count: facts.length,
+          corpus_example_count: corpus.length,
+          vertical: verticalSlug ?? null,
+          engine_version:
+            Deno.env.get('AD_COPY_BRAIN_V331_ENABLED') !== 'false'
+              ? 'evidence-agency-v9'
+              : 'legacy-v2',
+          creative_hint_present: !!body.creative_hint?.trim(),
+          additional_source_url_count: additionalSourceUrls.length,
+          model_profile: body.model_profile ?? 'production',
+          prompt_bundle_sha256: promptBundleSha256,
+        },
+        userId: user.id,
+        workspaceId: offer.workspace_id ?? undefined,
+        offerId,
+      })
+      await linkCreditToRun(creditHold, runId)
+    } catch (error) {
+      if (offer.workspace_id) {
+        await refundCredits(offer.workspace_id, creditHold, ACTION)
+      }
+      throw error
+    }
+
+    if (useResumableAgency) {
+      try {
+        const { data: job, error: jobError } = await admin
+          .from('ad_copy_jobs')
+          .insert({
+            ai_run_id: runId,
+            offer_id: offerId,
+            workspace_id: offer.workspace_id,
+            user_id: user.id,
+            status: 'queued',
+            input_payload: {
+              ad_copy_input: input,
+              template: template ?? null,
+              creative_hint: body.creative_hint?.trim() || null,
+              model,
+              corpus_example_count: corpus.length,
+              prompt_bundle_sha256: promptBundleSha256,
+            },
+            credit_hold: creditHold,
+          })
+          .select('id')
+          .single()
+        if (jobError || !job) throw jobError ?? new Error('Job insert failed')
+        const handedOff = await invokeSelf('run-ad-copy-job', {
+          job_id: job.id,
+        })
+        if (!handedOff) {
+          await admin
+            .from('ad_copy_jobs')
+            .update({
+              status: 'failed',
+              error_message: 'Could not start resumable ad-copy worker',
+              completed_at: new Date().toISOString(),
+              lease_expires_at: null,
+            })
+            .eq('id', job.id)
+          throw new Error('Could not start resumable ad-copy worker')
+        }
+        return jsonResponse({ run_id: runId }, 200)
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        await recordRunError(runId, message)
+        if (offer.workspace_id) {
+          await refundCredits(offer.workspace_id, creditHold, ACTION, runId)
+        }
+        throw error
+      }
+    }
 
     EdgeRuntime.waitUntil(
       (async () => {
@@ -588,34 +729,6 @@ Deno.serve(async (req: Request) => {
           // Mock path keeps latency so UI Realtime/polling exercises its loading state.
           if (!willCallReal) {
             await new Promise((resolve) => setTimeout(resolve, MOCK_LATENCY_MS))
-          }
-
-          const input: AdCopyInput = {
-            offer: {
-              id: offer.id,
-              name: offer.name,
-              url: offer.website_url ?? null,
-              vertical: verticalSlug ?? null,
-              description: offer.operator_notes ?? null,
-            },
-            productContext: { verified_facts: facts },
-            testKit,
-            corpus,
-            verticalSlug,
-            template,
-            hookLibrary,
-            deepBriefContext,
-            avatarContext,
-            spyContext,
-            creativeHint: body.creative_hint?.trim() || null,
-            additionalSourceUrls,
-            campaignContext: body.campaign_context ?? {
-              channel: 'meta_facebook',
-              geo: null,
-              audience: null,
-            },
-            brainSnapshot,
-            modelProfile: body.model_profile ?? 'production',
           }
 
           const result = await runAdCopy(input)
